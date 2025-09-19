@@ -167,7 +167,7 @@ Perform all feasible automated Jira and Git operations directly; only describe s
 
 ## Create a Phase 2 Start Report
 
-- In `.github/prompts/phases`, create file: `phase-2-start-report.md`.
+- In `.github/prompts`, create file: `phase-2-start-report.md`.
 - Describe initial actions taken to support all tasks within the phase.
 - Include a table in task-number order (order displayed in roadmap) with columns:
   - Name and description of task
@@ -198,4 +198,5 @@ Provide these variables when invoking this template (defaults shown where applic
 
 - Ground planning and acceptance criteria in `.github/requirements/index.md` and the referenced slice scope where applicable.
 - Keep diffs small and commits logically grouped per issue branch.
+- Ensure commit messages are descriptive in name and the description outlines all changes and why. The title must always reference the Jira ticket by starting with the key.
 - Use the same run commands as listed in the roadmap when applicable to validate changes.
