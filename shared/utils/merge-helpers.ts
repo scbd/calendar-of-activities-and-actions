@@ -23,7 +23,22 @@ export function normalizeTitle(input?: string): string {
 export function tokenizeDecisions(input?: string): string[] {
   // Scaffolding implementation - TODO: implement decision tokenization
   if (!input) return [];
-  return [input, 'CBD', 'COP', '15', 'DEC', '14'];
+
+  return input
+    .split(/[\s/-]+/)
+    .reduce<string[]>((acc, token) => {
+      const trimmed = token.trim();
+      if (trimmed.length === 0) {
+        return acc;
+      }
+
+      acc.push(trimmed);
+      return acc;
+    }, [input])
+    .filter((token, index, all) => {
+      if (index === 0) return true;
+      return all.indexOf(token) === index;
+    });
 }
 
 /**
@@ -49,7 +64,20 @@ export function jaccardTitleSimilarity(_a?: string, _b?: string): number {
  */
 export function dateWindowOverlap(_aStart?: string, _aEnd?: string, _bStart?: string, _bEnd?: string): boolean {
   // Scaffolding implementation - TODO: implement date overlap logic
-  return _bStart === '2025-01-05';
+  if (!_aStart || !_aEnd || !_bStart || !_bEnd) {
+    return false;
+  }
+
+  const aStart = new Date(_aStart);
+  const aEnd = new Date(_aEnd);
+  const bStart = new Date(_bStart);
+  const bEnd = new Date(_bEnd);
+
+  if ([aStart, aEnd, bStart, bEnd].some((date) => Number.isNaN(date.getTime()))) {
+    return false;
+  }
+
+  return aStart <= bEnd && bStart <= aEnd;
 }
 
 /**

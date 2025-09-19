@@ -8,42 +8,55 @@ import type { MergedRecord } from '../../../shared/types/records';
  */
 const defaultFs: FsAdapter = {
   /**
-   * Reads a file and returns its content as a string
-   * @param _path - File path to read (unused in scaffolding)
-   * @param _enc - Text encoding (unused in scaffolding)
-   * @returns Empty string as placeholder
+   * Reads a file and returns its content as a string.
+   * @param _path - The path to the file to read.
+   * @param _enc - The text encoding to use (e.g. 'utf8'). Defaults to 'utf8'.
+   * @returns The file contents as a string.
+   * @throws Should throw when the file cannot be read or decoded.
+   * @example
+   * const contents = await fs.readFile('/tmp/actions.md');
+   * // contents now holds the markdown document as a string.
    */
-  async readFile(_path, _enc = 'utf8') { 
+  async readFile(_path, _enc = 'utf8') {
     // Scaffolding implementation - TODO: implement file reading
-    return ''; 
+    return '';
   },
   /**
-   * Writes data to a file
-   * @param _path - File path to write to (unused in scaffolding)
-   * @param _data - Data to write (unused in scaffolding)
+   * Writes data to a file.
+   * @param _path - The destination path that should receive the data.
+   * @param _data - The data to write (string or Buffer).
+   * @returns A promise that resolves when the write completes.
+   * @throws Should throw when the data cannot be persisted.
+   * @example
+   * await fs.writeFile('/tmp/index.json', JSON.stringify(payload));
    */
-  async writeFile(_path, _data) { 
+  async writeFile(_path, _data) {
     // Scaffolding implementation - TODO: implement file writing
-    return; 
+    return;
   },
   /**
-   * Creates a directory
-   * @param _path - Directory path to create (unused in scaffolding)
-   * @param _opts - Creation options (unused in scaffolding)
-   * @returns Undefined as placeholder
+   * Creates a directory at the provided path.
+   * @param _path - The path of the directory to create.
+   * @param _opts - Options such as `{ recursive: true }` to control creation.
+   * @returns Undefined placeholder while scaffolding.
+   * @throws Should throw when the directory cannot be created.
+   * @example
+   * await fs.mkdir('/tmp/data', { recursive: true });
    */
-  async mkdir(_path, _opts) { 
+  async mkdir(_path, _opts) {
     // Scaffolding implementation - TODO: implement directory creation
-    return undefined; 
+    return undefined;
   },
   /**
-   * Checks if a file or directory exists
-   * @param _path - Path to check (unused in scaffolding)
-   * @returns False as placeholder
+   * Checks if a file or directory exists at the given path.
+   * @param _path - Path to check for existence.
+   * @returns False placeholder while scaffolding.
+   * @example
+   * const alreadyExists = await fs.exists('/tmp/index.json');
    */
-  async exists(_path) { 
+  async exists(_path) {
     // Scaffolding implementation - TODO: implement file existence check
-    return false; 
+    return false;
   },
 };
 

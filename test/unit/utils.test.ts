@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeTitle, tokenizeDecisions, jaccardTitleSimilarity, dateWindowOverlap } from '../../shared/utils/merge-helpers';
 import { mergeRecords } from '../../utils/indexers/scbd/index';
-import type { IndexRecord, MdRecord } from '../../shared/types/records';
+import type { IndexRecord, MdRecord } from '../../shared/types/records.ts';
 
 // Smoke tests and examples of unit tests
 describe('Utility Functions - Smoke Tests', () => {
