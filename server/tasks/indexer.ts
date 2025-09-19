@@ -33,6 +33,5 @@ const indexerTask: Task = {
     return { result };
   },
 };
-
 export default indexerTask;
 
