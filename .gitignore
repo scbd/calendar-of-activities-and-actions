@@ -43,3 +43,9 @@ playwright/.cache/
 *.njsproj
 *.sln
 *.sw?
+
+.continue/
+
+.codex/
+
+
