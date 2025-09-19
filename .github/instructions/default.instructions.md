@@ -667,17 +667,15 @@ When answering questions or providing code examples, always adhere to these guid
 
 ## Project Anchor: CBD Calendar of Activities and Actions
 
-Source of truth: `index.md` at workspace root. Use it to ground plans and acceptance criteria.
+Source of truth: `index.md` at /Users/randyhoulahan/projects/@scbd/calendar-of-activities-and-actions/.github/requirements/index.md. Use it to ground plans and acceptance criteria.
 
 - Purpose: Searchable calendar for CBD activities/actions, reduce notification overload, aid records maintenance.
 - Scope: Secretariat activities and party-led actions (deadlines), links to COP decisions/notifications; protocol activities only if specified.
-- Users: Secretariat (input/update/approve), Parties (view/search/filter), Admin (manage users/metadata/approvals).
+- Users: Secretariat (input/update/approve), Parties (view/search/filter).
 - Key functional points:
   - Data input: forms with mandatory/optional fields; link activities↔actions; support multi-values.
-  - Data management: MongoDB; Draft→Review/Approve→Publish; version history; integrations for notifications/decision tracker.
   - Search & display: Combined chronological list; filters; keyword/date/decision search.
   - UI: Nuxt.js + Bootstrap; responsive; secretariat dashboard; public layer view.
-  - Security: Auth via CBD credentials; RBAC; audit logs.
-- Roadmap baseline: 2w design, 3w backend, 4w frontend, 3w testing/deploy (total ~6w). NFRs: performance (<2s), scalability (1000+), accessibility (WCAG 2.1), backups (daily). V2: LLM ingestion for drafts, exports, notifications, analytics.
+
 
 Use this anchor to: define data models, prioritize features, validate search/filter UX, and frame tests.

@@ -16,17 +16,17 @@ Deliver a minimal, testable pipeline + UI that:
 2. Parses a program‑officer–maintained Markdown table (`shared/data/2024-12-01.md`).
 3. Deterministically merges both datasets (with provenance + unmerged outputs).
 4. Renders a single public Vue/Nuxt component (`calendar-activities-actions.vue`) providing filtering & basic light/dark styling.
-5. Ships unit + e2e tests and a component‑only library build (ES + UMD) externalizing `vue` & `bootstrap`.
+5. Ships unit tests now; e2e tests deferred to the final phase. Component‑only library build (ES + UMD) externalizing `vue` & `bootstrap`.
 
 ## In Scope (This Slice)
 
 - Local JSON persistence under `shared/data/` & duplicated to `public/data/` for client fetch.
 - Two Nitro Tasks (CLI only): `indexer` (fetch) & `merge` (parse + merge).
-- Reusable pure indexing utility (`utils/indexers/scbd/indexMeetings.ts`).
+- Reusable pure indexing utility (`utils/indexers/scbd/index.ts`).
 - Deterministic merge logic (COP decision / related doc tokens / title+date window) with provenance shape `{ index: {...}, md: {...}, normalized: {...} }`.
 - Single SFC UI (Bootstrap 5) with filters: Type, Subject, Status, Subsidiary Body, COP Decision, Date Range, Action Required flag.
 - Accessibility basics (aria labels, focus states).
-- Unit tests (filter logic & rendering) via Vitest; e2e tests via Playwright.
+- Unit tests (filter logic & rendering) via Vitest; e2e tests via Playwright (deferred to final phase).
 - Library build config at `build/component.vite.config.ts`.
 
 ## Out of Scope (Deferred to Later Phases)
@@ -53,7 +53,7 @@ Deliver a minimal, testable pipeline + UI that:
 | `utils/indexers/scbd/indexMeetings.ts` | Pure indexing helper (refactored). |
 | `components/calendar-activities-actions.vue` | Public list + filters component. |
 | `tests/unit/calendar-activities-actions.spec.ts` | Unit tests. |
-| `tests/e2e/calendar-activities-actions.spec.ts` | E2E filters test. |
+| `tests/e2e/calendar-activities-actions.spec.ts` | E2E filters test (deferred). |
 | `build/component.vite.config.ts` | Component‑only library build config. |
 
 ## Merge Logic Summary
@@ -84,7 +84,7 @@ Tests:
 
 ```bash
 npx vitest run
-npx playwright test
+# npx playwright test  # Deferred to final phase
 ```
 
 Library build (planned once config added):
@@ -98,7 +98,7 @@ npx vite build -c build/component.vite.config.ts
 - Both Nitro Tasks run without unhandled errors and emit expected JSON files.
 - `merged.json` contains required columns & provenance.
 - Component renders dataset, filters adjust result count, supports dark/light.
-- Unit + e2e tests pass locally.
+- Unit tests pass locally; e2e tests will be added in the final phase.
 - Library build outputs ES & UMD bundles excluding `vue` & `bootstrap`.
 
 ## Next Iteration Candidates (Not Implemented Yet)

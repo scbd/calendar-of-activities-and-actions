@@ -1,4 +1,6 @@
-# Nuxt Minimal Starter
+# CBD Activities & Actions Calendar
+
+A searchable calendar application for CBD (Convention on Biological Diversity) activities and actions, built with Nuxt.js and TypeScript. This project provides a consolidated view of Secretariat activities, party-led actions, and related COP decisions with advanced filtering and search capabilities.
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
@@ -16,7 +18,8 @@ Or manually:
 ```bash
 # yarn (recommended)
 yarn install
-yarn playwright install
+# Optional (E2E deferred to final phase):
+# yarn playwright install
 ```
 
 ## Development Server
@@ -80,15 +83,15 @@ Run the test suite:
 ```bash
 # yarn (recommended)
 yarn test                    # Run all tests
-yarn test:unit              # Run unit tests only
-yarn test:nuxt              # Run Nuxt component tests
-yarn test:e2e               # Run end-to-end tests
-yarn test:coverage          # Run tests with coverage report
-yarn test:watch             # Run tests in watch mode
-yarn test:ui                # Run tests with UI
+yarn test:unit               # Run unit tests only
+yarn test:nuxt               # Run Nuxt component tests
+# yarn test:e2e              # Deferred to final phase
+yarn test:coverage           # Run tests with coverage report
+yarn test:watch              # Run tests in watch mode
+yarn test:ui                 # Run tests with UI
 
 # Install Playwright browsers (required for E2E tests)
-yarn playwright install
+# yarn playwright install     # Deferred until enabling E2E
 ```
 
 ### Test Structure

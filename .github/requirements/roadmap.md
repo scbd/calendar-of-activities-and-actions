@@ -2,8 +2,58 @@
 
 This roadmap synthesizes the best features from multiple roadmap versions, creating a comprehensive, executable guide for the initial vertical slice of the CBD Activities & Actions Calendar. It includes detailed phases, checkable tasks, acceptance criteria, run commands, deliverables, and risk mitigation. Scope excludes auth, persistence DB, and editorial workflow (see `index.md`).
 
+## Project Scaffolding
+
+```text
+📁 calendar-of-activities-and-actions/
+├── 📄 eslint.config.mjs
+├── 📄 nuxt.config.ts
+├── 📄 package.json
+├── 📄 playwright.config.ts
+├── 📄 README.md
+├── 📄 setup.sh
+├── 📄 tsconfig.json
+├── 📄 vitest.config.ts
+├── 📄 wire-frame-2.png
+├── 📁 app/
+│   └── 📄 app.vue
+├── 📁 components/
+│   └── 📄 calendar-activities-actions.vue
+├── 📁 public/
+│   ├── 📄 favicon.ico
+│   └── 📄 robots.txt
+├── 📁 server/
+│   ├── 📁 tasks/
+│   │   ├── 📄 indexer.ts
+│   │   └── 📄 merge.ts
+│   └── 📁 types/
+│       └── 📄 tasks.ts
+├── 📁 shared/
+│   ├── 📁 data/
+│   │   ├── 📄 2024-12-01.md
+│   │   └── 📄 calendar of activities options for bureau-all staff presentation (17-06-2025).pptx
+│   ├── 📁 types/
+│   │   └── 📄 records.ts
+│   └── 📁 utils/
+│       └── 📄 merge-helpers.ts
+├── 📁 test/
+│   ├── 📁 e2e/
+│   │   └── 📄 homepage.test.ts
+│   ├── 📁 nuxt/
+│   │   └── 📄 calendar-activities-actions.test.ts
+│   └── 📁 unit/
+│       └── 📄 utils.test.ts
+└── 📁 utils/
+    └── 📁 indexers/
+        └── 📁 scbd/
+            └── 📄 index-meetings.ts
+```
+
+
+
 ## Phase 0 – Foundations & Setup
 
+- [ ] ensure all rules followed from .github/instructions/default.instructions.md are followed to date in all files.
 - [ ] Confirm repository bootstrap (Nuxt, Vitest, Playwright present)
 - [ ] Install `consola` (if not already) and ensure TS config supports new utils
 - [ ] Decide on date lib (native Date first; re-evaluate later)
@@ -18,14 +68,14 @@ This roadmap synthesizes the best features from multiple roadmap versions, creat
 
 ## Phase 1 – Data Fetch (Indexer Task)
 
-Goal: Fetch raw meeting/activity index JSON since configurable date.
+Goal: Fetch raw meeting  index JSON since configurable date.  Make an index service that will allow params to be passed support and payload.
 
-- [ ] Implement `utils/indexers/scbd/indexMeetings.ts` (pure; no side effects except via injected IO)
+- [ ] Implement `utils/indexers/scbd.ts` (pure; no side effects except via injected IO)
 - [ ] Support parameters: `{ since: string; limit?: number; logger?: ConsolaInstance; fetchImpl?: typeof fetch }`
 - [ ] Return shape: `{ items: any[]; count: number; warnings: string[] }`
 - [ ] Implement Nitro task `server/tasks/indexer.ts`
-- [ ] Task payload validation (`since` default = last COP start date env/constant)
-- [ ] Write outputs: `shared/data/raw-index.json` & `public/data/raw-index.json`
+- [ ] Task payload validation (`since` default = last COP start date env/constant also the schema 'meetings' in our case)
+- [ ] Write outputs: `shared/data/temp/raw-indexed-meetings.json`
 - [ ] Task return: `{ counts: { raw: number }, outputs: { rawIndex: string }, warnings: string[] }`
 - [ ] Dry run mode (skip file writes)
 - [ ] Unit test utility (mock fetch + fs adapter)
@@ -41,9 +91,9 @@ Goal: Fetch raw meeting/activity index JSON since configurable date.
 Goal: Convert program officer Markdown table(s) to structured JSON.
 
 - [ ] Implement MD table parser (robust to trailing pipes & alignment rows)
-- [ ] Extract columns: Title, Type, Subject, Status, StartDate, EndDate, AssociatedBody, COPDecision, Related_documents, ActionRequired
+- [ ] Extract all columns: Title, Type, Subject, Status, StartDate, EndDate, AssociatedBody, COPDecision, Related_documents, ActionRequired - if more colums than listed here update here, the related issue and output with additionaol colum found.
 - [ ] Normalize date strings (ISO where possible; keep raw if ambiguous)
-- [ ] Unit tests with fixture from `shared/data/2024-12-01.md`
+- [ ] Unit tests with fixture from `shared/data/2024-12-01.md` yet latest source as well.
 
 **Acceptance Criteria:**
 
@@ -84,47 +134,59 @@ Goal: Deterministically relate index + MD rows with provenance & unmerged output
 - Supports multiple data paths and dry run mode
 - Detailed warnings for any processing issues
 
-## Phase 5 – Post-Merge Data Indexation
+## Phase 5 – Activities & Actions Index (No Pre-Merge)
 
-Goal: Create a lightweight searchable in-memory index for fast filtering & free-text search.
+Goal: Index Activities & Actions from the Markdown table(s) as a separate collection with a lightweight search index. Do not globally merge with meetings yet. Provide loose link fields to enable query-time reconciliation.
 
-- [ ] Define derived index structure (token map: token -> record ids; facet maps)
-- [ ] Implement build step (part of merge task) that outputs `public/data/merged.index.json`
-- [ ] Include: tokens from normalized title, COPDecision tokens, related document tokens
-- [ ] Pre-compute facet value frequency maps for UI counts
-- [ ] Size check: ensure index file < 30% of merged payload size
-- [ ] Update merge task to emit index file
-- [ ] Unit tests: tokenization, lookup correctness, facet map integrity
-
-**Acceptance Criteria:**
-
-- `merged.index.json` present and search lookup returns expected record ids for sample tokens
-- Index enables fast filtering without rescanning full dataset
-
-## Phase 6 – Index Query Service Utility
-
-Goal: Provide a reusable query utility for free-text + facet filtering.
-
-Location: `shared/util/indexQuery.ts`
-
-- [ ] Implement types: `QueryInput { text?: string; facets?: FacetFilters; dateRange?: { from?: string; to?: string } }`
-- [ ] Load / accept injected data + index (pure function design)
-- [ ] Text search strategy: intersect postings lists for each token; fallback to substring scan if token absent
-- [ ] Facet filtering applied after text candidate set reduction
-- [ ] Stable sort (chronological ascending by StartDate then Title)
-- [ ] Expose incremental API: `prepare(data, index)`, `query(q)`, `facetCounts(qPartial)`
-- [ ] Unit tests: text only, facet only, combined, empty, date range edge, unknown token
-- [ ] Performance test (mock) to ensure O(k + r) where k tokens, r results
+- [ ] Define ActivitiesActions schema (minimum):
+  - `id` (stable hash), `Title`, `Type`, `Subject`, `Status`, `StartDate`, `EndDate`, `AssociatedBody`, `COPDecision[]`, `RelatedDocuments[]`, `ActionRequired`
+  - Provenance: `sourcePath`, `rowNumber`
+  - Optional loose-link hints: `link.decisions[]`, `link.dateWindow { from?: string; to?: string }`, `link.associatedBody?`
+- [ ] Implement build step (part of the existing pipeline) that outputs:
+  - `public/data/activities-actions.json` (normalized parsed records)
+  - `public/data/activities-actions.index.json` (token map + facet maps)
+- [ ] Index contents: tokens from normalized title, COPDecision tokens, related document tokens
+- [ ] Pre-compute facet value frequency maps for Activities & Actions UI counts
+- [ ] Size check: ensure index file < 30% of the Activities & Actions payload size
+- [ ] Update pipeline to emit these two files (skip creating a global merged index at this phase)
+- [ ] Unit tests: tokenization, lookup correctness, facet map integrity, schema validation
 
 **Acceptance Criteria:**
 
-- Utility returns identical result set to legacy in-component filtering for sampled queries
-- Document usage in roadmap & `index.md`
+- `public/data/activities-actions.index.json` present and postings lookup returns expected record ids for sample tokens
+- `public/data/activities-actions.json` present with normalized records and loose-link fields
+- Index enables fast filtering of Activities & Actions without rescanning the full dataset and without dependency on meeting reindex
+
+## Phase 6 – Cross-Collection Query Service (Query-Time Merge)
+
+Goal: Provide a reusable query utility that loads the meetings dataset and the Activities & Actions dataset+index, performs free-text + facet filtering, and merges results at query time using loose-link heuristics.
+
+Location: `shared/utils/index-query.ts`
+
+- [ ] Implement types:
+  - `QueryInput { text?: string; facets?: FacetFilters; dateRange?: { from?: string; to?: string } }`
+  - `MergedRecord { meeting?: Meeting; activity?: ActivityAction; linkConfidence?: number; linkReason?: string }`
+- [ ] Accept injected datasets and index (pure function design): `prepare(meetings, activities, activitiesIndex)`
+- [ ] Text search: use Activities & Actions postings lists (intersect per token); for meetings, use simple normalized field scan (or future index if added)
+- [ ] Facet filtering: apply per-dataset facets, then combine
+- [ ] Query-time merge strategy (loose link):
+  - Priority: COP decision token match > date window overlap + associated body match > title similarity
+  - Produce `MergedRecord` with `linkConfidence` and provenance
+- [ ] Stable sort: chronological ascending by `StartDate` then `Title`
+- [ ] API: `prepare(...)`, `query(q)`, `facetCounts(qPartial)` returns counts for both datasets and combined
+- [ ] Unit tests: text-only, facet-only, combined, empty, date-range edges, unknown token, merge heuristics (decision/date/title)
+- [ ] Performance test (mock): ensure near O(k + r) where k = tokens, r = results; no full rescans of Activities & Actions thanks to index
+
+**Acceptance Criteria:**
+
+- Query returns a unified list of `MergedRecord` items for sampled inputs
+- Activities & Actions candidates primarily sourced via index; meetings are incorporated without requiring reindex
+- Link heuristics produce expected matches for decision tokens and reasonable date-window matches
+- Documented usage in roadmap & `index.md`
 
 ## Phase 7 – UI Component
 
 - [ ] Create `components/calendar-activities-actions.vue`
-- [ ] Fetch `public/data/merged.json` client-side with loading/error/empty states
 - [ ] Provide facets: Type, Subject, Status, Subsidiary Body, COP Decision (multi), Date Range (from/to), Action Required (boolean)
 - [ ] Computed filtered list; performance: O(n * facets) acceptable for < 5k rows
 - [ ] Light/dark toggle (CSS vars + `prefers-color-scheme` fallback)
@@ -138,16 +200,16 @@ Location: `shared/util/indexQuery.ts`
 - All columns render correctly with proper formatting
 - Keyboard accessibility fully implemented
 
-## Phase 8 – Testing
+## Phase 8 – Testing (E2E Deferred)
 
 - [ ] Unit tests (Vitest): filter predicate combinations, empty state, provenance presence
 - [ ] Component mount test (shallow) verifies column rendering
-- [ ] E2E (Playwright): load page, apply ≥2 filters, assert count change & persistence on soft navigation
+- [ ] E2E (Playwright): Deferred to Phase 10
 - [ ] Add CI script entries (if CI config present)
 
 **Acceptance Criteria:**
 
-- `npx vitest run` and `npx playwright test` both pass
+- `npx vitest run` passes; Playwright E2E is deferred to Phase 10
 - Coverage > 80% for critical paths
 - Tests handle edge cases (empty data, malformed JSON)
 
@@ -164,12 +226,14 @@ Location: `shared/util/indexQuery.ts`
 - Build completes & bundle size minimal (< ~30KB gzipped, excluding externals)
 - Library can be consumed in other projects without Nuxt dependencies
 
-## Phase 10 – Documentation & Finalization
+## Phase 10 – Documentation, E2E & Finalization
 
 - [ ] Update roadmap checkboxes to reflect completion
 - [ ] Add quick run section (index, merge, tests, build) to README or roadmap
 - [ ] Record any configuration (auth tokens, env vars) needed (none expected for public index, else document)
 - [ ] List deferred backlog items (already in `index.md`)
+- [ ] Implement E2E (Playwright) scenarios: load page, apply ≥2 filters, assert count change & persistence on soft navigation
+- [ ] Ensure `npx playwright test` passes
 
 **Acceptance Criteria:**
 
@@ -190,8 +254,8 @@ npx nuxi task run merge --payload '{"dataPaths":["shared/data/2024-12-01.md"]}'
 # Unit tests
 npx vitest run
 
-# E2E tests
-npx playwright test
+# E2E tests (Deferred to Phase 10)
+# npx playwright test
 
 # Component build (after config added)
 npx vite build -c build/component.vite.config.ts
@@ -229,7 +293,7 @@ npx vite build -c build/component.vite.config.ts
 | `shared/data/unmerged_actions.json` | Unmatched MD rows | ⬜ |
 | `server/tasks/indexer.ts` | Fetch task | ⬜ |
 | `server/tasks/merge.ts` | Merge task | ⬜ |
-| `utils/indexers/scbd/indexMeetings.ts` | Indexing utility | ⬜ |
+| `utils/indexers/scbd/index-activities-actions.ts` | Indexing utility | ⬜ |
 | `components/calendar-activities-actions.vue` | Main component | ⬜ |
 | `tests/unit/calendar-activities-actions.spec.ts` | Unit tests | ⬜ |
 | `tests/e2e/calendar-activities-actions.spec.ts` | E2E tests | ⬜ |
