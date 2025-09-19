@@ -1,4 +1,3 @@
-import type { IndexRecord, MdRecord } from '../../shared/types/records';
 import type { ConsolaInstance } from 'consola';
 
 // File-system adapter abstraction used by indexers

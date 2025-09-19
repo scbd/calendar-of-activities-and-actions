@@ -1,12 +1,12 @@
 import type { Task, TaskEvent } from 'nitropack';
 import { consola } from 'consola';
-import { runIndexingTask } from '../../utils/indexers/scbd/index-meetings';
+import { runIndexingTask } from '../../utils/indexers/scbd/index';
 import type { IndexerPayload } from '../types/tasks';
 
 const indexerTask: Task = {
   meta: {
     name: 'indexer',
-    description: 'Fetch index data, parse MD tables, merge, and write outputs under shared/data',
+    description: 'Scaffolding for indexing data to the index defined in .env - fetches index data, parses MD tables, merges, and writes outputs under shared/data',
   },
   async run(event: TaskEvent) {
     const { payload } = event;
