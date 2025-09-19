@@ -3,10 +3,14 @@ import { consola } from 'consola';
 import { runIndexingTask } from '../../utils/indexers/scbd/index';
 import type { IndexerPayload } from '../types/tasks';
 
+/**
+ * Scaffolding task for indexing data to the index defined in .env
+ * This task handles fetching index data, parsing MD tables, merging, and writing outputs under shared/data
+ */
 const indexerTask: Task = {
   meta: {
     name: 'indexer',
-    description: 'Scaffolding for indexing data to the index defined in .env - fetches index data, parses MD tables, merges, and writes outputs under shared/data',
+    description: 'Scaffolding for indexer tasks to the index defined in .env',
   },
   async run(event: TaskEvent) {
     const { payload } = event;

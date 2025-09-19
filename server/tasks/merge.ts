@@ -2,26 +2,44 @@ import type { Task, TaskEvent } from 'nitropack';
 import { consola } from 'consola';
 import type { MergePayload } from '../types/tasks';
 
-// Scaffolding type for merge results
-// TODO: Define anticipated merge result type with counts, outputs, warnings
+/**
+ * Scaffolding type for merge results
+ * TODO: Define anticipated merge result type with counts, outputs, warnings
+ */
 type MergeResult = {
+  /** Statistical counts from the merge operation */
   counts: {
+    /** Number of index documents processed */
     index: number;
+    /** Number of markdown documents processed */
     md: number;
+    /** Number of successfully merged records */
     merged: number;
+    /** Number of unmerged index records */
     unmergedIndex: number;
+    /** Number of unmerged action records */
     unmergedActions: number;
+    /** Number of ambiguous merge candidates */
     ambiguous: number;
   };
+  /** File paths for generated output files */
   outputs: {
+    /** Path to merged records file */
     merged: string;
+    /** Path to unmerged index records file */
     unmergedIndex: string;
+    /** Path to unmerged actions file */
     unmergedActions: string;
+    /** Path to public merged records file */
     publicMerged: string;
   };
+  /** Warning messages from the merge process */
   warnings: string[];
 };
 
+/**
+ * Scaffolding task for parsing MD tables and merging with raw index JSON into merged outputs
+ */
 const mergeTask: Task = {
   meta: {
     name: 'merge',
