@@ -70,7 +70,7 @@ describe('CalendarActivitiesActions Component', () => {
     expect(component.text()).toContain('October 2025');
     expect(component.text()).toContain('Bangkok, Thailand');
     expect(component.text()).toContain('Confirmed');
-    expect(component.findAll('.links a').length).toBeGreaterThan(0);
+    expect(component.findAll('.links button').length).toBeGreaterThan(0);
   });
 
   it('should render simple pagination controls', async () => {

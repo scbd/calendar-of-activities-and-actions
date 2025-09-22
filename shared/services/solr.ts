@@ -3,6 +3,8 @@
  * This mirrors the approach in the online reporting tool and follows the example-index-call.
  */
 
+import { useQueryIndex } from '../../composables/useQueryIndex';
+
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
 
 export interface SolrSelectBody {
@@ -43,8 +45,6 @@ export interface QueryOptions {
   rows?: number;
   sinceUpdatedDateISO?: string; // ISO string used in updatedDate_dt range filter
 }
-
-const DEFAULT_ENDPOINT = 'https://api.cbd.int/api/v2013/index/select';
 
 export const getTextFieldForLocale = (locale: LocaleCode = 'en'): string => {
   return `text_${locale.toUpperCase()}_txt`;
@@ -99,28 +99,16 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
   return body;
 }
 
-export async function queryIndex<TDoc = Record<string, unknown>>(
-  body: SolrSelectBody,
-  endpoint: string = DEFAULT_ENDPOINT,
-): Promise<SolrResponse<TDoc>> {
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    redirect: 'follow' as RequestRedirect,
-  });
-  if (!res.ok) {
-    throw new Error(`Solr query failed with status ${res.status}`);
-  }
-  return res.json() as Promise<SolrResponse<TDoc>>;
-}
-
 export async function fetchMeetingsUpdatedSince(
   locale: LocaleCode = 'en',
   sinceUpdatedDateISO?: string,
 ) {
   const body = buildSelectBody({ locale, schema: 'meeting', sinceUpdatedDateISO });
-  return queryIndex(body);
+  const { data, error } = useQueryIndex(body);
+  if (error.value) {
+    throw new Error(`Solr query failed: ${error.value.message || error.value}`);
+  }
+  return data.value!;
 }
 
 export function collectAllFieldNames(docs: Array<Record<string, unknown>>): string[] {
