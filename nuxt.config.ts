@@ -8,5 +8,17 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/fonts',
     '@nuxt/test-utils'
-  ]
+  ],
+
+  runtimeConfig: {
+    public: {
+      SCBD_INDEX_ENDPOINT: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT || 'https://api.cbd.int/api/v2013/index/select'
+    }
+  },
+
+  nitro: {
+    externals: {
+      inline: ['shared/']
+    }
+  }
 });

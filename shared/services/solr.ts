@@ -70,9 +70,9 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
     '{!tag=excludeSchemas}(*:* NOT schema_s : (submission))',
   ];
 
-  // updatedDate filter as in the example; if not provided, query everything
+  // startDate filter to show upcoming/future meetings; if not provided, query everything
   const q = options.sinceUpdatedDateISO
-    ? `((updatedDate_dt:[ ${escapeSolrDate(options.sinceUpdatedDateISO)} TO * ]))`
+    ? `((startDate_dt:[ ${escapeSolrDate(options.sinceUpdatedDateISO)} TO * ]))`
     : '*:*';
 
   const body: SolrSelectBody = {
