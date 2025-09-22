@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSelectBody, collectAllFieldNames, getTextFieldForLocale } from '../../shared/services/solr';
+import { buildSelectBody, collectAllFieldNames, getTextFieldForLocale } from 'shared/services/solr';
 
 describe('Solr Service', () => {
   it('buildSelectBody should create default meeting query with locale', () => {

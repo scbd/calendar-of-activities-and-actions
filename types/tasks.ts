@@ -59,4 +59,4 @@ export type MergePayload = {
 }
 
 // Re-export commonly used shared types for server modules
-export type { IndexRecord, MdRecord } from '../../shared/types/records';
+export type { IndexRecord, MdRecord } from 'shared/types/records';

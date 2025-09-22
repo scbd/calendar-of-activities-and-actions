@@ -24,6 +24,9 @@ Key points for Copilot:
 - ensure all new code is internationalized and follows i18n guidelines using @nuxtjs/i18n
 - ensure all new code is optimized for performance, is secure, maintainable, scailable and follows best practices
 - Always use useFetch instead of fetch for HTTP requests in Nuxt applications or useLazyFetch for lazy loading data where appropriate.  Use $fetch on the server.
+- always use https://vue-multiselect.js.org  for select inputs.
+- always use NuxtLink for <a> links within nuxtjs applications, except where the component will be exported alone out of nuxtjs.
+
 
 Memory & voice workflow (for Copilot Chat in VS Code):
 

@@ -1,6 +1,6 @@
 import type { Task, TaskEvent } from 'nitropack';
 import { consola } from 'consola';
-import { runIndexingTask } from '../../../shared/utils/scbd-indexer';
+import { runIndexingTask } from 'shared/utils/scbd-indexer';
 import type { IndexerPayload } from '../types/tasks';
 
 const indexerTask: Task = {

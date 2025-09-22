@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { fileURLToPath } from 'node:url';
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -12,13 +13,28 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      SCBD_INDEX_ENDPOINT: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT || 'https://api.cbd.int/api/v2013/index/select'
+      SCBD_INDEX_ENDPOINT: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT,
+      SCBD_API_BASE: process.env.NUXT_PUBLIC_SCBD_API_BASE
+    }
+  },
+
+  // Ensure imports from the monorepo-like shared folder resolve in both client & server
+  alias: {
+    shared: fileURLToPath(new URL('./shared', import.meta.url))
+  },
+
+  vite: {
+    resolve: {
+      alias: {
+        shared: fileURLToPath(new URL('./shared', import.meta.url))
+      }
     }
   },
 
   nitro: {
     externals: {
-      inline: ['shared/']
+      // Inline the shared workspace so Nitro bundles it
+      inline: ['shared']
     }
   }
 });

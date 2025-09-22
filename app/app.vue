@@ -8,6 +8,8 @@
 
 <script setup lang="ts">
 import CalendarActivitiesActions from './components/calendar-activities-actions.vue';
-
-console.log('App.vue loaded');
 </script>
+
+<style>
+/* Custom styles can go here if needed */
+</style>

@@ -20,6 +20,9 @@ export interface SolrSelectBody {
   'facet.mincount': number;
   'facet.limit': number;
   'facet.pivot': string;
+  // Optional extras when doing multi-field queries (edismax)
+  defType?: 'dismax' | 'edismax';
+  qf?: string; // space-delimited fields for dismax/edismax
 }
 
 export interface SolrResponseHeader {
@@ -44,6 +47,9 @@ export interface QueryOptions {
   start?: number;
   rows?: number;
   sinceUpdatedDateISO?: string; // ISO string used in updatedDate_dt range filter
+  // Where to direct text searches: a single field, or multiple
+  // If multiple, we'll set defType=edismax and populate qf
+  searchField?: string | string[];
 }
 
 export const getTextFieldForLocale = (locale: LocaleCode = 'en'): string => {
@@ -55,12 +61,30 @@ export const getTitleFieldForLocale = (locale: LocaleCode = 'en'): string => {
   return `title_${locale.toUpperCase()}_t`;
 };
 
+/**
+ * Replace _EN occurrences in field names with the provided locale (uppercased).
+ * Accepts a single string or array of strings. If locale is not provided or 'en',
+ * fields are returned unchanged.
+ */
+export function localizeFields(fields?: string | string[], locale?: LocaleCode): string | string[] | undefined {
+  if (!fields) return fields;
+  if (!locale || locale === 'en') return fields;
+
+  const replace = (f: string) => f.replace(/_EN/gi, `_${locale.toUpperCase()}`);
+  if (Array.isArray(fields)) return fields.map(replace);
+  return replace(fields);
+}
+
 export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
   const locale: LocaleCode = options.locale ?? 'en';
   const schema = options.schema ?? 'meeting';
   const start = options.start ?? 0;
   const rows = options.rows ?? 1000;
-  const df = getTextFieldForLocale(locale);
+  // Resolve search field(s)
+  const localizedSearch = localizeFields(options.searchField, locale);
+  const df = typeof localizedSearch === 'string'
+    ? localizedSearch
+    : getTextFieldForLocale(locale);
 
   const fq: string[] = [
     '_state_s:public',
@@ -95,6 +119,12 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
     'facet.limit': 512,
     'facet.pivot': 'schema_s, all_Terms_ss',
   };
+
+  // If multiple search fields were provided, enable edismax and set qf
+  if (Array.isArray(localizedSearch) && localizedSearch.length) {
+    body.defType = 'edismax';
+    body.qf = localizedSearch.join(' ');
+  }
 
   return body;
 }

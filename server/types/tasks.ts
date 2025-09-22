@@ -1,4 +1,4 @@
-import type { IndexRecord, MdRecord } from '../../shared/types/records';
+// Deliberately re-export from shared; no local use to avoid unused warnings
 import type { ConsolaInstance } from 'consola';
 
 // File-system adapter abstraction used by indexers
@@ -32,4 +32,4 @@ export type MergePayload = {
 }
 
 // Re-export commonly used shared types for server modules
-export type { IndexRecord, MdRecord } from '../../shared/types/records';
+export type { IndexRecord, MdRecord } from 'shared/types/records';
