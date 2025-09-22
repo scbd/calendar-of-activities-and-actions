@@ -5,14 +5,14 @@
 
       <div class="card mb-3">
         <div class="card-body">
-          <!-- <CalendarFilters
+          <CalendarFilters
             :available-types="availableTypes"
             :available-subjects="availableSubjects"
             :available-statuses="availableStatuses"
             :available-subsidiary-bodies="availableSubsidiaryBodies"
             :available-cop-decisions="availableCopDecisions"
             @update:filters="handleFiltersUpdate"
-          /> -->
+          />
         </div>
       </div>
 
@@ -67,7 +67,7 @@ import { onMounted, ref, computed, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, buildSelectBody, getTitleFieldForLocale, type MeetingDoc, type LocaleCode, type SolrResponse } from 'shared/services/solr';
 import { useQueryIndex } from '../../composables/useQueryIndex';
-// import CalendarFilters from './calendar-filters.vue';
+import CalendarFilters from './calendar-filters.vue';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
 
@@ -80,27 +80,33 @@ const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
 
 // Filter state
-// interface FilterState {
-//   types: string[];
-//   subjects: string[];
-//   statuses: string[];
-//   subsidiaryBodies: string[];
-//   copDecisions: string[];
-//   startDate: string;
-//   endDate: string;
-//   actionRequired: boolean;
-// }
+interface FilterState {
+  types: string[];
+  subjects: string[];
+  statuses: string[];
+  subsidiaryBodies: string[];
+  copDecisions: string[];
+  globalGoals: string[];
+  globalTargets: string[];
+  countries: string[];
+  startDate: string;
+  endDate: string;
+  actionRequired: boolean;
+}
 
-// const currentFilters = ref<FilterState>({
-//   types: [],
-//   subjects: [],
-//   statuses: [],
-//   subsidiaryBodies: [],
-//   copDecisions: [],
-//   startDate: '',
-//   endDate: '',
-//   actionRequired: false,
-// });
+const currentFilters = ref<FilterState>({
+  types: [],
+  subjects: [],
+  statuses: [],
+  subsidiaryBodies: [],
+  copDecisions: [],
+  globalGoals: [],
+  globalTargets: [],
+  countries: [],
+  startDate: '',
+  endDate: '',
+  actionRequired: false,
+});
 
 // Build query body reactively
 const queryBody = computed(() => buildSelectBody({ 
@@ -144,7 +150,85 @@ interface GroupedItem {
 }
 
 // Update grouped to use filtered docs
-const filteredDocs = computed(() => docs.value);
+const filteredDocs = computed(() => {
+  let filtered = docs.value;
+
+  const filters = currentFilters.value;
+
+  // Apply type filter
+  if (filters.types.length > 0) {
+    filtered = filtered.filter(doc => {
+      const type = doc['type_s'] || doc['type'];
+      return type && filters.types.includes(String(type));
+    });
+  }
+
+  // Apply subject filter
+  if (filters.subjects.length > 0) {
+    filtered = filtered.filter(doc => {
+      const subject = doc['subject_EN_s'] || doc['subject_s'] || doc['subject'];
+      return subject && filters.subjects.includes(String(subject));
+    });
+  }
+
+  // Apply status filter
+  if (filters.statuses.length > 0) {
+    filtered = filtered.filter(doc => {
+      const status = doc['status_s'] || doc['status'];
+      return status && filters.statuses.includes(String(status));
+    });
+  }
+
+  // Apply subsidiary body filter
+  if (filters.subsidiaryBodies.length > 0) {
+    filtered = filtered.filter(doc => {
+      const body = doc['subsidiaryBody_s'] || doc['subsidiaryBody'];
+      return body && filters.subsidiaryBodies.includes(String(body));
+    });
+  }
+
+  // Apply COP decision filter
+  if (filters.copDecisions.length > 0) {
+    filtered = filtered.filter(doc => {
+      const decision = doc['copDecision_s'] || doc['copDecision'];
+      return decision && filters.copDecisions.includes(String(decision));
+    });
+  }
+
+  // Apply date range filter
+  if (filters.startDate || filters.endDate) {
+    filtered = filtered.filter(doc => {
+      const startDate = safeDate(doc['startDate_dt']);
+      const endDate = safeDate(doc['endDate_dt']);
+      const docDate = startDate || endDate;
+
+      if (!docDate) return false;
+
+      if (filters.startDate) {
+        const startFilter = DateTime.fromISO(filters.startDate);
+        if (docDate < startFilter) return false;
+      }
+
+      if (filters.endDate) {
+        const endFilter = DateTime.fromISO(filters.endDate);
+        if (docDate > endFilter) return false;
+      }
+
+      return true;
+    });
+  }
+
+  // Apply action required filter
+  if (filters.actionRequired) {
+    filtered = filtered.filter(doc => {
+      // This would need to be implemented based on the actual data structure
+      // For now, we'll assume there's an 'actionRequired' field
+      return doc['actionRequired_b'] === true || doc['actionRequired'] === true;
+    });
+  }
+
+  return filtered;
+});
 
 const filteredGrouped = computed<GroupedItem[]>(() => {
   console.log('Computing filtered grouped data, filteredDocs.length:', filteredDocs.value.length);
@@ -171,10 +255,56 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
   return result;
 });
 
+// Available filter options computed from docs
+const availableTypes = computed(() => {
+  const types = new Set<string>();
+  docs.value.forEach(doc => {
+    const type = doc['type_s'] || doc['type'];
+    if (type) types.add(String(type));
+  });
+  return Array.from(types).sort();
+});
+
+const availableSubjects = computed(() => {
+  const subjects = new Set<string>();
+  docs.value.forEach(doc => {
+    const subject = doc['subject_EN_s'] || doc['subject_s'] || doc['subject'];
+    if (subject) subjects.add(String(subject));
+  });
+  return Array.from(subjects).sort();
+});
+
+const availableStatuses = computed(() => {
+  const statuses = new Set<string>();
+  docs.value.forEach(doc => {
+    const status = doc['status_s'] || doc['status'];
+    if (status) statuses.add(String(status));
+  });
+  return Array.from(statuses).sort();
+});
+
+const availableSubsidiaryBodies = computed(() => {
+  const bodies = new Set<string>();
+  docs.value.forEach(doc => {
+    const body = doc['subsidiaryBody_s'] || doc['subsidiaryBody'];
+    if (body) bodies.add(String(body));
+  });
+  return Array.from(bodies).sort();
+});
+
+const availableCopDecisions = computed(() => {
+  const decisions = new Set<string>();
+  docs.value.forEach(doc => {
+    const decision = doc['copDecision_s'] || doc['copDecision'];
+    if (decision) decisions.add(String(decision));
+  });
+  return Array.from(decisions).sort();
+});
+
 // Filter update handler
-// const handleFiltersUpdate = (filters: FilterState) => {
-//   currentFilters.value = filters;
-// };
+const handleFiltersUpdate = (filters: FilterState) => {
+  currentFilters.value = filters;
+};
 
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);

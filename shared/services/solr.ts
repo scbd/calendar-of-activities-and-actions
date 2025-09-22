@@ -94,9 +94,9 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
     '{!tag=excludeSchemas}(*:* NOT schema_s : (submission))',
   ];
 
-  // startDate filter to show upcoming/future meetings; if not provided, query everything
+  // by default query everything; when sinceUpdatedDateISO provided, constrain updatedDate_dt
   const q = options.sinceUpdatedDateISO
-    ? `((startDate_dt:[ ${escapeSolrDate(options.sinceUpdatedDateISO)} TO * ]))`
+    ? `updatedDate_dt:[ ${escapeSolrDate(options.sinceUpdatedDateISO)} TO * ]`
     : '*:*';
 
   const body: SolrSelectBody = {
@@ -117,7 +117,7 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
     ],
     'facet.mincount': 1,
     'facet.limit': 512,
-    'facet.pivot': 'schema_s, all_Terms_ss',
+  'facet.pivot': 'schema_s, all_Terms_ss',
   };
 
   // If multiple search fields were provided, enable edismax and set qf

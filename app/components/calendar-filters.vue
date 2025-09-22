@@ -15,7 +15,6 @@
           placeholder="Select types"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -33,7 +32,6 @@
           placeholder="Select global goals"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -51,7 +49,6 @@
           placeholder="Select global targets"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -69,7 +66,6 @@
           placeholder="Select countries"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -87,7 +83,6 @@
           placeholder="Select subjects"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -105,7 +100,6 @@
           placeholder="Select statuses"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -123,7 +117,6 @@
           placeholder="Select subsidiary bodies"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -141,7 +134,6 @@
           placeholder="Select COP decisions"
           label="label"
           track-by="value"
-          @input="updateFilters"
         />
       </div>
 
@@ -200,7 +192,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue';
+import { ref, computed, watch, onMounted, watchEffect, type Ref, type ComputedRef } from 'vue';
+import Multiselect from 'vue-multiselect';
 import type { ThesaurusTerm } from '../../shared/types/thesaurus';
 import { getDomainTerms } from '../../shared/services/thesaurus';
 import { THESAURUS, type ThesaurusDomainIdentifier } from '../../shared/constants/thesaurus';
@@ -395,6 +388,23 @@ syncSelectionWithOptions(selectedCopDecisions, copDecisionOptions);
 syncSelectionWithOptions(selectedGlobalGoals, globalGoalOptions);
 syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
 syncSelectionWithOptions(selectedCountries, countryOptions);
+
+// Emit updates whenever relevant filter state changes
+watchEffect(() => {
+  // touch all filter refs to create dependency
+  void selectedTypes.value;
+  void selectedSubjects.value;
+  void selectedStatuses.value;
+  void selectedSubsidiaryBodies.value;
+  void selectedCopDecisions.value;
+  void selectedGlobalGoals.value;
+  void selectedGlobalTargets.value;
+  void selectedCountries.value;
+  void startDate.value;
+  void endDate.value;
+  void actionRequired.value;
+  updateFilters();
+});
 </script>
 
 <style scoped>

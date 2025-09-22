@@ -11,6 +11,10 @@ export default defineNuxtConfig({
     '@nuxt/test-utils'
   ],
 
+  css: [
+    'vue-multiselect/dist/vue-multiselect.css'
+  ],
+
   runtimeConfig: {
     public: {
       SCBD_INDEX_ENDPOINT: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT,

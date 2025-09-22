@@ -1,15 +1,15 @@
 <template>
-  <div>
-    <h1>App Loaded</h1>
+  <NuxtLayout>
     <NuxtRouteAnnouncer />
-    <CalendarActivitiesActions />
-  </div>
+    <NuxtPage />
+  </NuxtLayout>
+  
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActions from './components/calendar-activities-actions.vue';
+// Root app wrapper; route content is rendered via <NuxtPage />
 </script>
 
 <style>
-/* Custom styles can go here if needed */
+/* Global app-level styles (if any) */
 </style>

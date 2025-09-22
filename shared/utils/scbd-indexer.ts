@@ -105,7 +105,7 @@ export async function runIndexingTask(options: IndexerOptions) {
  * @param opts - Options including since date and logger
  * @returns Promise resolving to empty index response
  */
-async function fetchIndexRaw(opts: { since?: string; logger?: ConsolaInstance }): Promise<{ response: { docs: IndexRecord[] } }> {
+async function _fetchIndexRaw(opts: { since?: string; logger?: ConsolaInstance }): Promise<{ response: { docs: IndexRecord[] } }> {
   const logger = opts.logger || consola;
   logger.info('Scaffolding: would fetch index data from API');
   
@@ -119,7 +119,7 @@ async function fetchIndexRaw(opts: { since?: string; logger?: ConsolaInstance })
  * @param _md - Markdown content to parse (unused in scaffolding)
  * @returns Empty array as placeholder
  */
-function parseMdTable(_md: string): MdRecord[] {
+export function parseMdTable(_md: string): MdRecord[] {
   // Scaffolding implementation - TODO: implement MD table parsing
   return [];
 }
@@ -131,7 +131,7 @@ function parseMdTable(_md: string): MdRecord[] {
  * @param mdRows - Array of markdown records to merge
  * @returns Object containing merged and unmerged records
  */
-function mergeRecords(indexDocs: IndexRecord[], mdRows: MdRecord[]) {
+export function mergeRecords(indexDocs: IndexRecord[], mdRows: MdRecord[]) {
   // Scaffolding implementation - TODO: implement record merging logic
   const merged: MergedRecord[] = [];
   const unmergedIndex: IndexRecord[] = indexDocs;
