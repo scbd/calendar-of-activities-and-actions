@@ -200,6 +200,7 @@ import { THESAURUS, type ThesaurusDomainIdentifier } from '../../shared/constant
 import { activityTypeTerms } from '../../shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from '../../shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from '../../shared/data/cop-decision-terms.js';
+import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel } from '../../shared/utils/subjects';
 
 // Define filter option types
 interface FilterOption {
@@ -261,6 +262,8 @@ const thesaurusSubjectOptions = ref<FilterOption[]>([]);
 const countryOptions = ref<FilterOption[]>([]);
 const globalTargetOptions = ref<FilterOption[]>([]);
 
+const subjectLabelMap = computed(() => buildSubjectLabelMap(thesaurusSubjectOptions.value));
+
 // Computed filter options
 const typeOptions = computed<FilterOption[]>(() =>
   props.availableTypes.map(type => ({ value: type, label: type }))
@@ -268,9 +271,16 @@ const typeOptions = computed<FilterOption[]>(() =>
 
 const subjectOptions = computed<FilterOption[]>(() => {
   if (props.availableSubjects.length > 0) {
-    return props.availableSubjects.map(subject => ({ value: subject, label: subject }));
+    const uniqueSubjects = Array.from(new Set(props.availableSubjects));
+    return uniqueSubjects
+      .map(subject => ({
+        value: subject,
+        label: resolveSubjectLabel(subject, subjectLabelMap.value),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
-  return thesaurusSubjectOptions.value;
+
+  return thesaurusSubjectOptions.value.map(option => ({ value: option.value, label: option.label }));
 });
 
 function statusKeyToLabel(status: string): string {
@@ -319,7 +329,7 @@ const activityTypeOptions = computed<FilterOption[]>(() =>
 
 onMounted(async () => {
   await Promise.all([
-    loadDomainOptions(THESAURUS.CBD_SUBJECTS).then(options => {
+    loadSubjectOptions().then(options => {
       thesaurusSubjectOptions.value = options;
     }),
     loadDomainOptions(THESAURUS.COUNTRIES).then(options => {

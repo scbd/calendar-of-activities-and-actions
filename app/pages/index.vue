@@ -1,10 +1,10 @@
 <template>
   <div>
     <NuxtRouteAnnouncer />
-    <CalendarActivitiesActions />
+    <CalendarActivitiesActionsV2 />
   </div>
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActions from '../components/calendar-activities-actions.vue';
+import CalendarActivitiesActionsV2 from '../components/calendar-activities-actions-v2.vue';
 </script>

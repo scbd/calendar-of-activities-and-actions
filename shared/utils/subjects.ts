@@ -63,7 +63,7 @@ export async function loadSubjectOptions(): Promise<SubjectOption[]> {
   return options;
 }
 
-export function buildSubjectLabelMap(options: SubjectOption[]): Record<string, string> {
+export function buildSubjectLabelMap(options: Array<{ value: string; label: string }>): Record<string, string> {
   return options.reduce<Record<string, string>>((accumulator, option) => {
     accumulator[option.value] = option.label;
     return accumulator;

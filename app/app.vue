@@ -4,6 +4,8 @@
       <nav class="nav">
         <NuxtLink class="nav-link" to="/">Home</NuxtLink>
         <NuxtLink class="nav-link" to="/review-designs">Review Designs</NuxtLink>
+        <NuxtLink class="nav-link" to="/suggestion-1">Suggestion 1</NuxtLink>
+        <NuxtLink class="nav-link" to="/suggestion-2">Suggestion 2</NuxtLink>
       </nav>
     </header>
     <NuxtRouteAnnouncer />
