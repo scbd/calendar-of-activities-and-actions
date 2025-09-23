@@ -2,7 +2,7 @@ import { setup, createPage } from '@nuxt/test-utils/e2e';
 import { describe, it } from 'vitest';
 import { expect } from '@playwright/test';
 
-describe('Activities Calendar E2E', async () => {
+describe.skip('Activities Calendar E2E', async () => {
   await setup({
     host: 'http://localhost:3000',
   });

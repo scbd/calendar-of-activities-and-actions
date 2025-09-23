@@ -3,7 +3,7 @@ export interface Dictionary<T> {
 }
 
 // Localized string dictionary, e.g., { en: 'Title', fr: 'Titre' }
-export interface ELstring extends Dictionary<string> {}
+export type ELstring = Dictionary<string>;
 
 export interface ThesaurusTerm {
   termId: number;

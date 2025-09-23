@@ -18,18 +18,18 @@
         />
       </div>
 
-      <!-- Global Goals Filter -->
+      <!-- Activity Types Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="global-goals-filter" class="form-label">Global Goals</label>
+        <label for="activity-types-filter" class="form-label">Activity Types</label>
         <Multiselect
-          id="global-goals-filter"
-          v-model="selectedGlobalGoals"
-          :options="globalGoalOptions"
+          id="activity-types-filter"
+          v-model="selectedActivityTypes"
+          :options="activityTypeOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select global goals"
+          placeholder="Select activity types"
           label="label"
           track-by="value"
         />
@@ -197,6 +197,9 @@ import Multiselect from 'vue-multiselect';
 import type { ThesaurusTerm } from '../../shared/types/thesaurus';
 import { getDomainTerms } from '../../shared/services/thesaurus';
 import { THESAURUS, type ThesaurusDomainIdentifier } from '../../shared/constants/thesaurus';
+import { activityTypeTerms } from '../../shared/data/activity-type-terms.js';
+import { subsidiaryBodyTerms } from '../../shared/data/subsidiary-body-terms.js';
+import { copDecisionTerms } from '../../shared/data/cop-decision-terms.js';
 
 // Define filter option types
 interface FilterOption {
@@ -233,7 +236,7 @@ interface FilterState {
   statuses: string[];
   subsidiaryBodies: string[];
   copDecisions: string[];
-  globalGoals: string[];
+  activityTypes: string[];
   globalTargets: string[];
   countries: string[];
   startDate: string;
@@ -247,7 +250,7 @@ const selectedSubjects = ref<string[]>([]);
 const selectedStatuses = ref<string[]>([]);
 const selectedSubsidiaryBodies = ref<string[]>([]);
 const selectedCopDecisions = ref<string[]>([]);
-const selectedGlobalGoals = ref<string[]>([]);
+const selectedActivityTypes = ref<string[]>([]);
 const selectedGlobalTargets = ref<string[]>([]);
 const selectedCountries = ref<string[]>([]);
 const startDate = ref<string>('');
@@ -256,7 +259,6 @@ const actionRequired = ref<boolean>(false);
 
 const thesaurusSubjectOptions = ref<FilterOption[]>([]);
 const countryOptions = ref<FilterOption[]>([]);
-const globalGoalOptions = ref<FilterOption[]>([]);
 const globalTargetOptions = ref<FilterOption[]>([]);
 
 // Computed filter options
@@ -271,16 +273,48 @@ const subjectOptions = computed<FilterOption[]>(() => {
   return thesaurusSubjectOptions.value;
 });
 
+function statusKeyToLabel(status: string): string {
+  if (!status) return '';
+  const raw = String(status).trim();
+  // Explicit mapping for known keys
+  if (raw.toUpperCase() === 'CONFIRM') return 'Confirmed';
+  // If already mixed case (likely a label), return as-is
+  const isAllCapsOrUnderscore = /^[A-Z0-9_]+$/.test(raw);
+  if (!isAllCapsOrUnderscore) return raw;
+  // Convert KEY_NAME to "Key name"
+  return raw
+    .toLowerCase()
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 const statusOptions = computed<FilterOption[]>(() =>
-  props.availableStatuses.map(status => ({ value: status, label: status }))
+  props.availableStatuses.map(statusKey => ({ value: statusKey, label: statusKeyToLabel(statusKey) }))
 );
 
-const subsidiaryBodyOptions = computed<FilterOption[]>(() =>
-  props.availableSubsidiaryBodies.map(body => ({ value: body, label: body }))
-);
+const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
+  if (props.availableSubsidiaryBodies.length > 0) {
+    return props.availableSubsidiaryBodies.map(body => ({ value: body, label: body }));
+  }
+  return subsidiaryBodyTerms
+    .map(term => mapLocalCalendarTermToOption(term))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
 
-const copDecisionOptions = computed<FilterOption[]>(() =>
-  props.availableCopDecisions.map(decision => ({ value: decision, label: decision }))
+const copDecisionOptions = computed<FilterOption[]>(() => {
+  if (props.availableCopDecisions.length > 0) {
+    return props.availableCopDecisions.map(decision => ({ value: decision, label: decision }));
+  }
+  return copDecisionTerms
+    .map(term => mapLocalCalendarTermToOption(term))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+const activityTypeOptions = computed<FilterOption[]>(() =>
+  activityTypeTerms
+    .map(term => mapLocalCalendarTermToOption(term))
+    .sort((a, b) => a.label.localeCompare(b.label))
 );
 
 onMounted(async () => {
@@ -290,9 +324,6 @@ onMounted(async () => {
     }),
     loadDomainOptions(THESAURUS.COUNTRIES).then(options => {
       countryOptions.value = options;
-    }),
-    loadDomainOptions(THESAURUS.GBF_GLOBAL_GOALS).then(options => {
-      globalGoalOptions.value = options;
     }),
     loadDomainOptions(THESAURUS.GBF_GLOBAL_TARGETS).then(options => {
       globalTargetOptions.value = options;
@@ -307,7 +338,7 @@ function updateFilters(): void {
     statuses: selectedStatuses.value,
     subsidiaryBodies: selectedSubsidiaryBodies.value,
     copDecisions: selectedCopDecisions.value,
-    globalGoals: selectedGlobalGoals.value,
+    activityTypes: selectedActivityTypes.value,
     globalTargets: selectedGlobalTargets.value,
     countries: selectedCountries.value,
     startDate: startDate.value,
@@ -324,7 +355,7 @@ function clearFilters(): void {
   selectedStatuses.value = [];
   selectedSubsidiaryBodies.value = [];
   selectedCopDecisions.value = [];
-  selectedGlobalGoals.value = [];
+  selectedActivityTypes.value = [];
   selectedGlobalTargets.value = [];
   selectedCountries.value = [];
   startDate.value = '';
@@ -362,6 +393,18 @@ async function loadDomainOptions(domain: ThesaurusDomainIdentifier): Promise<Fil
   }
 }
 
+interface LocalCalendarTerm {
+  identifier: string;
+  name?: string;
+  title?: Record<string, string>;
+}
+
+function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
+  const label = (term.title && term.title['en']) || term.name || term.identifier;
+  const value = term.name || term.identifier;
+  return { value, label };
+}
+
 function syncSelectionWithOptions(
   selection: Ref<string[]>,
   options: Ref<FilterOption[]> | ComputedRef<FilterOption[]>,
@@ -385,7 +428,7 @@ syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
 syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);
 syncSelectionWithOptions(selectedCopDecisions, copDecisionOptions);
-syncSelectionWithOptions(selectedGlobalGoals, globalGoalOptions);
+syncSelectionWithOptions(selectedActivityTypes, activityTypeOptions);
 syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
 syncSelectionWithOptions(selectedCountries, countryOptions);
 
@@ -397,7 +440,7 @@ watchEffect(() => {
   void selectedStatuses.value;
   void selectedSubsidiaryBodies.value;
   void selectedCopDecisions.value;
-  void selectedGlobalGoals.value;
+  void selectedActivityTypes.value;
   void selectedGlobalTargets.value;
   void selectedCountries.value;
   void startDate.value;

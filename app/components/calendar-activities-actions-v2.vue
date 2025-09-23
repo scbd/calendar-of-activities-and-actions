@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer</h2>
+      <h2>Activities & Actions Explorer - Accordion View</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -23,19 +23,53 @@
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
-          <div v-for="item in group.items" :key="item._id" class="border-bottom py-2">
-            <div class="row">
-              <div class="col-12 col-md-4">
-                <div>
-                  <strong>{{ formatDateRange(item) }}</strong><br>
-                  <span v-if="venue(item)">{{ venue(item) }}</span><br>
-                  <i><b>{{ status(item) }}</b></i>
-                </div>
-              </div>
-              <div class="col-12 col-md-8">
-                <div>
-                  <div class="meeting-title">{{ title(item) }}</div>
-                  <div v-if="docLink(item)" class="links"><a :href="docLink(item)">Documents »</a></div>
+          <div :id="`accordion-${group.key}`" class="accordion">
+            <div v-for="item in group.items" :key="item._id" class="accordion-item">
+              <h2 :id="`heading-${item._id}`" class="accordion-header">
+                <button
+                  class="accordion-button"
+                  :class="{ collapsed: !openItems[item._id] }"
+                  type="button"
+                  :aria-expanded="openItems[item._id] ? 'true' : 'false'"
+                  :aria-controls="`collapse-${item._id}`"
+                  @click="toggleAccordion(item._id)"
+                >
+                  <div class="w-100">
+                    <div class="d-flex justify-content-between">
+                      <span class="flex-grow-1"><strong>{{ title(item) }}</strong></span>
+                      <span class="badge bg-secondary ms-2">{{ item.type_s }}</span>
+                    </div>
+                    <div class="small text-muted">{{ formatDateRange(item) }}</div>
+                  </div>
+                </button>
+              </h2>
+              <div
+                :id="`collapse-${item._id}`"
+                class="accordion-collapse collapse"
+                :class="{ show: openItems[item._id] }"
+                :aria-labelledby="`heading-${item._id}`"
+              >
+                <div class="accordion-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Status:</strong> <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span></p>
+                      <p v-if="item.actionRequired_b"><strong>Action Required by Parties:</strong> Yes</p>
+                      <p v-if="item.description_t"><strong>Description:</strong> {{ item.description_t }}</p>
+                      <p v-if="item.statusNarrative_t"><strong>Status Narrative:</strong> {{ item.statusNarrative_t }}</p>
+                    </div>
+                    <div class="col-md-6">
+                      <p v-if="item.subjects_ss && item.subjects_ss.length"><strong>Subjects:</strong> {{ item.subjects_ss.join(', ') }}</p>
+                      <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                      <p v-if="item.copDecision_s"><strong>COP Decision:</strong> {{ item.copDecision_s }}</p>
+                      <p v-if="item.copParagraph_s"><strong>COP Paragraph:</strong> {{ item.copParagraph_s }}</p>
+                      <p v-if="item.responsibleUnit_s"><strong>Responsible Unit:</strong> {{ item.responsibleUnit_s }}</p>
+                      <p v-if="item.responsibleOfficer_s"><strong>Responsible Officer:</strong> {{ item.responsibleOfficer_s }}</p>
+                    </div>
+                  </div>
+                  <div v-if="item.relatedDocuments_ss && item.relatedDocuments_ss.length" class="mt-3">
+                    <strong>Related Documents:</strong>
+                    <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -46,16 +80,6 @@
           <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Prev</button>
           <span>Page 1 / 1</span>
           <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
-        </div>
-
-        <div class="card mt-4">
-          <div class="card-header">Debug: Collected field names ({{ allFieldNames.length }})</div>
-          <div class="card-body">
-            <div class="small text-muted">Locale: {{ locale.toUpperCase() }}</div>
-            <ul class="mb-0">
-              <li v-for="f in allFieldNames" :key="f"><code>{{ f }}</code></li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
@@ -75,10 +99,16 @@ type AnyDoc = MeetingDoc & { [key: string]: unknown };
 const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
-// Locale will be dynamic later; default to 'en' for now
 const locale = ref<LocaleCode>('en');
 
-// Filter state
+const openItems = ref<Record<string, boolean>>({});
+
+const toggleAccordion = (itemId: string) => {
+  // This will close other items in the same group if you want a traditional accordion behavior
+  // For now, it allows multiple items to be open.
+  openItems.value[itemId] = !openItems.value[itemId];
+};
+
 interface FilterState {
   types: string[];
   subjects: string[];
@@ -106,6 +136,7 @@ const currentFilters = ref<FilterState>({
   endDate: '',
   actionRequired: false,
 });
+
 watchEffect(() => {
   if (docs.value.length === 0) {
     allFieldNames.value = [];
@@ -153,7 +184,6 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
 
   const id = String(record['_id'] ?? record['id'] ?? record['identifier_s'] ?? `meeting-${index}`);
 
-  // Derive normalized status key/label if present
   const rawStatus = (record['status_s'] ?? record['status']) as string | undefined;
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
@@ -235,8 +265,8 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
     actionRequired_b: row['Action Required by Parties']?.toUpperCase() === 'Y',
     subjects_ss: subjects,
     subject_EN_s: subjects.join(', '),
-    status_s: statusLabel,
-    statusKey_s: statusKey ?? null,
+  status_s: statusLabel,
+  statusKey_s: statusKey ?? null,
     statusNarrative_t: row['Status_narrative'] || null,
     startDate_dt: startDate,
     endDate_dt: endDate,
@@ -264,9 +294,7 @@ function normalizeStatusKey(label: string | undefined): string | null {
   if (!label) return null;
   const v = String(label).trim().toLowerCase();
   if (!v) return null;
-  // canonical mapping
   if (v === 'confirmed') return 'CONFIRM';
-  // default: keep original semantics by uppercasing words and replacing spaces with underscores
   return v.replace(/\s+/g, '_').toUpperCase();
 }
 
@@ -358,13 +386,11 @@ function getDocCopDecision(doc: AnyDoc): string | null {
   const decision = (doc as Record<string, unknown>).copDecision_s ?? (doc as Record<string, unknown>).copDecision;
   return decision ? String(decision) : null;
 }
-// Update grouped to use filtered docs
+
 const filteredDocs = computed(() => {
   let filtered = docs.value;
-
   const filters = currentFilters.value;
 
-  // Apply type filter
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
@@ -372,7 +398,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply activity types filter (mirrors type field for now)
   if (filters.activityTypes.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
@@ -380,7 +405,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply subject filter
   if (filters.subjects.length > 0) {
     filtered = filtered.filter(doc => {
       const subjects = getDocSubjects(doc);
@@ -388,7 +412,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply status filter
   if (filters.statuses.length > 0) {
     filtered = filtered.filter(doc => {
       const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
@@ -396,7 +419,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply subsidiary body filter
   if (filters.subsidiaryBodies.length > 0) {
     filtered = filtered.filter(doc => {
       const bodies = getDocSubsidiaryBodies(doc);
@@ -404,7 +426,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply COP decision filter
   if (filters.copDecisions.length > 0) {
     filtered = filtered.filter(doc => {
       const decision = getDocCopDecision(doc);
@@ -412,7 +433,6 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply date range filter
   if (filters.startDate || filters.endDate) {
     filtered = filtered.filter(doc => {
       const startDate = safeDate(doc['startDate_dt']);
@@ -435,11 +455,8 @@ const filteredDocs = computed(() => {
     });
   }
 
-  // Apply action required filter
   if (filters.actionRequired) {
     filtered = filtered.filter(doc => {
-      // This would need to be implemented based on the actual data structure
-      // For now, we'll assume there's an 'actionRequired' field
       return doc['actionRequired_b'] === true || doc['actionRequired'] === true;
     });
   }
@@ -448,7 +465,7 @@ const filteredDocs = computed(() => {
 });
 
 const filteredGrouped = computed<GroupedItem[]>(() => {
-  const buckets = new Map<string, { label: string; items: AnyDoc[] }>();
+  const buckets = new Map<string, { label: string; items: AnyDoc }>();
   for (const d of filteredDocs.value) {
     const { startDate_dt, endDate_dt } = d as MeetingDoc;
     const iso = startDate_dt || endDate_dt;
@@ -463,7 +480,6 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
     .map(([key, v]) => ({ key, label: v.label, items: v.items }));
 });
 
-// Available filter options computed from docs
 const availableTypes = computed(() => {
   const types = new Set<string>();
   docs.value.forEach(doc => {
@@ -507,7 +523,6 @@ const availableCopDecisions = computed(() => {
   return Array.from(decisions).sort();
 });
 
-// Filter update handler
 const handleFiltersUpdate = (filters: FilterState) => {
   currentFilters.value = filters;
 };
@@ -517,16 +532,6 @@ function title(d: AnyDoc): string {
   return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
 }
 
-function venue(d: AnyDoc): string | null {
-  const city = (d['city_EN_s'] || d['city_s']) as string | undefined;
-  // country fields can be localized; fallback to English
-  const country = (d['country_EN_s'] || d['country_s']) as string | undefined;
-  if (city && country) return `${city}, ${country}`;
-  if (city) return city;
-  if (country) return country;
-  return null;
-}
-
 function status(d: AnyDoc): string {
   const label = d['status_s'];
   if (typeof label === 'string' && label.trim()) return label;
@@ -534,15 +539,13 @@ function status(d: AnyDoc): string {
   return normalizeStatusLabel(key ?? null);
 }
 
-function docLink(d: AnyDoc): string | null {
-  // Prefer meetingCode/identifier to construct path if links array not present
-  const links = d['links_ss'] as string[] | undefined;
-  if (Array.isArray(links) && links.length > 0) return links[0];
-  const code = (d['meetingCode_s'] || d['identifier_s']) as string | undefined;
-  if (!code) return null;
-  if (String(d['source']).startsWith('markdown')) return null;
-  if (code.startsWith('markdown-')) return null;
-  return `/meetings/${code}`;
+function statusColor(d: AnyDoc): string {
+    const s = status(d).toLowerCase();
+    if (s === 'completed') return 'success';
+    if (s === 'confirmed') return 'primary';
+    if (s === 'to be confirmed') return 'warning';
+    if (s === 'ongoing') return 'info';
+    return 'secondary';
 }
 
 function formatDateRange(d: AnyDoc): string {
@@ -570,79 +573,15 @@ function safeDate(v: unknown): DateTime | null {
 }
 </script>
 <style lang="scss">
-// Import Bootstrap and shared styles globally for this component context
 @use '../assets/styles/main.scss' as *;
 </style>
 <style scoped>
-/* Custom component styles that extend Bootstrap */
-
-/* CBD-inspired color variables from official CSS */
-:root {
-  --primary-color: #0079C0; /* CBD primary blue */
-  --secondary-color: #A8CF45; /* CBD secondary green */
-  --border-color: #dee2e6; /* Light gray borders */
-  --light-bg: #f8f9fa; /* Light background */
-  --white: #fff;
-  --body-color: #1D1D1D; /* Body text color */
-  --link-color: #0079C0; /* Link color */
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-/* Custom styles that aren't in Bootstrap */
 .dgSep {
   padding: 0.5rem 0;
   border-top: 1px solid #e5e5e5;
   border-bottom: 1px solid #e5e5e5;
   margin: 1rem 0;
 }
-
-.links a {
-  background-color: #0c9d4d;
-  display: inline-block;
-  padding: 5px 7px;
-  border-radius: 3px;
-  color: white;
-  margin-left: 3px;
-  margin-right: 3px;
-  text-decoration: none;
-}
-
-.links a:hover {
-  text-decoration: underline;
-}
-
-code {
-  font-size: 0.85rem;
-  color: #e83e8c;
-  word-wrap: break-word;
-}
-
-/* Meeting title styling to match CBD website */
-.meeting-title {
-  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 0.4px;
-  box-sizing: border-box;
-  display: block;
-  color: #1D1D1D; /* Body text color matching CBD site */
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-  height: 75px;
-  overflow: hidden;
-}
-
-/* CBD website inspired styles for headings and rows */
-h2 {
-  letter-spacing: 0.025em;
-  color: #009b48;
-  margin-bottom: .5rem;
-  font-family: inherit;
-  font-weight: 500;
-  line-height: 1.2;
-  box-sizing: border-box;
-}
-
 h3 {
   font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
@@ -652,21 +591,5 @@ h3 {
   margin-top: 0px;
   color: #009b48;
   padding: 0.5rem 0;
-}
-
-.border-bottom {
-  border-bottom: 1px solid #dee2e6;
-  padding: 0.5rem 0;
-  &:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .col-md-4, .col-md-8 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
 }
 </style>
