@@ -1,16 +1,32 @@
 <template>
-  <div>
-    <h1>Review New Component Designs</h1>
-    <hr>
-    <h2>Suggestion 1: Accordion View</h2>
-    <CalendarActivitiesActionsV2 />
-    <hr>
-    <h2>Suggestion 2: Detailed Row View</h2>
-    <CalendarActivitiesActionsV3 />
-  </div>
+  <div class="visually-hidden" aria-live="polite">Redirecting…</div>
+  <!-- Page removed: redirecting to home -->
+  <!-- DEV-770: Review Designs route deprecated -->
+  <!-- i18n could be applied in future if needed -->
+  <!-- Keeping minimal template for accessibility -->
+  
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActionsV2 from '~/components/calendar-activities-actions-v2.vue';
-import CalendarActivitiesActionsV3 from '~/components/calendar-activities-actions-v3.vue';
+import { navigateTo } from '#imports';
+
+definePageMeta({
+  middleware: [
+    () => navigateTo('/')
+  ],
+});
 </script>
+
+<style scoped>
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+</style>
