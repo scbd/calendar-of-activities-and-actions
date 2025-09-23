@@ -11,6 +11,8 @@
             :available-statuses="availableStatuses"
             :available-subsidiary-bodies="availableSubsidiaryBodies"
             :available-cop-decisions="availableCopDecisions"
+            :preloaded-country-options="availableCountryOptions"
+            :preloaded-global-target-options="availableGlobalTargetOptions"
             @update:filters="handleFiltersUpdate"
           />
         </div>
@@ -20,10 +22,10 @@
       <div v-else>
         <div v-if="filteredGrouped.length === 0" class="alert alert-warning">No results</div>
 
-        <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
+  <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
-          <div v-for="item in group.items" :key="item._id" class="border-bottom py-2">
+          <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="border-bottom py-2">
             <div class="row">
               <div class="col-12 col-md-4">
                 <div>
@@ -35,17 +37,18 @@
               <div class="col-12 col-md-8">
                 <div>
                   <div class="meeting-title">{{ title(item) }}</div>
-                  <div v-if="docLink(item)" class="links"><a :href="docLink(item)">Documents »</a></div>
+                  <div
+                    v-if="displaySubjectLabels(item).length"
+                    class="small text-muted mt-1"
+                  >
+                    <strong>Subjects:</strong>
+                    {{ displaySubjectLabels(item).join(', ') }}
+                  </div>
+                  <div v-if="docLink(item)" class="links"><a :href="docLink(item) || undefined">Documents »</a></div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Prev</button>
-          <span>Page 1 / 1</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
         </div>
 
         <div class="card mt-4">
@@ -66,9 +69,12 @@
 import { onMounted, ref, computed, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
-import { meetings as meetingSnapshot } from '../../shared/data/meetings.js';
-import calendarMarkdownRaw from '../../shared/data/2024-12-01.md?raw';
+import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
+import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
 import CalendarFilters from './calendar-filters.vue';
+// Load markdown content at build-time for both client and server bundles
+const __mdModulesA = import.meta.glob('shared/data/2024-12-01.md', { as: 'raw', eager: true }) as Record<string, string>;
+const calendarMarkdownRaw = Object.values(__mdModulesA)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
 
@@ -77,6 +83,14 @@ const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 // Locale will be dynamic later; default to 'en' for now
 const locale = ref<LocaleCode>('en');
+
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+const subjectOptionsCache = ref<SubjectOption[]>([]);
+const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
 
 // Filter state
 interface FilterState {
@@ -114,8 +128,22 @@ watchEffect(() => {
   allFieldNames.value = collectAllFieldNames(docs.value as Array<Record<string, unknown>>);
 });
 
+async function ensureSubjectLabels(): Promise<void> {
+  if (subjectOptionsCache.value.length > 0) {
+    return;
+  }
+
+  try {
+    subjectOptionsCache.value = await loadSubjectOptions();
+  } catch (error) {
+    console.error('Failed to load subject options', error);
+    subjectOptionsCache.value = [];
+  }
+}
+
 onMounted(() => {
   loadSnapshotData();
+  void ensureSubjectLabels();
 });
 
 interface GroupedItem {
@@ -125,6 +153,11 @@ interface GroupedItem {
 }
 
 type SnapshotMeeting = (typeof meetingSnapshot)[number];
+
+const RegionDisplayNames = (Intl as typeof Intl & { DisplayNames?: typeof Intl.DisplayNames }).DisplayNames;
+const regionDisplayNames = typeof RegionDisplayNames === 'function'
+  ? new RegionDisplayNames(['en'], { type: 'region' })
+  : null;
 
 function loadSnapshotData(): void {
   loading.value = true;
@@ -187,8 +220,9 @@ function parseMarkdownTable(raw: string): MarkdownRow[] {
   if (lines.length < 3) {
     return [];
   }
-
-  const headerCells = lines[0].split('|').map(cell => cell.trim());
+  const headerLine = lines[0];
+  if (!headerLine) return [];
+  const headerCells = headerLine.split('|').map(cell => cell.trim());
   const header = headerCells.slice(1, headerCells.length - 1);
   const dataLines = lines.slice(2);
   const rows: MarkdownRow[] = [];
@@ -198,7 +232,8 @@ function parseMarkdownTable(raw: string): MarkdownRow[] {
     if (cells.length < header.length + 2) continue;
     const row: MarkdownRow = {};
     for (let i = 0; i < header.length; i += 1) {
-      row[header[i]] = cells[i + 1] ?? '';
+      const key = header[i]!;
+      row[key] = cells[i + 1] ?? '';
     }
     if (!row.Title) continue;
     rows.push(row);
@@ -213,6 +248,7 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
   const relatedDocs = splitValues(row['Related_documents']);
   const actors = splitValues(row['Actors']);
   const targets = splitValues(row['GBF_Targets']);
+  const countries = splitValues(row['Country'] || row['Countries']);
 
   const startDate = parseFlexibleDate(row['Startdate']);
   const endDate = parseFlexibleDate(row['Enddate']);
@@ -231,29 +267,33 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
     source: 'markdown:2024-12-01',
     title_EN_t: row['Title'],
     description_t: row['Description'] || null,
-    type_s: row['Type'] || 'Activity',
+  type_s: String(row['Type'] || 'Activity'),
     actionRequired_b: row['Action Required by Parties']?.toUpperCase() === 'Y',
     subjects_ss: subjects,
-    subject_EN_s: subjects.join(', '),
+  subject_EN_s: subjects.join(', '),
     status_s: statusLabel,
     statusKey_s: statusKey ?? null,
     statusNarrative_t: row['Status_narrative'] || null,
-    startDate_dt: startDate,
-    endDate_dt: endDate,
-    subsidiaryBody_s: bodies[0] ?? null,
+  startDate_dt: startDate ?? undefined,
+  endDate_dt: endDate ?? undefined,
+  subsidiaryBody_s: bodies[0] ?? undefined,
     subsidiaryBodies_ss: bodies,
-    copDecision_s: row['COPDecision'] || null,
-    copParagraph_s: row['COPParagraph_no'] || null,
-    responsibleUnit_s: row['Responsible_Unit'] || null,
-    responsibleOfficer_s: row['Responsible_Officer'] || null,
-    fundingSource_s: row['Funding_source'] || null,
-    fundingAllocated_s: row['Funding_allocated'] || null,
+  copDecision_s: row['COPDecision'] || undefined,
+  copParagraph_s: row['COPParagraph_no'] || undefined,
+  responsibleUnit_s: row['Responsible_Unit'] || undefined,
+  responsibleOfficer_s: row['Responsible_Officer'] || undefined,
+  fundingSource_s: row['Funding_source'] || undefined,
+  fundingAllocated_s: row['Funding_allocated'] || undefined,
     actors_ss: actors,
-    actorsComments_t: row['Actors_comments'] || null,
+  actorsComments_t: row['Actors_comments'] || undefined,
     gbfTargets_ss: targets,
     relatedDocuments_ss: relatedDocs,
     links_ss: [],
-    outcome_s: row['Outcome'] || null,
+  country_s: countries[0] ?? undefined,
+    countries_ss: countries,
+  country_EN_s: countries[0] ?? undefined,
+    countries_EN_ss: countries,
+    outcome_s: row['Outcome'] || undefined,
   };
 
   return doc;
@@ -307,7 +347,7 @@ function parseFlexibleDate(value: string | undefined): string | null {
 
   const yearMatch = normalized.match(/^(\d{4})$/);
   if (yearMatch) {
-    const year = Number.parseInt(yearMatch[1], 10);
+    const year = Number.parseInt(yearMatch[1]!, 10);
     const dt = DateTime.utc(year, 1, 1);
     if (dt.isValid) return dt.toISO();
   }
@@ -331,6 +371,25 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-')
     || 'item';
+}
+
+function humanizeIdentifier(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const hasMixedCase = /[a-z]/.test(trimmed) && /[A-Z]/.test(trimmed);
+  if (hasMixedCase) {
+    return trimmed;
+  }
+
+  return trimmed
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : '')
+    .join(' ');
 }
 
 function getDocSubjects(doc: AnyDoc): string[] {
@@ -357,6 +416,110 @@ function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
 function getDocCopDecision(doc: AnyDoc): string | null {
   const decision = (doc as Record<string, unknown>).copDecision_s ?? (doc as Record<string, unknown>).copDecision;
   return decision ? String(decision) : null;
+}
+
+interface ValueLabelPair {
+  value: string;
+  label?: string | null;
+}
+
+function collectValueLabelPairs(value: unknown, label?: unknown): ValueLabelPair[] {
+  const values = splitValues(value);
+  const labels = splitValues(label);
+
+  if (values.length === 0 && labels.length > 0) {
+    const fallback = labels[0];
+    return fallback ? [{ value: fallback, label: fallback }] : [];
+  }
+
+  return values.map((val, index) => ({
+    value: val,
+    label: labels[index] ?? labels[0] ?? null,
+  }));
+}
+
+function collectGlobalTargetEntries(doc: AnyDoc): ValueLabelPair[] {
+  const record = doc as Record<string, unknown>;
+  return [
+    ...collectValueLabelPairs(record['gbfTargets_ss'], record['gbfTargets_EN_ss']),
+    ...collectValueLabelPairs(record['globalTargets_ss'], record['globalTargets_EN_ss']),
+    ...collectValueLabelPairs(record['gbfTarget_ss'], record['gbfTarget_EN_ss']),
+    ...collectValueLabelPairs(record['gbfTargets_s'], record['gbfTargets_EN_s']),
+    ...collectValueLabelPairs(record['gbfTarget_s'], record['gbfTarget_EN_s']),
+    ...collectValueLabelPairs(record['gbfTargets'], record['gbfTargets_EN']),
+    ...collectValueLabelPairs(record['GBF_Targets'], record['GBF_Targets']),
+  ];
+}
+
+function collectCountryEntries(doc: AnyDoc): ValueLabelPair[] {
+  const record = doc as Record<string, unknown>;
+  return [
+    ...collectValueLabelPairs(record['country_s'], record['country_EN_s']),
+    ...collectValueLabelPairs(record['countryCode_s'], record['countryName_s']),
+    ...collectValueLabelPairs(record['country_ss'], record['country_EN_ss']),
+    ...collectValueLabelPairs(record['countries_ss'], record['countries_EN_ss']),
+    ...collectValueLabelPairs(record['countryCodes_ss'], record['countryNames_ss']),
+    ...collectValueLabelPairs(record['country_ISO2_ss'], record['countryNames_ss']),
+    ...collectValueLabelPairs(record['countries_s'], record['countries_EN_ss']),
+    ...collectValueLabelPairs(record['hostCountry_s'], record['hostCountry_EN_s']),
+    ...collectValueLabelPairs(record['hostCountries_ss'], record['hostCountries_EN_ss']),
+    ...collectValueLabelPairs(record['country_EN_s'], record['country_EN_s']),
+    ...collectValueLabelPairs(record['countries_EN_ss'], record['countries_EN_ss']),
+  ];
+}
+
+function getDocGlobalTargets(doc: AnyDoc): string[] {
+  const values = new Set<string>();
+  collectGlobalTargetEntries(doc).forEach(entry => {
+    if (entry.value) {
+      values.add(entry.value);
+    }
+  });
+  return Array.from(values);
+}
+
+function getDocCountries(doc: AnyDoc): string[] {
+  const values = new Set<string>();
+  collectCountryEntries(doc).forEach(entry => {
+    if (entry.value) {
+      values.add(entry.value);
+    }
+  });
+  return Array.from(values);
+}
+
+function resolveCountryLabel(value: string, provided?: string | null): string {
+  if (provided && provided.trim()) {
+    return provided.trim();
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (regionDisplayNames) {
+    try {
+      const display = regionDisplayNames.of(trimmed.toUpperCase());
+      if (display && display.toLowerCase() !== trimmed.toLowerCase()) {
+        return display;
+      }
+    } catch {
+      // Ignore lookup failures and fall back to a humanized identifier
+    }
+  }
+
+  if (/^[a-z]{2}$/i.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+
+  return humanizeIdentifier(trimmed);
+}
+
+function displaySubjectLabels(doc: AnyDoc): string[] {
+  return getDocSubjects(doc)
+    .map(subject => resolveSubjectLabel(subject, subjectLabelMap.value))
+    .filter(label => Boolean(label && label.trim()));
 }
 // Update grouped to use filtered docs
 const filteredDocs = computed(() => {
@@ -385,6 +548,22 @@ const filteredDocs = computed(() => {
     filtered = filtered.filter(doc => {
       const subjects = getDocSubjects(doc);
       return subjects.some(subject => filters.subjects.includes(subject));
+    });
+  }
+
+  // Apply global target filter
+  if (filters.globalTargets.length > 0) {
+    filtered = filtered.filter(doc => {
+      const targets = getDocGlobalTargets(doc);
+      return targets.some(target => filters.globalTargets.includes(target));
+    });
+  }
+
+  // Apply country filter
+  if (filters.countries.length > 0) {
+    filtered = filtered.filter(doc => {
+      const countries = getDocCountries(doc);
+      return countries.some(country => filters.countries.includes(country));
     });
   }
 
@@ -507,6 +686,44 @@ const availableCopDecisions = computed(() => {
   return Array.from(decisions).sort();
 });
 
+const availableCountryOptions = computed<FilterOption[]>(() => {
+  const map = new Map<string, string>();
+  docs.value.forEach(doc => {
+    collectCountryEntries(doc).forEach(({ value, label }) => {
+      if (!value) {
+        return;
+      }
+      const currentLabel = map.get(value);
+      const finalLabel = resolveCountryLabel(value, label ?? currentLabel);
+      if (!map.has(value) || (label && label.trim())) {
+        map.set(value, finalLabel);
+      }
+    });
+  });
+
+  return Array.from(map.entries())
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
+  const map = new Map<string, string>();
+  docs.value.forEach(doc => {
+    collectGlobalTargetEntries(doc).forEach(({ value, label }) => {
+      if (!value) {
+        return;
+      }
+      if (!map.has(value) || (label && label.trim())) {
+        map.set(value, label?.trim() || humanizeIdentifier(value));
+      }
+    });
+  });
+
+  return Array.from(map.entries())
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+});
+
 // Filter update handler
 const handleFiltersUpdate = (filters: FilterState) => {
   currentFilters.value = filters;
@@ -537,7 +754,7 @@ function status(d: AnyDoc): string {
 function docLink(d: AnyDoc): string | null {
   // Prefer meetingCode/identifier to construct path if links array not present
   const links = d['links_ss'] as string[] | undefined;
-  if (Array.isArray(links) && links.length > 0) return links[0];
+  if (Array.isArray(links) && links.length > 0) return links[0] ?? null;
   const code = (d['meetingCode_s'] || d['identifier_s']) as string | undefined;
   if (!code) return null;
   if (String(d['source']).startsWith('markdown')) return null;

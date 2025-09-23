@@ -194,13 +194,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, watchEffect, type Ref, type ComputedRef } from 'vue';
 import Multiselect from 'vue-multiselect';
-import type { ThesaurusTerm } from '../../shared/types/thesaurus';
-import { getDomainTerms } from '../../shared/services/thesaurus';
-import { THESAURUS, type ThesaurusDomainIdentifier } from '../../shared/constants/thesaurus';
-import { activityTypeTerms } from '../../shared/data/activity-type-terms.js';
-import { subsidiaryBodyTerms } from '../../shared/data/subsidiary-body-terms.js';
-import { copDecisionTerms } from '../../shared/data/cop-decision-terms.js';
-import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel } from '../../shared/utils/subjects';
+import type { ThesaurusTerm } from 'shared/types/thesaurus';
+import { getDomainTerms } from 'shared/services/thesaurus';
+import { THESAURUS, type ThesaurusDomainIdentifier } from 'shared/constants/thesaurus';
+import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
+import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
+import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
+import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel } from 'shared/utils/subjects';
 
 // Define filter option types
 interface FilterOption {
@@ -215,6 +215,8 @@ interface Props {
   availableStatuses?: string[];
   availableSubsidiaryBodies?: string[];
   availableCopDecisions?: string[];
+  preloadedCountryOptions?: FilterOption[];
+  preloadedGlobalTargetOptions?: FilterOption[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -223,6 +225,8 @@ const props = withDefaults(defineProps<Props>(), {
   availableStatuses: () => [],
   availableSubsidiaryBodies: () => [],
   availableCopDecisions: () => [],
+  preloadedCountryOptions: () => [],
+  preloadedGlobalTargetOptions: () => [],
 });
 
 // Define emits
@@ -258,30 +262,43 @@ const startDate = ref<string>('');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
 
-const thesaurusSubjectOptions = ref<FilterOption[]>([]);
-const countryOptions = ref<FilterOption[]>([]);
-const globalTargetOptions = ref<FilterOption[]>([]);
+const remoteSubjectOptions = ref<FilterOption[]>([]);
+const remoteCountryOptions = ref<FilterOption[]>([]);
+const remoteGlobalTargetOptions = ref<FilterOption[]>([]);
 
-const subjectLabelMap = computed(() => buildSubjectLabelMap(thesaurusSubjectOptions.value));
+const remoteSubjectLabelMap = computed(() => buildSubjectLabelMap(remoteSubjectOptions.value));
+
+const fallbackSubjectOptions = computed<FilterOption[]>(() => {
+  if (props.availableSubjects.length === 0) {
+    return [];
+  }
+
+  const uniqueSubjects = Array.from(new Set(props.availableSubjects));
+  return uniqueSubjects.map(subject => ({
+    value: subject,
+    label: resolveSubjectLabel(subject, remoteSubjectLabelMap.value),
+  }));
+});
+
+const subjectOptions = computed<FilterOption[]>(() =>
+  mergeOptions(remoteSubjectOptions.value, fallbackSubjectOptions.value),
+);
+
+const providedCountryOptions = computed(() => props.preloadedCountryOptions);
+const providedGlobalTargetOptions = computed(() => props.preloadedGlobalTargetOptions);
+
+const countryOptions = computed<FilterOption[]>(() =>
+  mergeOptions(remoteCountryOptions.value, providedCountryOptions.value),
+);
+
+const globalTargetOptions = computed<FilterOption[]>(() =>
+  mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
+);
 
 // Computed filter options
 const typeOptions = computed<FilterOption[]>(() =>
   props.availableTypes.map(type => ({ value: type, label: type }))
 );
-
-const subjectOptions = computed<FilterOption[]>(() => {
-  if (props.availableSubjects.length > 0) {
-    const uniqueSubjects = Array.from(new Set(props.availableSubjects));
-    return uniqueSubjects
-      .map(subject => ({
-        value: subject,
-        label: resolveSubjectLabel(subject, subjectLabelMap.value),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  return thesaurusSubjectOptions.value.map(option => ({ value: option.value, label: option.label }));
-});
 
 function statusKeyToLabel(status: string): string {
   if (!status) return '';
@@ -330,13 +347,13 @@ const activityTypeOptions = computed<FilterOption[]>(() =>
 onMounted(async () => {
   await Promise.all([
     loadSubjectOptions().then(options => {
-      thesaurusSubjectOptions.value = options;
+      remoteSubjectOptions.value = options;
     }),
     loadDomainOptions(THESAURUS.COUNTRIES).then(options => {
-      countryOptions.value = options;
+      remoteCountryOptions.value = options;
     }),
     loadDomainOptions(THESAURUS.GBF_GLOBAL_TARGETS).then(options => {
-      globalTargetOptions.value = options;
+      remoteGlobalTargetOptions.value = options;
     }),
   ]);
 });
@@ -413,6 +430,22 @@ function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
   const label = (term.title && term.title['en']) || term.name || term.identifier;
   const value = term.name || term.identifier;
   return { value, label };
+}
+
+function mergeOptions(primary: FilterOption[], fallback: FilterOption[]): FilterOption[] {
+  const merged = new Map<string, FilterOption>();
+
+  for (const option of fallback) {
+    if (!option?.value) continue;
+    merged.set(option.value, { value: option.value, label: option.label });
+  }
+
+  for (const option of primary) {
+    if (!option?.value) continue;
+    merged.set(option.value, { value: option.value, label: option.label });
+  }
+
+  return Array.from(merged.values()).sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function syncSelectionWithOptions(

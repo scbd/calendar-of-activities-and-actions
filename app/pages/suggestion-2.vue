@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1>Suggestion 2: Accordion View</h1>
     <CalendarActivitiesActionsV2 />
   </div>
  </template>

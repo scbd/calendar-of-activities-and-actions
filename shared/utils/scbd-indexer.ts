@@ -1,8 +1,7 @@
 import type { Task, TaskEvent } from 'nitropack';
 import { consola, type ConsolaInstance } from 'consola';
-import type { IndexerPayload } from '../types/tasks';
-import type { IndexerOptions, FsAdapter, IndexRecord, MdRecord } from '../../../server/types/tasks';
-import type { MergedRecord } from '../../../shared/types/records';
+import type { IndexerPayload, IndexerOptions, FsAdapter, IndexRecord, MdRecord } from '../../server/types/tasks';
+import type { MergedRecord } from '../types/records';
 
 /**
  * Default filesystem adapter implementation for scaffolding
@@ -19,7 +18,7 @@ const defaultFs: FsAdapter = {
    * const contents = await fs.readFile('/tmp/actions.md');
    * // contents now holds the markdown document as a string.
    */
-  async readFile(_path, _enc = 'utf8') {
+  async readFile(_path: string, _enc: BufferEncoding = 'utf8'): Promise<string> {
     // Scaffolding implementation - TODO: implement file reading
     return '';
   },
@@ -32,7 +31,7 @@ const defaultFs: FsAdapter = {
    * @example
    * await fs.writeFile('/tmp/index.json', JSON.stringify(payload));
    */
-  async writeFile(_path, _data) {
+  async writeFile(_path: string, _data: string): Promise<void> {
     // Scaffolding implementation - TODO: implement file writing
     return;
   },
@@ -45,7 +44,7 @@ const defaultFs: FsAdapter = {
    * @example
    * await fs.mkdir('/tmp/data', { recursive: true });
    */
-  async mkdir(_path, _opts) {
+  async mkdir(_path: string, _opts?: { recursive?: boolean }): Promise<string | undefined> {
     // Scaffolding implementation - TODO: implement directory creation
     return undefined;
   },
@@ -56,7 +55,7 @@ const defaultFs: FsAdapter = {
    * @example
    * const alreadyExists = await fs.exists('/tmp/index.json');
    */
-  async exists(_path) {
+  async exists(_path: string): Promise<boolean> {
     // Scaffolding implementation - TODO: implement file existence check
     return false;
   },

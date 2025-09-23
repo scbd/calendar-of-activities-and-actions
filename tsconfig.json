@@ -5,6 +5,9 @@
     "forceConsistentCasingInFileNames": true
   },
   "files": [],
+  "include": [
+    "types/**/*.d.ts"
+  ],
   "references": [
     {
       "path": "./.nuxt/tsconfig.app.json"

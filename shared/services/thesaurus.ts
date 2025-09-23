@@ -1,13 +1,14 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
 
+const DEFAULT_SCBD_API_BASE = 'https://api.cbd.int';
+
 function getApiBase(): string {
   // Use Vite/Nitro exposed public env at build/runtime without relying on #app in shared code
   const base = (import.meta as unknown as { env?: Record<string, unknown> }).env?.NUXT_PUBLIC_SCBD_API_BASE as string | undefined
-    || (process.env as Record<string, string | undefined>).NUXT_PUBLIC_SCBD_API_BASE;
-  if (!base) {
-    throw new Error('Missing env var NUXT_PUBLIC_SCBD_API_BASE');
-  }
-  return base;
+    || (process.env as Record<string, string | undefined>).NUXT_PUBLIC_SCBD_API_BASE
+    || DEFAULT_SCBD_API_BASE;
+
+  return base.replace(/\/$/, '');
 }
 
 /**

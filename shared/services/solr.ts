@@ -156,6 +156,8 @@ function escapeSolrDate(iso: string): string {
 }
 
 export interface MeetingDoc extends Record<string, unknown> {
+  _id?: string;
+  id?: string;
   startDate_dt?: string;
   endDate_dt?: string;
   city_EN_s?: string;
@@ -164,4 +166,11 @@ export interface MeetingDoc extends Record<string, unknown> {
   meetingCode_s?: string;
   identifier_s?: string;
   status_s?: string;
+  statusKey_s?: string | null;
+  description_t?: string | null;
+  type_s?: string;
+  links_ss?: string[];
+  subjects_ss?: string[];
+  subsidiaryBodies_ss?: string[];
+  actionRequired_b?: boolean;
 }
