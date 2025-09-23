@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h1>Suggestion 1: Accordion View</h1>
-    <CalendarActivitiesActionsV2 />
+    <h1>Suggestion 1: Detailed Row View</h1>
+    <CalendarActivitiesActionsV3 />
   </div>
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActionsV2 from '~/components/calendar-activities-actions-v2.vue';
+import CalendarActivitiesActionsV3 from '~/components/calendar-activities-actions-v3.vue';
 </script>
