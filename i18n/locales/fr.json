@@ -12,7 +12,8 @@
       "actionRequiredByParties": "Action requise par les Parties",
       "status": "Statut",
       "type": "Type",
-      "typeStripAria": "Élément {type}"
+  "typeStripAria": "Élément {type}",
+  "cop": "CdP"
     },
     "filters": {
       "labels": {

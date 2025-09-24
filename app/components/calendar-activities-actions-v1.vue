@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer - Accordion View</h2>
+      <h2>Activities & Actions Explorer - Detailed Row View</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -25,67 +25,51 @@
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
-          <div :id="`accordion-${group.key}`" class="accordion">
-            <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="accordion-item">
-              <h2 :id="`heading-${item._id}`" class="accordion-header">
-                <button
-                  class="accordion-button"
-                  :class="{ collapsed: !openItems[String(item._id || item.id || '')] }"
-                  type="button"
-                  :aria-expanded="openItems[String(item._id || item.id || '')] ? 'true' : 'false'"
-                  :aria-controls="`collapse-${item._id}`"
-                  @click="toggleAccordion(String(item._id || item.id || '') )"
-                >
-                  <div class="w-100">
-                    <div class="d-flex justify-content-between">
-                      <span class="flex-grow-1"><strong>{{ title(item) }}</strong></span>
-                      <span class="badge bg-secondary ms-2">{{ typeLabel(item) }}</span>
-                    </div>
-                    <div class="small text-muted">{{ formatDateRange(item) }}</div>
-                  </div>
-                </button>
-              </h2>
-              <div
-                :id="`collapse-${item._id}`"
-                class="accordion-collapse collapse"
-                :class="{ show: openItems[String(item._id || item.id || '')] }"
-                :aria-labelledby="`heading-${item._id}`"
-              >
-                <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <p>
-                        <strong>{{ t('calendar.labels.status') }}: </strong>
-                        <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
-                      </p>
-                      <p v-if="item.actionRequired_b">
-                        <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
-                        {{ t('calendar.common.yes') }}
-                      </p>
-                      <p v-if="item.description_t"><strong>Description:</strong> {{ item.description_t }}</p>
-                      <p v-if="item.statusNarrative_t"><strong>Status Narrative:</strong> {{ item.statusNarrative_t }}</p>
-                    </div>
-                    <div class="col-md-6">
-                      <p v-if="displaySubjectLabels(item).length"><strong>Subjects:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
-                      <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                      <p v-if="formattedCopDecision(item)"><strong>Decision:</strong> {{ formattedCopDecision(item) }}</p>
-                      <p v-if="item.copParagraph_s"><strong>Paragraph:</strong> {{ item.copParagraph_s }}</p>
-                      <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
-                          <div class="card-header">
-                            <strong>Responsible</strong>
-                          </div>
-                          <ul class="list-group list-group-flush">
-                            <li class="list-group-item "><span class="fw-bold">Unit: </span>{{ item.responsibleUnit_s }}</li>
-                            <li class="list-group-item "><span class="fw-bold">Officer: </span>{{ item.responsibleOfficer_s }}</li>
-                          </ul>
-
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mt-3">
+          <div
+            v-for="item in group.items"
+            :key="String(item._id || item.id || '')"
+            class="card mb-2 calendar-item"
+          >
+            <div
+              class="calendar-item__header"
+              :style="typeStripStyle(item)"
+              :aria-label="typeStripAria(item)"
+            >
+              <span class="calendar-item__header-label">{{ typeLabel(item) }}</span>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <h5 class="card-title">{{ title(item) }}</h5>
+                  <p class="card-text small text-muted">{{ item.description_t }}</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                  <strong>{{ formatDateRange(item) }}</strong><br>
+                  <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
+                  <span v-if="item.actionRequired_b" class="badge bg-danger ms-1">{{ t('calendar.labels.actionRequired') }}</span>
+                </div>
+              </div>
+              <hr>
+              <div class="row small">
+                <div class="col-md-6">
+                  <p v-if="displaySubjectLabels(item).length" class="mb-1"><strong>Subjects:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
+                  <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="mb-1"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                  <p v-if="item.copDecision_s" class="mb-1"><strong>COP Decision:</strong> {{ item.copDecision_s }}</p>
+                  <p v-if="item.copParagraph_s" class="mb-1"><strong>COP Paragraph:</strong> {{ item.copParagraph_s }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p v-if="item.responsibleUnit_s" class="mb-1">
+                    <strong>{{ t('calendar.labels.responsibleUnit') }}:</strong>
+                    {{ item.responsibleUnit_s }}
+                  </p>
+                  <p v-if="item.responsibleOfficer_s" class="mb-1">
+                    <strong>{{ t('calendar.labels.responsibleOfficer') }}:</strong>
+                    {{ item.responsibleOfficer_s }}
+                  </p>
+                  <p v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mb-1">
                     <strong>{{ t('calendar.labels.relatedDocuments') }}:</strong>
                     <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
@@ -104,15 +88,15 @@ import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type Loc
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
 import { extractDecisionEntries } from 'shared/utils/decision-links';
-import { normalizeTypeKey } from 'shared/utils/type-colors';
+import { getTypeColor, getTypeForegroundColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 // Load markdown content at build-time for both client and server bundles
-const __mdModulesB = import.meta.glob('shared/data/2024-12-01.md', {
+const __mdModulesC = import.meta.glob('shared/data/2024-12-01.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>;
-const calendarMarkdownRaw = Object.values(__mdModulesB)[0] ?? '';
+const calendarMarkdownRaw = Object.values(__mdModulesC)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
 
@@ -120,7 +104,7 @@ const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
-const { t, te } = useI18n();
+const { t } = useI18n();
 
 interface FilterOption {
   value: string;
@@ -129,14 +113,6 @@ interface FilterOption {
 
 const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
-
-const openItems = ref<Record<string, boolean>>({});
-
-const toggleAccordion = (itemId: string) => {
-  // This will close other items in the same group if you want a traditional accordion behavior
-  // For now, it allows multiple items to be open.
-  openItems.value[itemId] = !openItems.value[itemId];
-};
 
 interface FilterState {
   types: string[];
@@ -567,38 +543,6 @@ function displaySubjectLabels(doc: AnyDoc): string[] {
     .filter(label => Boolean(label && label.trim()));
 }
 
-function getCopLabel(): string {
-  if (te('calendar.labels.cop')) {
-    const localized = t('calendar.labels.cop');
-    if (typeof localized === 'string' && localized.trim().length > 0) {
-      return localized.trim();
-    }
-  }
-  return 'COP';
-}
-
-function formattedCopDecision(doc: AnyDoc): string | null {
-  const raw = (doc as Record<string, unknown>)['copDecision_s'];
-  if (raw === null || raw === undefined) {
-    return null;
-  }
-
-  const decision = String(raw).trim();
-  if (!decision) {
-    return null;
-  }
-
-  const normalized = decision.toUpperCase();
-  const hasReservedToken = ['COP', 'NP', 'CP'].some(token => normalized.includes(token));
-  if (hasReservedToken) {
-    return decision;
-  }
-
-  const prefix = getCopLabel();
-  const safePrefix = prefix.trim() || 'COP';
-  return `${safePrefix} ${decision}`;
-}
-
 const filteredDocs = computed(() => {
   let filtered = docs.value;
   const filters = currentFilters.value;
@@ -802,13 +746,28 @@ function typeValue(doc: AnyDoc): string {
 function typeLabel(doc: AnyDoc): string {
   const raw = typeValue(doc);
   const key = `calendar.types.${normalizeTypeKey(raw)}`;
-  if (raw && te(key)) {
-    return t(key) as string;
+  const translated = t(key) as string;
+  if (translated && translated !== key) {
+    return translated;
   }
-  if (te('calendar.types.default')) {
-    return t('calendar.types.default') as string;
+  const fallback = t('calendar.types.default') as string;
+  if (fallback && fallback !== 'calendar.types.default') {
+    return fallback;
   }
   return raw || 'Activity';
+}
+
+function typeStripStyle(doc: AnyDoc): Record<string, string> {
+  const palette = getTypeColor(typeValue(doc));
+  const textColor = getTypeForegroundColor(palette);
+  return {
+    backgroundColor: palette.background,
+    color: textColor,
+  };
+}
+
+function typeStripAria(doc: AnyDoc): string {
+  return t('calendar.labels.typeStripAria', { type: typeLabel(doc) }) as string;
 }
 
 function title(d: AnyDoc): string {
@@ -830,6 +789,24 @@ function statusColor(d: AnyDoc): string {
     if (s === 'to be confirmed') return 'warning';
     if (s === 'ongoing') return 'info';
     return 'secondary';
+}
+
+function _paragraphEntries(doc: AnyDoc): string[] {
+  const record = doc as Record<string, unknown>;
+  const values = new Set<string>();
+  [
+    record['copParagraph_s'],
+    record['copParagraph'],
+    record['copParagraph_ss'],
+    record['copParagraphs_ss'],
+  ].forEach(value => {
+    splitValues(value).forEach(paragraph => {
+      if (paragraph) {
+        values.add(paragraph);
+      }
+    });
+  });
+  return Array.from(values);
 }
 
 function formatDateRange(d: AnyDoc): string {
@@ -875,5 +852,29 @@ h3 {
   margin-top: 0px;
   color: #009b48;
   padding: 0.5rem 0;
+}
+.card-title {
+    font-weight: 500;
+}
+
+.calendar-item {
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.calendar-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.calendar-item__header-label {
+  text-transform: uppercase;
+  font-size: 0.875rem;
 }
 </style>

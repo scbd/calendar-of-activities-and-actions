@@ -12,7 +12,8 @@
       "actionRequiredByParties": "Action required by parties",
       "status": "Status",
       "type": "Type",
-      "typeStripAria": "{type} item"
+  "typeStripAria": "{type} item",
+  "cop": "COP"
     },
     "filters": {
       "labels": {
@@ -74,7 +75,7 @@
       "sbi": "SBI meeting",
       "meeting": "Meeting",
       "nominations": "Nominations",
-      "submission": "Submission of Information",
+      "submission": "Submission",
       "peerReview": "Peer-review",
       "report": "Report",
       "forum": "Forum",
@@ -86,7 +87,7 @@
       "campaign": "Campaign",
       "other": "Other",
       "conference": "Conference",
-      "side-event": "Side event",
+      "side-event": "Side-event",
       "default": "Activity",
       "unknown": "Activity"
     },

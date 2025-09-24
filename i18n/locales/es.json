@@ -1,5 +1,8 @@
 {
   "calendar": {
+    "labels": {
+      "cop": "CdP"
+    },
     "filters": {
       "labels": {
         "typeActivity": "Tipo",

@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer - Detailed Row View</h2>
+      <h2>Activities & Actions Explorer</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -22,60 +22,69 @@
       <div v-else>
         <div v-if="filteredGrouped.length === 0" class="alert alert-warning">No results</div>
 
-        <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
+  <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
-          <div
-            v-for="item in group.items"
-            :key="String(item._id || item.id || '')"
-            class="card mb-2 calendar-item"
-          >
+          <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="calendar-row border-bottom">
             <div
-              class="calendar-item__header"
+              class="calendar-row__type-strip d-flex align-items-center justify-content-center"
               :style="typeStripStyle(item)"
-              :aria-label="typeStripAria(item)"
+              data-testid="calendar-row-type-strip"
             >
-              <span class="calendar-item__header-label">{{ typeLabel(item) }}</span>
+              <span class="calendar-row__type-text" data-testid="calendar-row-type-text">
+                {{ typeLabel(item) }}
+              </span>
             </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-8">
-                  <h5 class="card-title">{{ title(item) }}</h5>
-                  <p class="card-text small text-muted">{{ item.description_t }}</p>
-                </div>
-                <div class="col-md-4 text-md-end">
+            <div class="row py-3">
+              <div class="col-12 col-md-4">
+                <div>
                   <strong>{{ formatDateRange(item) }}</strong><br>
-                  <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
-                  <span v-if="item.actionRequired_b" class="badge bg-danger ms-1">{{ t('calendar.labels.actionRequired') }}</span>
+                  <span v-if="venue(item)">{{ venue(item) }}</span><br>
+                  <i><b>{{ status(item) }}</b></i>
                 </div>
               </div>
-              <hr>
-              <div class="row small">
-                <div class="col-md-6">
-                  <p v-if="displaySubjectLabels(item).length" class="mb-1"><strong>Subjects:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
-                  <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="mb-1"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                  <p v-if="item.copDecision_s" class="mb-1"><strong>COP Decision:</strong> {{ item.copDecision_s }}</p>
-                  <p v-if="item.copParagraph_s" class="mb-1"><strong>COP Paragraph:</strong> {{ item.copParagraph_s }}</p>
-                </div>
-                <div class="col-md-6">
-                  <p v-if="item.responsibleUnit_s" class="mb-1">
-                    <strong>{{ t('calendar.labels.responsibleUnit') }}:</strong>
-                    {{ item.responsibleUnit_s }}
-                  </p>
-                  <p v-if="item.responsibleOfficer_s" class="mb-1">
-                    <strong>{{ t('calendar.labels.responsibleOfficer') }}:</strong>
-                    {{ item.responsibleOfficer_s }}
-                  </p>
-                  <p v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mb-1">
-                    <strong>{{ t('calendar.labels.relatedDocuments') }}:</strong>
-                    <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
-                  </p>
+              <div class="col-12 col-md-8">
+                <div>
+                  <div class="meeting-title">{{ title(item) }}</div>
+                  <div
+                    v-if="displaySubjectLabels(item).length"
+                    class="small text-muted mt-1"
+                  >
+                    <strong>{{ t('calendar.labels.subjects') }}:</strong>
+                    {{ displaySubjectLabels(item).join(', ') }}
+                  </div>
+                  <div v-if="decisionEntries(item).length" class="small mt-1">
+                    <strong>{{ t('calendar.labels.decision') }}:</strong>
+                    <span class="ms-1">
+                      <template
+                        v-for="(entry, index) in decisionEntries(item)"
+                        :key="`${entry.href ?? entry.label}-${index}`"
+                      >
+                        <DecisionLink :href="entry.href" :label="entry.label" />
+                        <span v-if="index < decisionEntries(item).length - 1">, </span>
+                      </template>
+                    </span>
+                  </div>
+                  <div v-if="paragraphEntries(item).length" class="small mt-1">
+                    <strong>{{ t('calendar.labels.paragraph') }}:</strong>
+                    {{ paragraphEntries(item).join(', ') }}
+                  </div>
+                  <div v-if="docLink(item)" class="links"><a :href="docLink(item) || undefined">Documents »</a></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <div class="card mt-4">
+          <div class="card-header">Debug: Collected field names ({{ allFieldNames.length }})</div>
+          <div class="card-body">
+            <div class="small text-muted">Locale: {{ locale.toUpperCase() }}</div>
+            <ul class="mb-0">
+              <li v-for="f in allFieldNames" :key="f"><code>{{ f }}</code></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -83,28 +92,36 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed, watchEffect } from 'vue';
+import { useI18n } from '#imports';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
-import { extractDecisionEntries } from 'shared/utils/decision-links';
-import { getTypeColor, getTypeForegroundColor, normalizeTypeKey } from 'shared/utils/type-colors';
+import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
+import { getTypeColor, normalizeTypeKey, type CalendarTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
+import DecisionLink from './decision-link.vue';
 // Load markdown content at build-time for both client and server bundles
-const __mdModulesC = import.meta.glob('shared/data/2024-12-01.md', {
+const __mdModulesA = import.meta.glob('shared/data/2024-12-01.md', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>;
-const calendarMarkdownRaw = Object.values(__mdModulesC)[0] ?? '';
+const calendarMarkdownRaw = Object.values(__mdModulesA)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
 
 const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
+const supportedLocales: LocaleCode[] = ['en', 'fr', 'es', 'ar', 'ru', 'zh'];
+const { t, locale: nuxtLocale } = useI18n();
 const locale = ref<LocaleCode>('en');
-const { t } = useI18n();
+
+watchEffect(() => {
+  const rawLocale = (nuxtLocale.value || 'en').split('-')[0]?.toLowerCase() ?? 'en';
+  locale.value = (supportedLocales.includes(rawLocale as LocaleCode) ? rawLocale : 'en') as LocaleCode;
+});
 
 interface FilterOption {
   value: string;
@@ -113,7 +130,10 @@ interface FilterOption {
 
 const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
+const decisionEntriesCache = new WeakMap<AnyDoc, DecisionEntry[]>();
+const paragraphEntriesCache = new WeakMap<AnyDoc, string[]>();
 
+// Filter state
 interface FilterState {
   types: string[];
   subjects: string[];
@@ -141,7 +161,6 @@ const currentFilters = ref<FilterState>({
   endDate: '',
   actionRequired: false,
 });
-
 watchEffect(() => {
   if (docs.value.length === 0) {
     allFieldNames.value = [];
@@ -208,6 +227,7 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
 
   const id = String(record['_id'] ?? record['id'] ?? record['identifier_s'] ?? `meeting-${index}`);
 
+  // Derive normalized status key/label if present
   const rawStatus = (record['status_s'] ?? record['status']) as string | undefined;
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
@@ -220,7 +240,7 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
     subject_EN_s: record['subject_EN_s'] ?? (subjects.length > 0 ? subjects.join(', ') : null),
     subsidiaryBody_s: record['subsidiaryBody_s'] ?? (bodies.length > 0 ? bodies[0] : null),
     subsidiaryBodies_ss: bodies,
-  type_s: String(record['type_s'] ?? record['type'] ?? 'Meeting'),
+    type_s: record['type_s'] ?? record['type'] ?? 'Meeting',
     links_ss: Array.isArray(record['links_ss']) ? record['links_ss'] as string[] : [],
     statusKey_s: statusKey ?? null,
     status_s: statusLabel,
@@ -241,7 +261,6 @@ function parseMarkdownTable(raw: string): MarkdownRow[] {
   if (lines.length < 3) {
     return [];
   }
-
   const headerLine = lines[0];
   if (!headerLine) return [];
   const headerCells = headerLine.split('|').map(cell => cell.trim());
@@ -293,8 +312,8 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
     actionRequired_b: row['Action Required by Parties']?.toUpperCase() === 'Y',
     subjects_ss: subjects,
   subject_EN_s: subjects.join(', '),
-  status_s: statusLabel,
-  statusKey_s: statusKey ?? null,
+    status_s: statusLabel,
+    statusKey_s: statusKey ?? null,
     statusNarrative_t: row['Status_narrative'] || null,
   startDate_dt: startDate ?? undefined,
   endDate_dt: endDate ?? undefined,
@@ -326,7 +345,9 @@ function normalizeStatusKey(label: string | undefined): string | null {
   if (!label) return null;
   const v = String(label).trim().toLowerCase();
   if (!v) return null;
+  // canonical mapping
   if (v === 'confirmed') return 'CONFIRM';
+  // default: keep original semantics by uppercasing words and replacing spaces with underscores
   return v.replace(/\s+/g, '_').toUpperCase();
 }
 
@@ -542,11 +563,13 @@ function displaySubjectLabels(doc: AnyDoc): string[] {
     .map(subject => resolveSubjectLabel(subject, subjectLabelMap.value))
     .filter(label => Boolean(label && label.trim()));
 }
-
+// Update grouped to use filtered docs
 const filteredDocs = computed(() => {
   let filtered = docs.value;
+
   const filters = currentFilters.value;
 
+  // Apply type filter
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
@@ -554,6 +577,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply activity types filter (mirrors type field for now)
   if (filters.activityTypes.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
@@ -561,6 +585,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply subject filter
   if (filters.subjects.length > 0) {
     filtered = filtered.filter(doc => {
       const subjects = getDocSubjects(doc);
@@ -568,6 +593,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply global target filter
   if (filters.globalTargets.length > 0) {
     filtered = filtered.filter(doc => {
       const targets = getDocGlobalTargets(doc);
@@ -575,6 +601,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply country filter
   if (filters.countries.length > 0) {
     filtered = filtered.filter(doc => {
       const countries = getDocCountries(doc);
@@ -582,6 +609,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply status filter
   if (filters.statuses.length > 0) {
     filtered = filtered.filter(doc => {
       const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
@@ -589,6 +617,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply subsidiary body filter
   if (filters.subsidiaryBodies.length > 0) {
     filtered = filtered.filter(doc => {
       const bodies = getDocSubsidiaryBodies(doc);
@@ -596,6 +625,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply COP decision filter
   if (filters.copDecisions.length > 0) {
     filtered = filtered.filter(doc => {
       const decisions = getDocDecisionLabels(doc);
@@ -603,6 +633,7 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply date range filter
   if (filters.startDate || filters.endDate) {
     filtered = filtered.filter(doc => {
       const startDate = safeDate(doc['startDate_dt']);
@@ -625,8 +656,11 @@ const filteredDocs = computed(() => {
     });
   }
 
+  // Apply action required filter
   if (filters.actionRequired) {
     filtered = filtered.filter(doc => {
+      // This would need to be implemented based on the actual data structure
+      // For now, we'll assume there's an 'actionRequired' field
       return doc['actionRequired_b'] === true || doc['actionRequired'] === true;
     });
   }
@@ -642,14 +676,15 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
     const label = dt ? dt.toFormat('LLLL yyyy') : 'Unknown';
-    if (!buckets.has(key)) buckets.set(key, { label, items: [] as AnyDoc[] });
-    buckets.get(key)!.items.push(d as AnyDoc);
+    if (!buckets.has(key)) buckets.set(key, { label, items: [] });
+    buckets.get(key)!.items.push(d);
   }
   return Array.from(buckets.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([key, v]) => ({ key, label: v.label, items: v.items }));
 });
 
+// Available filter options computed from docs
 const availableTypes = computed(() => {
   const types = new Set<string>();
   docs.value.forEach(doc => {
@@ -734,64 +769,26 @@ const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
     .sort((a, b) => a.label.localeCompare(b.label));
 });
 
+// Filter update handler
 const handleFiltersUpdate = (filters: FilterState) => {
-  currentFilters.value = filters;
+  currentFilters.value = { ...filters };
 };
 
-function typeValue(doc: AnyDoc): string {
-  const raw = (doc as Record<string, unknown>).type_s ?? (doc as Record<string, unknown>).type;
-  return typeof raw === 'string' ? raw.trim() : '';
-}
-
-function typeLabel(doc: AnyDoc): string {
-  const raw = typeValue(doc);
-  const key = `calendar.types.${normalizeTypeKey(raw)}`;
-  const translated = t(key) as string;
-  if (translated && translated !== key) {
-    return translated;
+function decisionEntries(doc: AnyDoc): DecisionEntry[] {
+  const cached = decisionEntriesCache.get(doc);
+  if (cached) {
+    return cached;
   }
-  const fallback = t('calendar.types.default') as string;
-  if (fallback && fallback !== 'calendar.types.default') {
-    return fallback;
-  }
-  return raw || 'Activity';
-}
-
-function typeStripStyle(doc: AnyDoc): Record<string, string> {
-  const color = getTypeColor(typeValue(doc));
-  const textColor = getTypeForegroundColor(color);
-  return {
-    backgroundColor: color,
-    color: textColor,
-  };
-}
-
-function typeStripAria(doc: AnyDoc): string {
-  return t('calendar.labels.typeStripAria', { type: typeLabel(doc) }) as string;
-}
-
-function title(d: AnyDoc): string {
-  const tField = getTitleFieldForLocale(locale.value);
-  return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
-}
-
-function status(d: AnyDoc): string {
-  const label = d['status_s'];
-  if (typeof label === 'string' && label.trim()) return label;
-  const key = d['statusKey_s'] as string | undefined;
-  return normalizeStatusLabel(key ?? null);
-}
-
-function statusColor(d: AnyDoc): string {
-    const s = status(d).toLowerCase();
-    if (s === 'completed') return 'success';
-    if (s === 'confirmed') return 'primary';
-    if (s === 'to be confirmed') return 'warning';
-    if (s === 'ongoing') return 'info';
-    return 'secondary';
+  const entries = extractDecisionEntries(doc as Record<string, unknown>);
+  decisionEntriesCache.set(doc, entries);
+  return entries;
 }
 
 function paragraphEntries(doc: AnyDoc): string[] {
+  const cached = paragraphEntriesCache.get(doc);
+  if (cached) {
+    return cached;
+  }
   const record = doc as Record<string, unknown>;
   const values = new Set<string>();
   [
@@ -806,7 +803,142 @@ function paragraphEntries(doc: AnyDoc): string[] {
       }
     });
   });
-  return Array.from(values);
+  const result = Array.from(values);
+  paragraphEntriesCache.set(doc, result);
+  return result;
+}
+
+const FALLBACK_TYPE_LABELS: Record<CalendarTypeKey, string> = {
+  cop: 'COP meeting',
+  sbstta: 'SBSTTA meeting',
+  sbi: 'SBI meeting',
+  meeting: 'Meeting',
+  nominations: 'Nominations',
+  submission: 'Submission of Information',
+  peerReview: 'Peer-review',
+  report: 'Report',
+  forum: 'Forum',
+  activity: 'Activity',
+  webinar: 'Webinar',
+  workshop: 'Workshop',
+  training: 'Training',
+  consultation: 'Consultation',
+  campaign: 'Campaign',
+  other: 'Other',
+};
+
+function extractTypeKey(candidate: unknown): CalendarTypeKey | null {
+  if (!candidate) return null;
+  if (Array.isArray(candidate)) {
+    for (const entry of candidate) {
+      const key = extractTypeKey(entry);
+      if (key) return key;
+    }
+    return null;
+  }
+  if (typeof candidate !== 'string') return null;
+  const normalized = normalizeTypeKey(candidate);
+  return normalized === 'other' ? null : normalized;
+}
+
+function resolveTypeKey(doc: AnyDoc): CalendarTypeKey {
+  const candidates: unknown[] = [
+    doc['meetingCode_s'],
+    doc['meetingType_s'],
+    doc['eventType_s'],
+    doc['activityType_s'],
+    doc['type_s'],
+    doc['type'],
+    doc['category_s'],
+    doc['category'],
+    doc['programmeType_s'],
+    doc['programmeType'],
+    doc['subsidiaryBody_s'],
+    doc['subsidiaryBodies_ss'],
+    getDocSubjects(doc),
+  ];
+
+  for (const candidate of candidates) {
+    const key = extractTypeKey(candidate);
+    if (key) return key;
+  }
+
+  return 'other';
+}
+
+function translateTypeKey(key: CalendarTypeKey): string {
+  const translationKey = `calendar.types.${key}`;
+  const translated = t(translationKey);
+  if (typeof translated === 'string' && translated !== translationKey) {
+    return translated;
+  }
+  return FALLBACK_TYPE_LABELS[key];
+}
+
+function primaryTypeValue(doc: AnyDoc): string | null {
+  const candidates = [doc['type_s'], doc['type'], doc['meetingType_s'], doc['meetingType']];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+  return null;
+}
+
+function typeLabel(doc: AnyDoc): string {
+  const key = resolveTypeKey(doc);
+  if (key === 'other') {
+    const raw = primaryTypeValue(doc);
+    if (raw) {
+      const normalized = normalizeTypeKey(raw);
+      if (normalized !== 'other') {
+        return translateTypeKey(normalized);
+      }
+      return raw;
+    }
+  }
+  return translateTypeKey(key);
+}
+
+function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string } {
+  const palette = getTypeColor(resolveTypeKey(doc));
+  return {
+    backgroundColor: palette.background,
+    color: palette.text,
+  };
+}
+
+function title(d: AnyDoc): string {
+  const tField = getTitleFieldForLocale(locale.value);
+  return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
+}
+
+function venue(d: AnyDoc): string | null {
+  const city = (d['city_EN_s'] || d['city_s']) as string | undefined;
+  // country fields can be localized; fallback to English
+  const country = (d['country_EN_s'] || d['country_s']) as string | undefined;
+  if (city && country) return `${city}, ${country}`;
+  if (city) return city;
+  if (country) return country;
+  return null;
+}
+
+function status(d: AnyDoc): string {
+  const label = d['status_s'];
+  if (typeof label === 'string' && label.trim()) return label;
+  const key = d['statusKey_s'] as string | undefined;
+  return normalizeStatusLabel(key ?? null);
+}
+
+function docLink(d: AnyDoc): string | null {
+  // Prefer meetingCode/identifier to construct path if links array not present
+  const links = d['links_ss'] as string[] | undefined;
+  if (Array.isArray(links) && links.length > 0) return links[0] ?? null;
+  const code = (d['meetingCode_s'] || d['identifier_s']) as string | undefined;
+  if (!code) return null;
+  if (String(d['source']).startsWith('markdown')) return null;
+  if (code.startsWith('markdown-')) return null;
+  return `/meetings/${code}`;
 }
 
 function formatDateRange(d: AnyDoc): string {
@@ -834,15 +966,100 @@ function safeDate(v: unknown): DateTime | null {
 }
 </script>
 <style lang="scss">
+// Import Bootstrap and shared styles globally for this component context
 @use '../assets/styles/main.scss' as *;
 </style>
 <style scoped>
+/* Custom component styles that extend Bootstrap */
+
+/* CBD-inspired color variables from official CSS */
+:root {
+  --primary-color: #0079C0; /* CBD primary blue */
+  --secondary-color: #A8CF45; /* CBD secondary green */
+  --border-color: #dee2e6; /* Light gray borders */
+  --light-bg: #f8f9fa; /* Light background */
+  --white: #fff;
+  --body-color: #1D1D1D; /* Body text color */
+  --link-color: #0079C0; /* Link color */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Custom styles that aren't in Bootstrap */
 .dgSep {
   padding: 0.5rem 0;
   border-top: 1px solid #e5e5e5;
   border-bottom: 1px solid #e5e5e5;
   margin: 1rem 0;
 }
+
+.links a {
+  background-color: #0c9d4d;
+  display: inline-block;
+  padding: 5px 7px;
+  border-radius: 3px;
+  color: white;
+  margin-left: 3px;
+  margin-right: 3px;
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+.calendar-row {
+  background-color: var(--white);
+  padding: 0 0 0.5rem;
+}
+
+.calendar-row__type-strip {
+  width: 100%;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 4px 4px 0 0;
+  text-align: center;
+}
+
+.calendar-row__type-text {
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+code {
+  font-size: 0.85rem;
+  color: #e83e8c;
+  word-wrap: break-word;
+}
+
+/* Meeting title styling to match CBD website */
+.meeting-title {
+  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.4px;
+  box-sizing: border-box;
+  display: block;
+  color: #1D1D1D; /* Body text color matching CBD site */
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  height: 75px;
+  overflow: hidden;
+}
+
+/* CBD website inspired styles for headings and rows */
+h2 {
+  letter-spacing: 0.025em;
+  color: #009b48;
+  margin-bottom: .5rem;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
 h3 {
   font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
@@ -853,28 +1070,20 @@ h3 {
   color: #009b48;
   padding: 0.5rem 0;
 }
-.card-title {
-    font-weight: 500;
+
+.border-bottom {
+  border-bottom: 1px solid #dee2e6;
 }
 
-.calendar-item {
-  border: 1px solid #e5e5e5;
-  overflow: hidden;
-  border-radius: 0.5rem;
+.calendar-row:nth-of-type(even) {
+  background-color: #f9f9f9;
 }
 
-.calendar-item__header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.25rem;
-  padding: 0.25rem 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.calendar-item__header-label {
-  text-transform: uppercase;
-  font-size: 0.875rem;
+/* Responsive design */
+@media (max-width: 768px) {
+  .col-md-4, .col-md-8 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
 </style>

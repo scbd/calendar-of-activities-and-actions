@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { CBD_GREEN, getTypeColor, isReservedGreen, normalizeTypeKey } from '../../shared/utils/type-colors';
+import {
+  CBD_GREEN,
+  getTypeColor,
+  getTypeForegroundColor,
+  isReservedGreen,
+  normalizeTypeKey,
+} from '../../shared/utils/type-colors';
 
 describe('calendar type color helpers', () => {
   it('uses CBD green for COP, SBSTTA and SBI variants', () => {
@@ -39,5 +45,11 @@ describe('calendar type color helpers', () => {
     expect(normalizeTypeKey('Nomination of experts')).toBe('nominations');
     expect(normalizeTypeKey('Peer review process')).toBe('peerReview');
     expect(normalizeTypeKey('Unmapped category')).toBe('other');
+  });
+
+  it('derives text color from either type keys or palettes', () => {
+    const palette = getTypeColor('meeting');
+    expect(getTypeForegroundColor('meeting')).toBe(palette.text);
+    expect(getTypeForegroundColor(palette)).toBe(palette.text);
   });
 });

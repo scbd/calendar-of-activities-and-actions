@@ -1,5 +1,8 @@
 {
   "calendar": {
+    "labels": {
+      "cop": "缔约方大会"
+    },
     "filters": {
       "labels": {
         "typeActivity": "类型",

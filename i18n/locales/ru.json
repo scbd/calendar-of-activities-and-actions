@@ -1,5 +1,8 @@
 {
   "calendar": {
+    "labels": {
+      "cop": "КС"
+    },
     "filters": {
       "labels": {
         "typeActivity": "Тип",

@@ -84,6 +84,26 @@ export function getTypeColor(type: CalendarTypeKey | string | null | undefined):
   return TYPE_COLOR_MAP[normalized] ?? TYPE_COLOR_MAP.other;
 }
 
+function isCalendarTypeColor(value: unknown): value is CalendarTypeColor {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return typeof record.background === 'string' && typeof record.text === 'string';
+}
+
+export function getTypeForegroundColor(
+  typeOrColor: CalendarTypeKey | string | CalendarTypeColor | null | undefined,
+): string {
+  if (isCalendarTypeColor(typeOrColor)) {
+    return typeOrColor.text;
+  }
+
+  const color = getTypeColor(typeOrColor as CalendarTypeKey | string | null | undefined);
+  return color.text;
+}
+
 export function isReservedGreen(type: string | null | undefined): boolean {
   const normalized = normalizeTypeKey(type);
   return normalized === 'cop' || normalized === 'sbstta' || normalized === 'sbi';

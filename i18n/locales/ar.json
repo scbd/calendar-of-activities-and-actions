@@ -1,5 +1,8 @@
 {
   "calendar": {
+    "labels": {
+      "cop": "مؤتمر الأطراف"
+    },
     "filters": {
       "labels": {
         "typeActivity": "النوع",
