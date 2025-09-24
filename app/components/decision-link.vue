@@ -1,14 +1,14 @@
 <template>
   <NuxtLink
-    v-if="href && isInternal"
-    :to="href"
+    v-if="resolvedHref && isInternal"
+    :to="resolvedHref"
     class="decision-link"
   >
     <slot>{{ displayLabel }}</slot>
   </NuxtLink>
   <a
-    v-else-if="href"
-    :href="href"
+    v-else-if="resolvedHref"
+    :href="resolvedHref"
     class="decision-link"
     :target="isExternal ? '_blank' : undefined"
     :rel="isExternal ? 'noopener noreferrer' : undefined"
@@ -22,18 +22,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { isExternalUrl, isInternalUrl, normalizeUrl } from 'shared/utils/url';
+import { resolveDecisionHrefWithFallback } from 'shared/utils/decision-links';
+import { isExternalUrl, isInternalUrl } from 'shared/utils/url';
 
 const props = defineProps<{ href?: string; label?: string }>();
 
-const sanitizedHref = computed(() => normalizeUrl(props.href ?? null));
+const resolvedHref = computed(() => resolveDecisionHrefWithFallback(props.href ?? null, props.label ?? null));
 
-const href = computed(() => sanitizedHref.value);
+const isInternal = computed(() => Boolean(resolvedHref.value && isInternalUrl(resolvedHref.value)));
+const isExternal = computed(() => Boolean(resolvedHref.value && isExternalUrl(resolvedHref.value)));
 
-const isInternal = computed(() => Boolean(href.value && isInternalUrl(href.value)));
-const isExternal = computed(() => Boolean(href.value && isExternalUrl(href.value)));
-
-const displayLabel = computed(() => props.label ?? href.value ?? '');
+const displayLabel = computed(() => props.label ?? resolvedHref.value ?? '');
 </script>
 
 <style scoped>

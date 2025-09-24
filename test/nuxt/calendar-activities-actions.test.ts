@@ -41,6 +41,7 @@ vi.mock('../../shared/utils/subjects', () => ({
 
 const decisionEntriesMock = vi.hoisted(() => vi.fn((record: Record<string, unknown>) => {
   const id = record._id ?? record.id;
+
   if (id === 'test-1') {
     return [
       {
@@ -60,9 +61,14 @@ const decisionEntriesMock = vi.hoisted(() => vi.fn((record: Record<string, unkno
   return [];
 })) as ReturnType<typeof vi.fn>;
 
-vi.mock('../../shared/utils/decision-links', () => ({
-  extractDecisionEntries: decisionEntriesMock,
-}));
+vi.mock('../../shared/utils/decision-links', async () => {
+  const actual = await vi.importActual<typeof import('../../shared/utils/decision-links')>('../../shared/utils/decision-links');
+
+  return {
+    ...actual,
+    extractDecisionEntries: decisionEntriesMock,
+  };
+});
 
 vi.mock('../../shared/data/meetings.js', () => ({
   meetings: [
@@ -98,26 +104,31 @@ describe('CalendarActivitiesActions Component', () => {
 
   it('should mount successfully without filteredDocs error', async () => {
     const component = await mountComponent();
+
     expect(component.exists()).toBe(true);
   });
 
   it('should display the correct title', async () => {
     const component = await mountComponent();
     const title = component.find('h2');
+
     expect(title.text()).toBe('Activities & Actions Explorer - Accordion View');
   });
 
   it('renders a type strip with a centered label', async () => {
     const component = await mountComponent();
+
     await flushPromises();
 
     const typeStrip = component.find('.calendar-row__type-strip');
+
     expect(typeStrip.exists()).toBe(true);
     expect(typeStrip.text().trim().length).toBeGreaterThan(0);
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {
     const component = await mountComponent('en');
+
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);
@@ -132,6 +143,7 @@ describe('CalendarActivitiesActions Component', () => {
 
   it('uses localized COP prefix when locale is French', async () => {
     const component = await mountComponent('fr');
+
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);

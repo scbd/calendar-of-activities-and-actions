@@ -23,7 +23,7 @@
         <div v-if="filteredGrouped.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
 
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
-          <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
+          <div class="dg-sep"><h3 class="m-0">{{ group.label }}</h3></div>
 
           <div
             v-for="item in group.items"
@@ -213,6 +213,7 @@ function loadSnapshotData(): void {
   try {
     const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
     const markdownDocs = buildDocsFromMarkdown(calendarMarkdownRaw);
+
     docs.value = [...normalizedMeetings, ...markdownDocs];
   } catch (error) {
     console.error('Failed to load snapshot data', error);
@@ -258,6 +259,7 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
 
 function buildDocsFromMarkdown(raw: string): AnyDoc[] {
   const rows = parseMarkdownTable(raw);
+
   return rows.map((row, index) => mapMarkdownRowToDoc(row, index));
 }
 
@@ -265,11 +267,13 @@ type MarkdownRow = Record<string, string>;
 
 function parseMarkdownTable(raw: string): MarkdownRow[] {
   const lines = raw.split('\n').filter(line => line.trim().startsWith('|'));
+
   if (lines.length < 3) {
     return [];
   }
 
   const headerLine = lines[0];
+
   if (!headerLine) return [];
   const headerCells = headerLine.split('|').map(cell => cell.trim());
   const header = headerCells.slice(1, headerCells.length - 1);
@@ -278,10 +282,13 @@ function parseMarkdownTable(raw: string): MarkdownRow[] {
 
   for (const line of dataLines) {
     const cells = line.split('|').map(cell => cell.trim());
+
     if (cells.length < header.length + 2) continue;
     const row: MarkdownRow = {};
+
     for (let i = 0; i < header.length; i += 1) {
       const key = header[i]!;
+
       row[key] = cells[i + 1] ?? '';
     }
     if (!row.Title) continue;
@@ -352,6 +359,7 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
 function normalizeStatusKey(label: string | undefined): string | null {
   if (!label) return null;
   const v = String(label).trim().toLowerCase();
+
   if (!v) return null;
   if (v === 'confirmed') return 'CONFIRM';
   return v.replace(/\s+/g, '_').toUpperCase();
@@ -366,6 +374,7 @@ function normalizeStatusLabel(key: string | null | undefined, fallback?: string)
 function parseFlexibleDate(value: string | undefined): string | null {
   if (!value) return null;
   const trimmed = value.trim();
+
   if (!trimmed) return null;
 
   const normalized = trimmed.replace(/\s+/g, ' ');
@@ -373,29 +382,37 @@ function parseFlexibleDate(value: string | undefined): string | null {
 
   for (const pattern of patterns) {
     const dt = DateTime.fromFormat(normalized, pattern, { zone: 'utc', locale: 'en' });
+
     if (dt.isValid) return dt.toUTC().toISO();
   }
 
   const monthPatterns = ['MMM-yy', 'MMM-yyyy', 'LLL yyyy', 'LLLL yyyy'];
+
   for (const pattern of monthPatterns) {
     const dt = DateTime.fromFormat(normalized, pattern, { zone: 'utc', locale: 'en' });
+
     if (dt.isValid) return dt.startOf('month').toUTC().toISO();
   }
 
   const quarterMatch = normalized.match(/^Q([1-4])\s*(\d{2,4})$/i);
+
   if (quarterMatch) {
     const quarter = Number.parseInt(quarterMatch[1] ?? '1', 10);
+
     let year = Number.parseInt(quarterMatch[2] ?? '0', 10);
     if (year < 100) year += year >= 70 ? 1900 : 2000;
     const month = (quarter - 1) * 3 + 1;
     const dt = DateTime.utc(year, month, 1);
+
     if (dt.isValid) return dt.toISO();
   }
 
   const yearMatch = normalized.match(/^(\d{4})$/);
+
   if (yearMatch) {
     const year = Number.parseInt(yearMatch[1]!, 10);
     const dt = DateTime.utc(year, 1, 1);
+
     if (dt.isValid) return dt.toISO();
   }
 
@@ -422,11 +439,13 @@ function slugify(text: string): string {
 
 function humanizeIdentifier(value: string): string {
   const trimmed = value.trim();
+
   if (!trimmed) {
     return '';
   }
 
   const hasMixedCase = /[a-z]/.test(trimmed) && /[A-Z]/.test(trimmed);
+
   if (hasMixedCase) {
     return trimmed;
   }
@@ -447,6 +466,7 @@ function getDocSubjects(doc: AnyDoc): string[] {
     return ((doc as Record<string, unknown>).subjectIdentifiers_ss as unknown[]).map(String).filter(Boolean);
   }
   const subjectField = (doc as Record<string, unknown>).subject_EN_s ?? (doc as Record<string, unknown>).subject_s ?? (doc as Record<string, unknown>).subject;
+
   if (typeof subjectField === 'string') return splitValues(subjectField);
   return [];
 }
@@ -456,6 +476,7 @@ function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
     return ((doc as Record<string, unknown>).subsidiaryBodies_ss as unknown[]).map(String).filter(Boolean);
   }
   const bodyField = (doc as Record<string, unknown>).subsidiaryBody_s ?? (doc as Record<string, unknown>).subsidiaryBody;
+
   if (typeof bodyField === 'string') return splitValues(bodyField);
   return [];
 }
@@ -477,6 +498,7 @@ function collectValueLabelPairs(value: unknown, label?: unknown): ValueLabelPair
 
   if (values.length === 0 && labels.length > 0) {
     const fallback = labels[0];
+
     return fallback ? [{ value: fallback, label: fallback }] : [];
   }
 
@@ -488,6 +510,7 @@ function collectValueLabelPairs(value: unknown, label?: unknown): ValueLabelPair
 
 function collectGlobalTargetEntries(doc: AnyDoc): ValueLabelPair[] {
   const record = doc as Record<string, unknown>;
+
   return [
     ...collectValueLabelPairs(record['gbfTargets_ss'], record['gbfTargets_EN_ss']),
     ...collectValueLabelPairs(record['globalTargets_ss'], record['globalTargets_EN_ss']),
@@ -501,6 +524,7 @@ function collectGlobalTargetEntries(doc: AnyDoc): ValueLabelPair[] {
 
 function collectCountryEntries(doc: AnyDoc): ValueLabelPair[] {
   const record = doc as Record<string, unknown>;
+
   return [
     ...collectValueLabelPairs(record['country_s'], record['country_EN_s']),
     ...collectValueLabelPairs(record['countryCode_s'], record['countryName_s']),
@@ -518,6 +542,7 @@ function collectCountryEntries(doc: AnyDoc): ValueLabelPair[] {
 
 function getDocGlobalTargets(doc: AnyDoc): string[] {
   const values = new Set<string>();
+
   collectGlobalTargetEntries(doc).forEach(entry => {
     if (entry.value) {
       values.add(entry.value);
@@ -528,6 +553,7 @@ function getDocGlobalTargets(doc: AnyDoc): string[] {
 
 function getDocCountries(doc: AnyDoc): string[] {
   const values = new Set<string>();
+
   collectCountryEntries(doc).forEach(entry => {
     if (entry.value) {
       values.add(entry.value);
@@ -542,6 +568,7 @@ function resolveCountryLabel(value: string, provided?: string | null): string {
   }
 
   const trimmed = value.trim();
+
   if (!trimmed) {
     return '';
   }
@@ -549,6 +576,7 @@ function resolveCountryLabel(value: string, provided?: string | null): string {
   if (regionDisplayNames) {
     try {
       const display = regionDisplayNames.of(trimmed.toUpperCase());
+
       if (display && display.toLowerCase() !== trimmed.toLowerCase()) {
         return display;
       }
@@ -572,8 +600,10 @@ function displaySubjectLabels(doc: AnyDoc): string[] {
 
 function getCopLabel(): string {
   const key = 'calendar.labels.cop';
+
   if (te(key)) {
     const localized = t(key);
+
     if (typeof localized === 'string' && localized.trim().length > 0) {
       return localized.trim();
     }
@@ -587,23 +617,27 @@ function normalizeDecisionLabel(label: string | null | undefined): string | null
   }
 
   const trimmed = label.trim();
+
   if (!trimmed) {
     return null;
   }
 
   const normalized = trimmed.toUpperCase();
   const hasReservedToken = ['COP', 'NP', 'CP'].some(token => normalized.includes(token));
+
   if (hasReservedToken) {
     return trimmed;
   }
 
   const prefix = getCopLabel();
   const safePrefix = prefix.trim() || 'COP';
+
   return `${safePrefix} ${trimmed}`;
 }
 
 function decisionEntries(doc: AnyDoc): DecisionEntry[] {
   const cached = decisionEntriesCache.get(doc);
+
   if (cached) {
     return cached;
   }
@@ -613,6 +647,7 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
     .map(entry => {
       const normalizedLabel = normalizeDecisionLabel(entry.label) ?? entry.label;
       const finalLabel = normalizedLabel?.trim() ?? '';
+
       if (!finalLabel) {
         return null;
       }
@@ -625,6 +660,7 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
 
   if (normalized.length === 0) {
     const fallback = normalizeDecisionLabel((doc as Record<string, unknown>)['copDecision_s'] as string | undefined);
+
     if (fallback) {
       normalized.push({ label: fallback });
     }
@@ -636,12 +672,14 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
 
 function paragraphEntries(doc: AnyDoc): string[] {
   const cached = paragraphEntriesCache.get(doc);
+
   if (cached) {
     return cached;
   }
 
   const record = doc as Record<string, unknown>;
   const values = new Set<string>();
+
   [
     record['copParagraph_s'],
     record['copParagraph'],
@@ -650,6 +688,7 @@ function paragraphEntries(doc: AnyDoc): string[] {
   ].forEach(value => {
     splitValues(value).forEach(paragraph => {
       const trimmed = paragraph.trim();
+
       if (trimmed) {
         values.add(trimmed);
       }
@@ -657,6 +696,7 @@ function paragraphEntries(doc: AnyDoc): string[] {
   });
 
   const result = Array.from(values);
+
   paragraphEntriesCache.set(doc, result);
   return result;
 }
@@ -668,6 +708,7 @@ const filteredDocs = computed(() => {
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
+
       return type && filters.types.includes(String(type));
     });
   }
@@ -675,6 +716,7 @@ const filteredDocs = computed(() => {
   if (filters.activityTypes.length > 0) {
     filtered = filtered.filter(doc => {
       const type = doc['type_s'] || doc['type'];
+
       return type && filters.activityTypes.includes(String(type));
     });
   }
@@ -682,6 +724,7 @@ const filteredDocs = computed(() => {
   if (filters.subjects.length > 0) {
     filtered = filtered.filter(doc => {
       const subjects = getDocSubjects(doc);
+
       return subjects.some(subject => filters.subjects.includes(subject));
     });
   }
@@ -689,6 +732,7 @@ const filteredDocs = computed(() => {
   if (filters.globalTargets.length > 0) {
     filtered = filtered.filter(doc => {
       const targets = getDocGlobalTargets(doc);
+
       return targets.some(target => filters.globalTargets.includes(target));
     });
   }
@@ -696,6 +740,7 @@ const filteredDocs = computed(() => {
   if (filters.countries.length > 0) {
     filtered = filtered.filter(doc => {
       const countries = getDocCountries(doc);
+
       return countries.some(country => filters.countries.includes(country));
     });
   }
@@ -703,6 +748,7 @@ const filteredDocs = computed(() => {
   if (filters.statuses.length > 0) {
     filtered = filtered.filter(doc => {
       const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
+
       return !!key && filters.statuses.includes(key);
     });
   }
@@ -710,6 +756,7 @@ const filteredDocs = computed(() => {
   if (filters.subsidiaryBodies.length > 0) {
     filtered = filtered.filter(doc => {
       const bodies = getDocSubsidiaryBodies(doc);
+
       return bodies.some(body => filters.subsidiaryBodies.includes(body));
     });
   }
@@ -717,6 +764,7 @@ const filteredDocs = computed(() => {
   if (filters.copDecisions.length > 0) {
     filtered = filtered.filter(doc => {
       const decisions = getDocDecisionLabels(doc);
+
       return decisions.some(decision => filters.copDecisions.includes(decision));
     });
   }
@@ -731,11 +779,13 @@ const filteredDocs = computed(() => {
 
       if (filters.startDate) {
         const startFilter = DateTime.fromISO(filters.startDate);
+
         if (docDate < startFilter) return false;
       }
 
       if (filters.endDate) {
         const endFilter = DateTime.fromISO(filters.endDate);
+
         if (docDate > endFilter) return false;
       }
 
@@ -754,12 +804,14 @@ const filteredDocs = computed(() => {
 
 const filteredGrouped = computed<GroupedItem[]>(() => {
   const buckets = new Map<string, { label: string; items: AnyDoc[] }>();
+
   for (const d of filteredDocs.value) {
     const { startDate_dt, endDate_dt } = d as MeetingDoc;
     const iso = startDate_dt || endDate_dt;
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
     const label = dt ? dt.toFormat('LLLL yyyy') : 'Unknown';
+
     if (!buckets.has(key)) buckets.set(key, { label, items: [] as AnyDoc[] });
     buckets.get(key)!.items.push(d as AnyDoc);
   }
@@ -770,8 +822,10 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
 
 const availableTypes = computed(() => {
   const types = new Set<string>();
+
   docs.value.forEach(doc => {
     const type = doc['type_s'] || doc['type'];
+
     if (type) types.add(String(type));
   });
   return Array.from(types).sort();
@@ -779,6 +833,7 @@ const availableTypes = computed(() => {
 
 const availableSubjects = computed(() => {
   const subjects = new Set<string>();
+
   docs.value.forEach(doc => {
     getDocSubjects(doc).forEach(subject => subjects.add(subject));
   });
@@ -787,8 +842,10 @@ const availableSubjects = computed(() => {
 
 const availableStatuses = computed(() => {
   const statuses = new Set<string>();
+
   docs.value.forEach(doc => {
     const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
+
     if (key) statuses.add(key);
   });
   return Array.from(statuses).sort();
@@ -796,6 +853,7 @@ const availableStatuses = computed(() => {
 
 const availableSubsidiaryBodies = computed(() => {
   const bodies = new Set<string>();
+
   docs.value.forEach(doc => {
     getDocSubsidiaryBodies(doc).forEach(body => bodies.add(body));
   });
@@ -804,6 +862,7 @@ const availableSubsidiaryBodies = computed(() => {
 
 const availableCopDecisions = computed(() => {
   const decisions = new Set<string>();
+
   docs.value.forEach(doc => {
     getDocDecisionLabels(doc).forEach(label => {
       if (label) {
@@ -816,6 +875,7 @@ const availableCopDecisions = computed(() => {
 
 const availableCountryOptions = computed<FilterOption[]>(() => {
   const map = new Map<string, string>();
+
   docs.value.forEach(doc => {
     collectCountryEntries(doc).forEach(({ value, label }) => {
       if (!value) {
@@ -823,6 +883,7 @@ const availableCountryOptions = computed<FilterOption[]>(() => {
       }
       const currentLabel = map.get(value);
       const finalLabel = resolveCountryLabel(value, label ?? currentLabel);
+
       if (!map.has(value) || (label && label.trim())) {
         map.set(value, finalLabel);
       }
@@ -836,6 +897,7 @@ const availableCountryOptions = computed<FilterOption[]>(() => {
 
 const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
   const map = new Map<string, string>();
+
   docs.value.forEach(doc => {
     collectGlobalTargetEntries(doc).forEach(({ value, label }) => {
       if (!value) {
@@ -858,6 +920,7 @@ const handleFiltersUpdate = (filters: FilterState) => {
 
 function typeValue(doc: AnyDoc): string {
   const raw = (doc as Record<string, unknown>).type_s ?? (doc as Record<string, unknown>).type;
+
   return typeof raw === 'string' ? raw.trim() : '';
 }
 
@@ -865,10 +928,12 @@ function typeLabel(doc: AnyDoc): string {
   const raw = typeValue(doc);
   const key = `calendar.types.${normalizeTypeKey(raw)}`;
   const translated = t(key) as string;
+
   if (translated && translated !== key) {
     return translated;
   }
   const fallback = t('calendar.types.default') as string;
+
   if (fallback && fallback !== 'calendar.types.default') {
     return fallback;
   }
@@ -878,6 +943,7 @@ function typeLabel(doc: AnyDoc): string {
 function typeStripStyle(doc: AnyDoc): Record<string, string> {
   const palette = getTypeColor(typeValue(doc));
   const textColor = getTypeForegroundColor(palette);
+
   return {
     backgroundColor: palette.background,
     color: textColor,
@@ -890,18 +956,22 @@ function typeStripAria(doc: AnyDoc): string {
 
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
+
   return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
 }
 
 function status(d: AnyDoc): string {
   const label = d['status_s'];
+
   if (typeof label === 'string' && label.trim()) return label;
   const key = d['statusKey_s'] as string | undefined;
+
   return normalizeStatusLabel(key ?? null);
 }
 
 function statusColor(d: AnyDoc): string {
     const s = status(d).toLowerCase();
+
     if (s === 'completed') return 'success';
     if (s === 'confirmed') return 'primary';
     if (s === 'to be confirmed') return 'warning';
@@ -912,6 +982,7 @@ function statusColor(d: AnyDoc): string {
 function _paragraphEntries(doc: AnyDoc): string[] {
   const record = doc as Record<string, unknown>;
   const values = new Set<string>();
+
   [
     record['copParagraph_s'],
     record['copParagraph'],
@@ -930,6 +1001,7 @@ function _paragraphEntries(doc: AnyDoc): string[] {
 function formatDateRange(d: AnyDoc): string {
   const start = safeDate(d['startDate_dt']);
   const end = safeDate(d['endDate_dt']);
+
   if (start && end) {
     if (start.hasSame(end, 'day')) return start.toFormat('d LLLL yyyy');
     if (start.month === end.month && start.year === end.year) {
@@ -948,6 +1020,7 @@ function formatDateRange(d: AnyDoc): string {
 function safeDate(v: unknown): DateTime | null {
   if (!v) return null;
   const dt = DateTime.fromISO(String(v));
+
   return dt.isValid ? dt : null;
 }
 </script>
@@ -955,11 +1028,21 @@ function safeDate(v: unknown): DateTime | null {
 @use '../assets/styles/main.scss' as *;
 </style>
 <style scoped>
-.dgSep {
-  padding: 0.5rem 0;
+.activities-explorer {
+  --calendar-group-header-offset: 0px;
+  --calendar-group-header-bg: var(--bs-body-bg, #fff);
+}
+
+.dg-sep {
+  position: sticky;
+  top: var(--calendar-group-header-offset);
+  z-index: 3;
+  padding: 0.75rem 0;
   border-top: 1px solid #e5e5e5;
   border-bottom: 1px solid #e5e5e5;
-  margin: 1rem 0;
+  margin: 1.5rem 0 1rem;
+  background-color: var(--calendar-group-header-bg);
+  scroll-margin-top: calc(var(--calendar-group-header-offset) + 1rem);
 }
 h3 {
   font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
