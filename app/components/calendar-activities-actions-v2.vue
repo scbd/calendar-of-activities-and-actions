@@ -39,7 +39,7 @@
                   <div class="w-100">
                     <div class="d-flex justify-content-between">
                       <span class="flex-grow-1"><strong>{{ title(item) }}</strong></span>
-                      <span class="badge bg-secondary ms-2">{{ item.type_s }}</span>
+                      <span class="badge bg-secondary ms-2">{{ typeLabel(item) }}</span>
                     </div>
                     <div class="small text-muted">{{ formatDateRange(item) }}</div>
                   </div>
@@ -54,8 +54,14 @@
                 <div class="accordion-body">
                   <div class="row">
                     <div class="col-md-6">
-                      <p><strong>Status:</strong> <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span></p>
-                      <p v-if="item.actionRequired_b"><strong>Action Required by Parties:</strong> Yes</p>
+                      <p>
+                        <strong>{{ t('calendar.labels.status') }}:</strong>
+                        <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
+                      </p>
+                      <p v-if="item.actionRequired_b">
+                        <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
+                        {{ t('calendar.common.yes') }}
+                      </p>
                       <p v-if="item.description_t"><strong>Description:</strong> {{ item.description_t }}</p>
                       <p v-if="item.statusNarrative_t"><strong>Status Narrative:</strong> {{ item.statusNarrative_t }}</p>
                     </div>
@@ -69,7 +75,7 @@
                     </div>
                   </div>
                   <div v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mt-3">
-                    <strong>Related Documents:</strong>
+                    <strong>{{ t('calendar.labels.relatedDocuments') }}:</strong>
                     <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
                   </div>
                 </div>
@@ -89,9 +95,15 @@ import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
+import { extractDecisionEntries } from 'shared/utils/decision-links';
+import { normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 // Load markdown content at build-time for both client and server bundles
-const __mdModulesB = import.meta.glob('shared/data/2024-12-01.md', { as: 'raw', eager: true }) as Record<string, string>;
+const __mdModulesB = import.meta.glob('shared/data/2024-12-01.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 const calendarMarkdownRaw = Object.values(__mdModulesB)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
@@ -100,6 +112,7 @@ const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
+const { t, te } = useI18n();
 
 interface FilterOption {
   value: string;
@@ -436,9 +449,10 @@ function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
   return [];
 }
 
-function getDocCopDecision(doc: AnyDoc): string | null {
-  const decision = (doc as Record<string, unknown>).copDecision_s ?? (doc as Record<string, unknown>).copDecision;
-  return decision ? String(decision) : null;
+function getDocDecisionLabels(doc: AnyDoc): string[] {
+  return extractDecisionEntries(doc as Record<string, unknown>)
+    .map(entry => entry.label)
+    .filter(label => Boolean(label && label.trim()));
 }
 
 interface ValueLabelPair {
@@ -600,8 +614,8 @@ const filteredDocs = computed(() => {
 
   if (filters.copDecisions.length > 0) {
     filtered = filtered.filter(doc => {
-      const decision = getDocCopDecision(doc);
-      return decision ? filters.copDecisions.includes(decision) : false;
+      const decisions = getDocDecisionLabels(doc);
+      return decisions.some(decision => filters.copDecisions.includes(decision));
     });
   }
 
@@ -689,8 +703,11 @@ const availableSubsidiaryBodies = computed(() => {
 const availableCopDecisions = computed(() => {
   const decisions = new Set<string>();
   docs.value.forEach(doc => {
-    const decision = getDocCopDecision(doc);
-    if (decision) decisions.add(decision);
+    getDocDecisionLabels(doc).forEach(label => {
+      if (label) {
+        decisions.add(label);
+      }
+    });
   });
   return Array.from(decisions).sort();
 });
@@ -736,6 +753,23 @@ const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
 const handleFiltersUpdate = (filters: FilterState) => {
   currentFilters.value = filters;
 };
+
+function typeValue(doc: AnyDoc): string {
+  const raw = (doc as Record<string, unknown>).type_s ?? (doc as Record<string, unknown>).type;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
+
+function typeLabel(doc: AnyDoc): string {
+  const raw = typeValue(doc);
+  const key = `calendar.types.${normalizeTypeKey(raw)}`;
+  if (raw && te(key)) {
+    return t(key) as string;
+  }
+  if (te('calendar.types.default')) {
+    return t('calendar.types.default') as string;
+  }
+  return raw || 'Activity';
+}
 
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);

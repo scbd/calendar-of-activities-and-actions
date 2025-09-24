@@ -19,13 +19,15 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "clean-reinstall": "rm -rf node_modules yarn.lock .nuxt .yarn && yarn install"
   },
   "dependencies": {
     "@nuxt/eslint": "1.9.0",
     "@nuxt/fonts": "0.11.4",
     "@nuxt/image": "1.11.0",
     "@nuxt/test-utils": "3.19.2",
+    "@nuxtjs/i18n": "10.1.0",
     "@popperjs/core": "2.11.8",
     "bootstrap": "5.3.8",
     "consola": "3.4.2",

@@ -1,0 +1,54 @@
+{
+  "calendar": {
+    "filters": {
+      "labels": {
+        "typeActivity": "类型",
+        "activityTypes": "活动类型",
+        "globalTargets": "全球目标",
+        "countries": "国家",
+        "subjects": "主题",
+        "statuses": "状态",
+        "subsidiaryBodies": "附属机构",
+        "decisions": "决定",
+        "dateRange": "日期范围",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "actionRequired": "需要采取行动"
+      },
+      "placeholders": {
+        "typeActivity": "选择类型",
+        "activityTypes": "选择活动类型",
+        "globalTargets": "选择全球目标",
+        "countries": "选择国家",
+        "subjects": "选择主题",
+        "statuses": "选择状态",
+        "subsidiaryBodies": "选择附属机构",
+        "decisions": "选择决定"
+      },
+      "toggles": {
+        "actionRequiredOnly": "仅显示需要采取行动的事项"
+      },
+      "actions": {
+        "clearAll": "清除所有筛选条件"
+      }
+    },
+    "types": {
+      "cop": "缔约方大会会议",
+      "sbstta": "SBSTTA 会议",
+      "sbi": "SBI 会议",
+      "meeting": "会议",
+      "nominations": "提名",
+      "submission": "提交信息",
+      "peerReview": "同行评审",
+      "report": "报告",
+      "forum": "论坛",
+      "activity": "活动",
+      "webinar": "网络研讨会",
+      "workshop": "研讨班",
+      "training": "培训",
+      "consultation": "磋商",
+      "campaign": "宣传活动",
+      "other": "其他"
+    }
+  }
+}

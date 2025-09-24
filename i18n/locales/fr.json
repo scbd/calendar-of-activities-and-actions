@@ -1,0 +1,97 @@
+{
+  "calendar": {
+    "labels": {
+      "decision": "Décision",
+      "paragraph": "Parag.",
+      "subjects": "Sujets",
+      "associatedBody": "Organe associé",
+      "responsibleUnit": "Unité responsable",
+      "responsibleOfficer": "Responsable",
+      "relatedDocuments": "Documents connexes",
+      "actionRequired": "Action requise",
+      "actionRequiredByParties": "Action requise par les Parties",
+      "status": "Statut",
+      "type": "Type",
+      "typeStripAria": "Élément {type}"
+    },
+    "filters": {
+      "labels": {
+        "typeActivity": "Type",
+        "activityTypes": "Types d'activité",
+        "globalTargets": "Objectifs mondiaux",
+        "countries": "Pays",
+        "subjects": "Sujets",
+        "statuses": "Statuts",
+        "subsidiaryBodies": "Organe subsidiaire",
+        "decisions": "Décision",
+        "dateRange": "Période",
+        "startDate": "Date de début",
+        "endDate": "Date de fin",
+        "actionRequired": "Action requise"
+      },
+      "placeholders": {
+        "typeActivity": "Sélectionner des types",
+        "activityTypes": "Sélectionner des types d'activité",
+        "globalTargets": "Sélectionner des objectifs mondiaux",
+        "countries": "Sélectionner des pays",
+        "subjects": "Sélectionner des sujets",
+        "statuses": "Sélectionner des statuts",
+        "subsidiaryBodies": "Sélectionner des organes subsidiaires",
+        "decisions": "Sélectionner des décisions"
+      },
+      "toggles": {
+        "actionRequiredOnly": "Afficher uniquement les éléments nécessitant une action"
+      },
+      "actions": {
+        "clearAll": "Effacer tous les filtres"
+      },
+      "typeLabel": "Type",
+      "typePlaceholder": "Sélectionner des types",
+      "activityLabel": "Types d'activité",
+      "activityPlaceholder": "Sélectionner des types d'activité",
+      "globalTargetLabel": "Objectifs mondiaux",
+      "globalTargetPlaceholder": "Sélectionner des objectifs mondiaux",
+      "countryLabel": "Pays",
+      "countryPlaceholder": "Sélectionner des pays",
+      "subjectLabel": "Sujet",
+      "subjectPlaceholder": "Sélectionner des sujets",
+      "statusLabel": "Statut",
+      "statusPlaceholder": "Sélectionner des statuts",
+      "subsidiaryBodyLabel": "Organe subsidiaire",
+      "subsidiaryBodyPlaceholder": "Sélectionner des organes subsidiaires",
+      "decisionLabel": "Décision",
+      "decisionPlaceholder": "Sélectionner des décisions",
+      "dateRangeLabel": "Période",
+      "startDateLabel": "Date de début",
+      "endDateLabel": "Date de fin",
+      "actionRequiredLabel": "Action requise",
+      "actionRequiredHint": "Afficher uniquement les éléments nécessitant une action",
+      "clearAll": "Effacer tous les filtres"
+    },
+    "types": {
+      "cop": "Réunion de la CdP",
+      "sbstta": "Réunion du SBSTTA",
+      "sbi": "Réunion du SBI",
+      "meeting": "Réunion",
+      "nominations": "Nominations",
+      "submission": "Soumission d'informations",
+      "peerReview": "Revue par les pairs",
+      "report": "Rapport",
+      "forum": "Forum",
+      "activity": "Activité",
+      "webinar": "Webinaire",
+      "workshop": "Atelier",
+      "training": "Formation",
+      "consultation": "Consultation",
+      "campaign": "Campagne",
+      "other": "Autre",
+      "conference": "Conférence",
+      "side-event": "Événement parallèle",
+      "default": "Activité",
+      "unknown": "Activité"
+    },
+    "common": {
+      "yes": "Oui"
+    }
+  }
+}

@@ -25,7 +25,18 @@
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
-          <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="card mb-2">
+          <div
+            v-for="item in group.items"
+            :key="String(item._id || item.id || '')"
+            class="card mb-2 calendar-item"
+          >
+            <div
+              class="calendar-item__header"
+              :style="typeStripStyle(item)"
+              :aria-label="typeStripAria(item)"
+            >
+              <span class="calendar-item__header-label">{{ typeLabel(item) }}</span>
+            </div>
             <div class="card-body">
               <div class="row">
                 <div class="col-md-8">
@@ -35,7 +46,7 @@
                 <div class="col-md-4 text-md-end">
                   <strong>{{ formatDateRange(item) }}</strong><br>
                   <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
-                  <span v-if="item.actionRequired_b" class="badge bg-danger ms-1">Action Required</span>
+                  <span v-if="item.actionRequired_b" class="badge bg-danger ms-1">{{ t('calendar.labels.actionRequired') }}</span>
                 </div>
               </div>
               <hr>
@@ -47,10 +58,16 @@
                   <p v-if="item.copParagraph_s" class="mb-1"><strong>COP Paragraph:</strong> {{ item.copParagraph_s }}</p>
                 </div>
                 <div class="col-md-6">
-                  <p v-if="item.responsibleUnit_s" class="mb-1"><strong>Responsible Unit:</strong> {{ item.responsibleUnit_s }}</p>
-                  <p v-if="item.responsibleOfficer_s" class="mb-1"><strong>Responsible Officer:</strong> {{ item.responsibleOfficer_s }}</p>
+                  <p v-if="item.responsibleUnit_s" class="mb-1">
+                    <strong>{{ t('calendar.labels.responsibleUnit') }}:</strong>
+                    {{ item.responsibleUnit_s }}
+                  </p>
+                  <p v-if="item.responsibleOfficer_s" class="mb-1">
+                    <strong>{{ t('calendar.labels.responsibleOfficer') }}:</strong>
+                    {{ item.responsibleOfficer_s }}
+                  </p>
                   <p v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mb-1">
-                    <strong>Related Documents:</strong>
+                    <strong>{{ t('calendar.labels.relatedDocuments') }}:</strong>
                     <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
                   </p>
                 </div>
@@ -70,9 +87,15 @@ import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
+import { extractDecisionEntries } from 'shared/utils/decision-links';
+import { getTypeColor, getTypeForegroundColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 // Load markdown content at build-time for both client and server bundles
-const __mdModulesC = import.meta.glob('shared/data/2024-12-01.md', { as: 'raw', eager: true }) as Record<string, string>;
+const __mdModulesC = import.meta.glob('shared/data/2024-12-01.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 const calendarMarkdownRaw = Object.values(__mdModulesC)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
@@ -81,6 +104,7 @@ const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
+const { t } = useI18n();
 
 interface FilterOption {
   value: string;
@@ -409,9 +433,10 @@ function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
   return [];
 }
 
-function getDocCopDecision(doc: AnyDoc): string | null {
-  const decision = (doc as Record<string, unknown>).copDecision_s ?? (doc as Record<string, unknown>).copDecision;
-  return decision ? String(decision) : null;
+function getDocDecisionLabels(doc: AnyDoc): string[] {
+  return extractDecisionEntries(doc as Record<string, unknown>)
+    .map(entry => entry.label)
+    .filter(label => Boolean(label && label.trim()));
 }
 
 interface ValueLabelPair {
@@ -573,8 +598,8 @@ const filteredDocs = computed(() => {
 
   if (filters.copDecisions.length > 0) {
     filtered = filtered.filter(doc => {
-      const decision = getDocCopDecision(doc);
-      return decision ? filters.copDecisions.includes(decision) : false;
+      const decisions = getDocDecisionLabels(doc);
+      return decisions.some(decision => filters.copDecisions.includes(decision));
     });
   }
 
@@ -662,8 +687,11 @@ const availableSubsidiaryBodies = computed(() => {
 const availableCopDecisions = computed(() => {
   const decisions = new Set<string>();
   docs.value.forEach(doc => {
-    const decision = getDocCopDecision(doc);
-    if (decision) decisions.add(decision);
+    getDocDecisionLabels(doc).forEach(label => {
+      if (label) {
+        decisions.add(label);
+      }
+    });
   });
   return Array.from(decisions).sort();
 });
@@ -710,6 +738,38 @@ const handleFiltersUpdate = (filters: FilterState) => {
   currentFilters.value = filters;
 };
 
+function typeValue(doc: AnyDoc): string {
+  const raw = (doc as Record<string, unknown>).type_s ?? (doc as Record<string, unknown>).type;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
+
+function typeLabel(doc: AnyDoc): string {
+  const raw = typeValue(doc);
+  const key = `calendar.types.${normalizeTypeKey(raw)}`;
+  const translated = t(key) as string;
+  if (translated && translated !== key) {
+    return translated;
+  }
+  const fallback = t('calendar.types.default') as string;
+  if (fallback && fallback !== 'calendar.types.default') {
+    return fallback;
+  }
+  return raw || 'Activity';
+}
+
+function typeStripStyle(doc: AnyDoc): Record<string, string> {
+  const color = getTypeColor(typeValue(doc));
+  const textColor = getTypeForegroundColor(color);
+  return {
+    backgroundColor: color,
+    color: textColor,
+  };
+}
+
+function typeStripAria(doc: AnyDoc): string {
+  return t('calendar.labels.typeStripAria', { type: typeLabel(doc) }) as string;
+}
+
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
   return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
@@ -729,6 +789,24 @@ function statusColor(d: AnyDoc): string {
     if (s === 'to be confirmed') return 'warning';
     if (s === 'ongoing') return 'info';
     return 'secondary';
+}
+
+function paragraphEntries(doc: AnyDoc): string[] {
+  const record = doc as Record<string, unknown>;
+  const values = new Set<string>();
+  [
+    record['copParagraph_s'],
+    record['copParagraph'],
+    record['copParagraph_ss'],
+    record['copParagraphs_ss'],
+  ].forEach(value => {
+    splitValues(value).forEach(paragraph => {
+      if (paragraph) {
+        values.add(paragraph);
+      }
+    });
+  });
+  return Array.from(values);
 }
 
 function formatDateRange(d: AnyDoc): string {
@@ -777,5 +855,26 @@ h3 {
 }
 .card-title {
     font-weight: 500;
+}
+
+.calendar-item {
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.calendar-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.calendar-item__header-label {
+  text-transform: uppercase;
+  font-size: 0.875rem;
 }
 </style>

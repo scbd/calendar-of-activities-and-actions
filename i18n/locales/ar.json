@@ -1,0 +1,54 @@
+{
+  "calendar": {
+    "filters": {
+      "labels": {
+        "typeActivity": "النوع",
+        "activityTypes": "أنواع الأنشطة",
+        "globalTargets": "الأهداف العالمية",
+        "countries": "الدول",
+        "subjects": "الموضوعات",
+        "statuses": "الحالات",
+        "subsidiaryBodies": "الأجهزة الفرعية",
+        "decisions": "القرارات",
+        "dateRange": "نطاق التاريخ",
+        "startDate": "تاريخ البدء",
+        "endDate": "تاريخ الانتهاء",
+        "actionRequired": "الإجراء المطلوب"
+      },
+      "placeholders": {
+        "typeActivity": "اختر الأنواع",
+        "activityTypes": "اختر أنواع الأنشطة",
+        "globalTargets": "اختر الأهداف العالمية",
+        "countries": "اختر الدول",
+        "subjects": "اختر الموضوعات",
+        "statuses": "اختر الحالات",
+        "subsidiaryBodies": "اختر الأجهزة الفرعية",
+        "decisions": "اختر القرارات"
+      },
+      "toggles": {
+        "actionRequiredOnly": "عرض العناصر التي تتطلب إجراء فقط"
+      },
+      "actions": {
+        "clearAll": "مسح جميع عوامل التصفية"
+      }
+    },
+    "types": {
+      "cop": "اجتماع مؤتمر الأطراف",
+      "sbstta": "اجتماع SBSTTA",
+      "sbi": "اجتماع SBI",
+      "meeting": "اجتماع",
+      "nominations": "الترشيحات",
+      "submission": "تقديم المعلومات",
+      "peerReview": "مراجعة الأقران",
+      "report": "تقرير",
+      "forum": "منتدى",
+      "activity": "نشاط",
+      "webinar": "ندوة عبر الإنترنت",
+      "workshop": "ورشة عمل",
+      "training": "تدريب",
+      "consultation": "مشاورة",
+      "campaign": "حملة",
+      "other": "أخرى"
+    }
+  }
+}

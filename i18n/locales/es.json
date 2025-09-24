@@ -1,0 +1,54 @@
+{
+  "calendar": {
+    "filters": {
+      "labels": {
+        "typeActivity": "Tipo",
+        "activityTypes": "Tipos de actividad",
+        "globalTargets": "Objetivos mundiales",
+        "countries": "Países",
+        "subjects": "Temas",
+        "statuses": "Estados",
+        "subsidiaryBodies": "Órganos subsidiarios",
+        "decisions": "Decisiones",
+        "dateRange": "Rango de fechas",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de finalización",
+        "actionRequired": "Acción requerida"
+      },
+      "placeholders": {
+        "typeActivity": "Seleccionar tipos",
+        "activityTypes": "Seleccionar tipos de actividad",
+        "globalTargets": "Seleccionar objetivos mundiales",
+        "countries": "Seleccionar países",
+        "subjects": "Seleccionar temas",
+        "statuses": "Seleccionar estados",
+        "subsidiaryBodies": "Seleccionar órganos subsidiarios",
+        "decisions": "Seleccionar decisiones"
+      },
+      "toggles": {
+        "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
+      },
+      "actions": {
+        "clearAll": "Limpiar todos los filtros"
+      }
+    },
+    "types": {
+      "cop": "Reunión de la COP",
+      "sbstta": "Reunión del SBSTTA",
+      "sbi": "Reunión del SBI",
+      "meeting": "Reunión",
+      "nominations": "Nominaciones",
+      "submission": "Presentación de información",
+      "peerReview": "Revisión por pares",
+      "report": "Informe",
+      "forum": "Foro",
+      "activity": "Actividad",
+      "webinar": "Seminario web",
+      "workshop": "Taller",
+      "training": "Capacitación",
+      "consultation": "Consulta",
+      "campaign": "Campaña",
+      "other": "Otro"
+    }
+  }
+}

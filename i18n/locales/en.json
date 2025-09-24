@@ -1,0 +1,97 @@
+{
+  "calendar": {
+    "labels": {
+      "decision": "Decision",
+      "paragraph": "Para",
+      "subjects": "Subjects",
+      "associatedBody": "Associated body",
+      "responsibleUnit": "Responsible unit",
+      "responsibleOfficer": "Responsible officer",
+      "relatedDocuments": "Related documents",
+      "actionRequired": "Action required",
+      "actionRequiredByParties": "Action required by parties",
+      "status": "Status",
+      "type": "Type",
+      "typeStripAria": "{type} item"
+    },
+    "filters": {
+      "labels": {
+        "typeActivity": "Type",
+        "activityTypes": "Activity types",
+        "globalTargets": "Global targets",
+        "countries": "Countries",
+        "subjects": "Subjects",
+        "statuses": "Status",
+        "subsidiaryBodies": "Subsidiary body",
+        "decisions": "Decision",
+        "dateRange": "Date range",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "actionRequired": "Action required"
+      },
+      "placeholders": {
+        "typeActivity": "Select types",
+        "activityTypes": "Select activity types",
+        "globalTargets": "Select global targets",
+        "countries": "Select countries",
+        "subjects": "Select subjects",
+        "statuses": "Select statuses",
+        "subsidiaryBodies": "Select subsidiary bodies",
+        "decisions": "Select decisions"
+      },
+      "toggles": {
+        "actionRequiredOnly": "Show only items requiring action"
+      },
+      "actions": {
+        "clearAll": "Clear all filters"
+      },
+      "typeLabel": "Type",
+      "typePlaceholder": "Select types",
+      "activityLabel": "Activity types",
+      "activityPlaceholder": "Select activity types",
+      "globalTargetLabel": "Global targets",
+      "globalTargetPlaceholder": "Select global targets",
+      "countryLabel": "Countries",
+      "countryPlaceholder": "Select countries",
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "Select subjects",
+      "statusLabel": "Status",
+      "statusPlaceholder": "Select statuses",
+      "subsidiaryBodyLabel": "Subsidiary body",
+      "subsidiaryBodyPlaceholder": "Select subsidiary bodies",
+      "decisionLabel": "Decision",
+      "decisionPlaceholder": "Select decisions",
+      "dateRangeLabel": "Date range",
+      "startDateLabel": "Start date",
+      "endDateLabel": "End date",
+      "actionRequiredLabel": "Action required",
+      "actionRequiredHint": "Show only items requiring action",
+      "clearAll": "Clear all filters"
+    },
+    "types": {
+      "cop": "COP meeting",
+      "sbstta": "SBSTTA meeting",
+      "sbi": "SBI meeting",
+      "meeting": "Meeting",
+      "nominations": "Nominations",
+      "submission": "Submission of Information",
+      "peerReview": "Peer-review",
+      "report": "Report",
+      "forum": "Forum",
+      "activity": "Activity",
+      "webinar": "Webinar",
+      "workshop": "Workshop",
+      "training": "Training",
+      "consultation": "Consultation",
+      "campaign": "Campaign",
+      "other": "Other",
+      "conference": "Conference",
+      "side-event": "Side event",
+      "default": "Activity",
+      "unknown": "Activity"
+    },
+    "common": {
+      "yes": "Yes"
+    }
+  }
+}

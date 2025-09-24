@@ -1,74 +1,86 @@
 import { describe, it, expect } from 'vitest';
 import { nextTick } from 'vue';
-import Multiselect from 'vue-multiselect';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
+import Multiselect from 'vue-multiselect';
+import { createI18n } from 'vue-i18n';
 import CalendarFilters from '../../app/components/calendar-filters.vue';
+import en from '../../i18n/locales/en.json';
+import fr from '../../i18n/locales/fr.json';
+
+const defaultProps = {
+  availableTypes: ['Meeting', 'Workshop'],
+  availableSubjects: ['Biodiversity', 'Climate'],
+  availableStatuses: ['Confirmed', 'Tentative'],
+  availableSubsidiaryBodies: ['SBSTTA', 'SBI'],
+  availableCopDecisions: ['COP-15', 'COP-16'],
+};
+
+function createI18nPlugin() {
+  return createI18n({
+    legacy: false,
+    locale: 'en',
+    fallbackLocale: 'en',
+    messages: { en, fr },
+  });
+}
+
+async function mountFilters(props = defaultProps) {
+  return mountSuspended(CalendarFilters, {
+    props,
+    global: {
+      plugins: [createI18nPlugin()],
+    },
+  });
+}
 
 describe('CalendarFilters Component', () => {
-  it('should mount successfully', async () => {
-    const wrapper = await mountSuspended(CalendarFilters, {
-      props: {
-        availableTypes: ['Meeting', 'Workshop'],
-        availableSubjects: ['Biodiversity', 'Climate'],
-        availableStatuses: ['Confirmed', 'Tentative'],
-        availableSubsidiaryBodies: ['SBSTTA', 'SBI'],
-        availableCopDecisions: ['COP-15', 'COP-16'],
-      },
-    });
-
+  it('mounts successfully', async () => {
+    const wrapper = await mountFilters();
     expect(wrapper.exists()).toBe(true);
   });
 
-  it('should emit filter updates when select changes', async () => {
-    const wrapper = await mountSuspended(CalendarFilters, {
-      props: {
-        availableTypes: ['Meeting', 'Workshop'],
-        availableSubjects: ['Biodiversity', 'Climate'],
-        availableStatuses: ['Confirmed', 'Tentative'],
-        availableSubsidiaryBodies: ['SBSTTA', 'SBI'],
-        availableCopDecisions: ['COP-15', 'COP-16'],
-      },
-    });
+  it('emits filter updates when type selection changes', async () => {
+    const wrapper = await mountFilters();
 
-    // Simulate selecting a type
-  const typeSelect = wrapper.findComponent(Multiselect);
-  // vue-multiselect is a custom component; simulate v-model update event
-  typeSelect.vm.$emit('update:modelValue', ['Meeting']);
-  await nextTick();
+    const selects = wrapper.findAllComponents(Multiselect);
+    const typeSelect = selects[0];
+    typeSelect.vm.$emit('update:modelValue', ['Meeting']);
+    await nextTick();
 
-    expect(wrapper.emitted('update:filters')).toBeTruthy();
-  const emissions = wrapper.emitted('update:filters')!;
-    const emittedFilters = emissions[emissions.length - 1][0];
-    expect(emittedFilters.types).toEqual(['Meeting']);
+    const emissions = wrapper.emitted('update:filters');
+    expect(emissions).toBeTruthy();
+    const latest = emissions?.[emissions.length - 1]?.[0];
+    expect(latest?.types).toEqual(['Meeting']);
   });
 
-  it('should clear all filters when clear button is clicked', async () => {
-    const wrapper = await mountSuspended(CalendarFilters, {
-      props: {
-        availableTypes: ['Meeting', 'Workshop'],
-        availableSubjects: ['Biodiversity', 'Climate'],
-        availableStatuses: ['Confirmed', 'Tentative'],
-        availableSubsidiaryBodies: ['SBSTTA', 'SBI'],
-        availableCopDecisions: ['COP-15', 'COP-16'],
-      },
-    });
+  it('clears all filters when the clear button is clicked', async () => {
+    const wrapper = await mountFilters();
+    const selects = wrapper.findAllComponents(Multiselect);
+    const typeSelect = selects[0];
+    typeSelect.vm.$emit('update:modelValue', ['Meeting']);
+    await nextTick();
 
-    // Set some filters first
-    const typeSelect = wrapper.find('#type-filter');
-    await typeSelect.setValue(['Meeting']);
+    const actionRequiredToggle = wrapper.find('#action-required-filter');
+    await actionRequiredToggle.setValue(true);
+    await nextTick();
 
-    // Clear filters
     const clearButton = wrapper.find('button');
     await clearButton.trigger('click');
+    await nextTick();
 
-    const emittedFilters = wrapper.emitted('update:filters')[1][0]; // Second emission after clear
-    expect(emittedFilters.types).toEqual([]);
-    expect(emittedFilters.subjects).toEqual([]);
-    expect(emittedFilters.statuses).toEqual([]);
-    expect(emittedFilters.subsidiaryBodies).toEqual([]);
-    expect(emittedFilters.copDecisions).toEqual([]);
-    expect(emittedFilters.startDate).toBe('');
-    expect(emittedFilters.endDate).toBe('');
-    expect(emittedFilters.actionRequired).toBe(false);
+    const emissions = wrapper.emitted('update:filters');
+    expect(emissions).toBeTruthy();
+    const latest = emissions?.[emissions.length - 1]?.[0];
+    expect(latest?.types).toEqual([]);
+    expect(latest?.subjects).toEqual([]);
+    expect(latest?.statuses).toEqual([]);
+    expect(latest?.subsidiaryBodies).toEqual([]);
+    expect(latest?.copDecisions).toEqual([]);
+    expect(latest?.activityTypes).toEqual([]);
+    expect(latest?.globalTargets).toEqual([]);
+    expect(latest?.countries).toEqual([]);
+    expect(latest?.startDate).toBe('');
+    expect(latest?.endDate).toBe('');
+    expect(latest?.actionRequired).toBe(false);
   });
 });

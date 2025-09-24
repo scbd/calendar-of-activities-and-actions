@@ -8,9 +8,23 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/image',
     '@nuxt/fonts',
-    '@nuxt/test-utils'
+    '@nuxt/test-utils',
+    '@nuxtjs/i18n'
   ],
-
+  i18n: {
+    locales: [
+      { code: 'en', name: 'English', file: 'en.json' },
+      { code: 'fr', name: 'Français', file: 'fr.json' },
+      { code: 'es', name: 'Español', file: 'es.json' },
+      { code: 'ar', name: 'العربية', file: 'ar.json' },
+      { code: 'ru', name: 'Русский', file: 'ru.json' },
+      { code: 'zh', name: '中文', file: 'zh.json' }
+    ],
+    defaultLocale: 'en',
+    langDir: 'locales',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: true
+  },
   css: [
     'vue-multiselect/dist/vue-multiselect.css'
   ],

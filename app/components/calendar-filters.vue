@@ -3,7 +3,7 @@
     <div class="row g-3">
       <!-- Type Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="type-filter" class="form-label">Type</label>
+        <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.typeActivity') }}</label>
         <Multiselect
           id="type-filter"
           v-model="selectedTypes"
@@ -12,15 +12,17 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select types"
+          :group-values="'options'"
+          :group-label="'label'"
           label="label"
           track-by="value"
+          :placeholder="t('calendar.filters.placeholders.typeActivity')"
         />
       </div>
 
       <!-- Activity Types Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="activity-types-filter" class="form-label">Activity Types</label>
+        <label for="activity-types-filter" class="form-label">{{ t('calendar.filters.labels.activityTypes') }}</label>
         <Multiselect
           id="activity-types-filter"
           v-model="selectedActivityTypes"
@@ -29,7 +31,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select activity types"
+          :placeholder="t('calendar.filters.placeholders.activityTypes')"
           label="label"
           track-by="value"
         />
@@ -37,7 +39,7 @@
 
       <!-- Global Targets Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="global-targets-filter" class="form-label">Global Targets</label>
+        <label for="global-targets-filter" class="form-label">{{ t('calendar.filters.labels.globalTargets') }}</label>
         <Multiselect
           id="global-targets-filter"
           v-model="selectedGlobalTargets"
@@ -46,7 +48,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select global targets"
+          :placeholder="t('calendar.filters.placeholders.globalTargets')"
           label="label"
           track-by="value"
         />
@@ -54,7 +56,7 @@
 
       <!-- Countries Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="countries-filter" class="form-label">Countries</label>
+        <label for="countries-filter" class="form-label">{{ t('calendar.filters.labels.countries') }}</label>
         <Multiselect
           id="countries-filter"
           v-model="selectedCountries"
@@ -63,7 +65,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select countries"
+          :placeholder="t('calendar.filters.placeholders.countries')"
           label="label"
           track-by="value"
         />
@@ -71,7 +73,7 @@
 
       <!-- Subject Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="subject-filter" class="form-label">Subject</label>
+        <label for="subject-filter" class="form-label">{{ t('calendar.filters.labels.subjects') }}</label>
         <Multiselect
           id="subject-filter"
           v-model="selectedSubjects"
@@ -80,7 +82,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select subjects"
+          :placeholder="t('calendar.filters.placeholders.subjects')"
           label="label"
           track-by="value"
         />
@@ -88,7 +90,7 @@
 
       <!-- Status Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="status-filter" class="form-label">Status</label>
+        <label for="status-filter" class="form-label">{{ t('calendar.filters.labels.statuses') }}</label>
         <Multiselect
           id="status-filter"
           v-model="selectedStatuses"
@@ -97,7 +99,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select statuses"
+          :placeholder="t('calendar.filters.placeholders.statuses')"
           label="label"
           track-by="value"
         />
@@ -105,7 +107,7 @@
 
       <!-- Subsidiary Body Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="subsidiary-body-filter" class="form-label">Subsidiary Body</label>
+        <label for="subsidiary-body-filter" class="form-label">{{ t('calendar.filters.labels.subsidiaryBodies') }}</label>
         <Multiselect
           id="subsidiary-body-filter"
           v-model="selectedSubsidiaryBodies"
@@ -114,7 +116,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select subsidiary bodies"
+          :placeholder="t('calendar.filters.placeholders.subsidiaryBodies')"
           label="label"
           track-by="value"
         />
@@ -122,7 +124,7 @@
 
       <!-- COP Decision Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="cop-decision-filter" class="form-label">COP Decision</label>
+        <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
           v-model="selectedCopDecisions"
@@ -131,7 +133,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          placeholder="Select COP decisions"
+          :placeholder="t('calendar.filters.placeholders.decisions')"
           label="label"
           track-by="value"
         />
@@ -139,7 +141,7 @@
 
       <!-- Date Range Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label class="form-label">Date Range</label>
+        <label class="form-label">{{ t('calendar.filters.labels.dateRange') }}</label>
         <div class="row g-2">
           <div class="col-6">
             <input
@@ -162,7 +164,7 @@
 
       <!-- Action Required Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label class="form-label">Action Required</label>
+        <label class="form-label">{{ t('calendar.filters.labels.actionRequired') }}</label>
         <div class="form-check">
           <input
             id="action-required-filter"
@@ -172,7 +174,7 @@
             @change="updateFilters"
           >
           <label class="form-check-label" for="action-required-filter">
-            Show only items requiring action
+            {{ t('calendar.filters.toggles.actionRequiredOnly') }}
           </label>
         </div>
       </div>
@@ -184,7 +186,7 @@
           class="btn btn-outline-secondary btn-sm"
           @click="clearFilters"
         >
-          Clear All Filters
+          {{ t('calendar.filters.actions.clearAll') }}
         </button>
       </div>
     </div>
@@ -234,6 +236,8 @@ const emit = defineEmits<{
   'update:filters': [filters: FilterState];
 }>();
 
+const { t } = useI18n();
+
 // Filter state
 interface FilterState {
   types: string[];
@@ -249,15 +253,17 @@ interface FilterState {
   actionRequired: boolean;
 }
 
+type FilterSelectionValue = FilterOption | string;
+
 // Reactive filter values
-const selectedTypes = ref<string[]>([]);
-const selectedSubjects = ref<string[]>([]);
-const selectedStatuses = ref<string[]>([]);
-const selectedSubsidiaryBodies = ref<string[]>([]);
-const selectedCopDecisions = ref<string[]>([]);
-const selectedActivityTypes = ref<string[]>([]);
-const selectedGlobalTargets = ref<string[]>([]);
-const selectedCountries = ref<string[]>([]);
+const selectedTypes = ref<FilterSelectionValue[]>([]);
+const selectedSubjects = ref<FilterSelectionValue[]>([]);
+const selectedStatuses = ref<FilterSelectionValue[]>([]);
+const selectedSubsidiaryBodies = ref<FilterSelectionValue[]>([]);
+const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
+const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
+const selectedGlobalTargets = ref<FilterSelectionValue[]>([]);
+const selectedCountries = ref<FilterSelectionValue[]>([]);
 const startDate = ref<string>('');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
@@ -358,16 +364,28 @@ onMounted(async () => {
   ]);
 });
 
+function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
+  return selection
+    .map(item => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+      const raw = item?.value ?? '';
+      return typeof raw === 'string' ? raw.trim() : String(raw);
+    })
+    .filter(value => value.length > 0);
+}
+
 function updateFilters(): void {
   const filters: FilterState = {
-    types: selectedTypes.value,
-    subjects: selectedSubjects.value,
-    statuses: selectedStatuses.value,
-    subsidiaryBodies: selectedSubsidiaryBodies.value,
-    copDecisions: selectedCopDecisions.value,
-    activityTypes: selectedActivityTypes.value,
-    globalTargets: selectedGlobalTargets.value,
-    countries: selectedCountries.value,
+    types: extractSelectedValues(selectedTypes.value),
+    subjects: extractSelectedValues(selectedSubjects.value),
+    statuses: extractSelectedValues(selectedStatuses.value),
+    subsidiaryBodies: extractSelectedValues(selectedSubsidiaryBodies.value),
+    copDecisions: extractSelectedValues(selectedCopDecisions.value),
+    activityTypes: extractSelectedValues(selectedActivityTypes.value),
+    globalTargets: extractSelectedValues(selectedGlobalTargets.value),
+    countries: extractSelectedValues(selectedCountries.value),
     startDate: startDate.value,
     endDate: endDate.value,
     actionRequired: actionRequired.value,
@@ -449,15 +467,28 @@ function mergeOptions(primary: FilterOption[], fallback: FilterOption[]): Filter
 }
 
 function syncSelectionWithOptions(
-  selection: Ref<string[]>,
+  selection: Ref<FilterSelectionValue[]>,
   options: Ref<FilterOption[]> | ComputedRef<FilterOption[]>,
 ): void {
   watch(
     options,
     (newOptions) => {
-      const validValues = new Set(newOptions.map(option => option.value));
-      const filtered = selection.value.filter(value => validValues.has(value));
-      if (filtered.length !== selection.value.length) {
+      const optionMap = new Map(newOptions.map(option => [option.value, option]));
+      const filtered = selection.value
+        .map(item => optionMap.get(typeof item === 'string' ? item : item.value))
+        .filter((option): option is FilterOption => Boolean(option));
+
+      const selectionChanged =
+        filtered.length !== selection.value.length ||
+        filtered.some((option, index) => {
+          const current = selection.value[index];
+          if (!current || typeof current === 'string') {
+            return true;
+          }
+          return current.value !== option.value || current.label !== option.label;
+        });
+
+      if (selectionChanged) {
         selection.value = filtered;
         updateFilters();
       }

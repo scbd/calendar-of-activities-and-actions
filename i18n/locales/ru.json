@@ -1,0 +1,54 @@
+{
+  "calendar": {
+    "filters": {
+      "labels": {
+        "typeActivity": "Тип",
+        "activityTypes": "Типы мероприятий",
+        "globalTargets": "Глобальные цели",
+        "countries": "Страны",
+        "subjects": "Темы",
+        "statuses": "Статусы",
+        "subsidiaryBodies": "Вспомогательные органы",
+        "decisions": "Решения",
+        "dateRange": "Диапазон дат",
+        "startDate": "Дата начала",
+        "endDate": "Дата окончания",
+        "actionRequired": "Требуются действия"
+      },
+      "placeholders": {
+        "typeActivity": "Выберите типы",
+        "activityTypes": "Выберите типы мероприятий",
+        "globalTargets": "Выберите глобальные цели",
+        "countries": "Выберите страны",
+        "subjects": "Выберите темы",
+        "statuses": "Выберите статусы",
+        "subsidiaryBodies": "Выберите вспомогательные органы",
+        "decisions": "Выберите решения"
+      },
+      "toggles": {
+        "actionRequiredOnly": "Показывать только элементы, требующие действий"
+      },
+      "actions": {
+        "clearAll": "Очистить все фильтры"
+      }
+    },
+    "types": {
+      "cop": "Заседание КС",
+      "sbstta": "Заседание SBSTTA",
+      "sbi": "Заседание SBI",
+      "meeting": "Совещание",
+      "nominations": "Выдвижение кандидатур",
+      "submission": "Представление информации",
+      "peerReview": "Рецензирование",
+      "report": "Доклад",
+      "forum": "Форум",
+      "activity": "Мероприятие",
+      "webinar": "Вебинар",
+      "workshop": "Семинар",
+      "training": "Обучение",
+      "consultation": "Консультация",
+      "campaign": "Кампания",
+      "other": "Другое"
+    }
+  }
+}
