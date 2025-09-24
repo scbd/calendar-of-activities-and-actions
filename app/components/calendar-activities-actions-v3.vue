@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer</h2>
+      <h2>{{ t('calendar.headings.activitiesExplorer') }}</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -18,9 +18,9 @@
         </div>
       </div>
 
-      <div v-if="loading" class="alert">Loading meetings…</div>
+      <div v-if="loading" class="alert">{{ t('calendar.messages.loadingMeetings') }}</div>
       <div v-else>
-        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">No results</div>
+        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
 
   <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
@@ -69,7 +69,7 @@
                     <strong>{{ t('calendar.labels.paragraph') }}:</strong>
                     {{ paragraphEntries(item).join(', ') }}
                   </div>
-                  <div v-if="docLink(item)" class="links"><a :href="docLink(item) || undefined">Documents »</a></div>
+                  <div v-if="docLink(item)" class="links"><a :href="docLink(item) || undefined">{{ t('calendar.links.documents') }}</a></div>
                 </div>
               </div>
             </div>
@@ -77,9 +77,9 @@
         </div>
 
         <div class="card mt-4">
-          <div class="card-header">Debug: Collected field names ({{ allFieldNames.length }})</div>
+          <div class="card-header">{{ t('calendar.debug.collectedFieldNames', { count: allFieldNames.length }) }}</div>
           <div class="card-body">
-            <div class="small text-muted">Locale: {{ locale.toUpperCase() }}</div>
+            <div class="small text-muted">{{ t('calendar.debug.locale', { locale: locale.toUpperCase() }) }}</div>
             <ul class="mb-0">
               <li v-for="f in allFieldNames" :key="f"><code>{{ f }}</code></li>
             </ul>

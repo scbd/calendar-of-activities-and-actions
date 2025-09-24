@@ -1,7 +1,41 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "活动与行动浏览器",
+      "activitiesExplorerAccordion": "活动与行动浏览器 - 手风琴视图",
+      "activitiesExplorerDetailed": "活动与行动浏览器 - 详细视图",
+      "activitiesExplorerGrouped": "活动与行动浏览器 - 会议中分组的活动"
+    },
+    "messages": {
+      "loadingMeetings": "正在加载会议…",
+      "noResults": "无结果"
+    },
     "labels": {
-      "cop": "缔约方大会"
+      "decision": "决定",
+      "paragraph": "段落",
+      "subjects": "主题",
+      "associatedBody": "相关机构",
+      "responsibleUnit": "负责部门",
+      "responsibleOfficer": "负责人",
+      "relatedDocuments": "相关文件",
+      "actionRequired": "需要采取行动",
+      "actionRequiredByParties": "缔约方需采取的行动",
+      "status": "状态",
+      "type": "类型",
+      "typeStripAria": "项目 {type}",
+      "cop": "缔约方大会",
+      "description": "描述",
+      "statusNarrative": "状态说明",
+      "responsible": "责任",
+      "unit": "部门",
+      "officer": "负责人"
+    },
+    "links": {
+      "documents": "文件 »"
+    },
+    "debug": {
+      "collectedFieldNames": "调试：收集的字段名称 ({count})",
+      "locale": "语言：{locale}"
     },
     "filters": {
       "labels": {
@@ -52,6 +86,9 @@
       "consultation": "磋商",
       "campaign": "宣传活动",
       "other": "其他"
+    },
+    "common": {
+      "yes": "是"
     }
   }
 }

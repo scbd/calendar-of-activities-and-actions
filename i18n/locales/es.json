@@ -1,7 +1,41 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "Explorador de actividades y acciones",
+      "activitiesExplorerAccordion": "Explorador de actividades y acciones - Vista en acordeón",
+      "activitiesExplorerDetailed": "Explorador de actividades y acciones - Vista detallada",
+      "activitiesExplorerGrouped": "Explorador de actividades y acciones - Actividades agrupadas en reuniones"
+    },
+    "messages": {
+      "loadingMeetings": "Cargando reuniones…",
+      "noResults": "Sin resultados"
+    },
     "labels": {
-      "cop": "CdP"
+      "decision": "Decisión",
+      "paragraph": "Párrafo",
+      "subjects": "Temas",
+      "associatedBody": "Órgano asociado",
+      "responsibleUnit": "Unidad responsable",
+      "responsibleOfficer": "Responsable",
+      "relatedDocuments": "Documentos relacionados",
+      "actionRequired": "Acción requerida",
+      "actionRequiredByParties": "Acción requerida por las Partes",
+      "status": "Estado",
+      "type": "Tipo",
+      "typeStripAria": "Elemento {type}",
+      "cop": "CdP",
+      "description": "Descripción",
+      "statusNarrative": "Narrativa del estado",
+      "responsible": "Responsable",
+      "unit": "Unidad",
+      "officer": "Funcionario"
+    },
+    "links": {
+      "documents": "Documentos »"
+    },
+    "debug": {
+      "collectedFieldNames": "Depuración: Nombres de campos recopilados ({count})",
+      "locale": "Idioma: {locale}"
     },
     "filters": {
       "labels": {
@@ -51,7 +85,14 @@
       "training": "Capacitación",
       "consultation": "Consulta",
       "campaign": "Campaña",
-      "other": "Otro"
+      "other": "Otro",
+      "conference": "Conferencia",
+      "side-event": "Evento paralelo",
+      "default": "Actividad",
+      "unknown": "Actividad"
+    },
+    "common": {
+      "yes": "Sí"
     }
   }
 }

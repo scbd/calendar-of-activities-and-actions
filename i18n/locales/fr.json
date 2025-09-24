@@ -1,5 +1,15 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "Explorateur des activités et actions",
+      "activitiesExplorerAccordion": "Explorateur des activités et actions - Vue en accordéon",
+      "activitiesExplorerDetailed": "Explorateur des activités et actions - Vue détaillée",
+      "activitiesExplorerGrouped": "Explorateur des activités et actions - Activités regroupées par réunions"
+    },
+    "messages": {
+      "loadingMeetings": "Chargement des réunions…",
+      "noResults": "Aucun résultat"
+    },
     "labels": {
       "decision": "Décision",
       "paragraph": "Parag.",
@@ -12,8 +22,20 @@
       "actionRequiredByParties": "Action requise par les Parties",
       "status": "Statut",
       "type": "Type",
-  "typeStripAria": "Élément {type}",
-  "cop": "CdP"
+      "typeStripAria": "Élément {type}",
+      "cop": "CdP",
+      "description": "Description",
+      "statusNarrative": "Narratif du statut",
+      "responsible": "Responsable",
+      "unit": "Unité",
+      "officer": "Responsable"
+    },
+    "links": {
+      "documents": "Documents »"
+    },
+    "debug": {
+      "collectedFieldNames": "Debug : Noms de champs collectés ({count})",
+      "locale": "Langue : {locale}"
     },
     "filters": {
       "labels": {

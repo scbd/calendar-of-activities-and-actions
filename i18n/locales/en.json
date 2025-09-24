@@ -1,5 +1,15 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "Activities & Actions Explorer",
+      "activitiesExplorerAccordion": "Activities & Actions Explorer - Accordion View",
+      "activitiesExplorerDetailed": "Activities & Actions Explorer - Detailed Row View",
+      "activitiesExplorerGrouped": "Activities & Actions Explorer - Activities grouped in meetings"
+    },
+    "messages": {
+      "loadingMeetings": "Loading meetings…",
+      "noResults": "No results"
+    },
     "labels": {
       "decision": "Decision",
       "paragraph": "Para",
@@ -12,8 +22,20 @@
       "actionRequiredByParties": "Action required by parties",
       "status": "Status",
       "type": "Type",
-  "typeStripAria": "{type} item",
-  "cop": "COP"
+      "typeStripAria": "{type} item",
+      "cop": "COP",
+      "description": "Description",
+      "statusNarrative": "Status narrative",
+      "responsible": "Responsible",
+      "unit": "Unit",
+      "officer": "Officer"
+    },
+    "links": {
+      "documents": "Documents »"
+    },
+    "debug": {
+      "collectedFieldNames": "Debug: Collected field names ({count})",
+      "locale": "Locale: {locale}"
     },
     "filters": {
       "labels": {

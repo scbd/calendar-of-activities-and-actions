@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer - Detailed Row View</h2>
+      <h2>{{ t('calendar.headings.activitiesExplorerDetailed') }}</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -18,9 +18,9 @@
         </div>
       </div>
 
-      <div v-if="loading" class="alert">Loading meetings…</div>
+      <div v-if="loading" class="alert">{{ t('calendar.messages.loadingMeetings') }}</div>
       <div v-else>
-        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">No results</div>
+        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
 
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
@@ -52,10 +52,10 @@
               <hr>
               <div class="row small">
                 <div class="col-md-6">
-                  <p v-if="displaySubjectLabels(item).length" class="mb-1"><strong>Subjects:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
-                  <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="mb-1"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                  <p v-if="item.copDecision_s" class="mb-1"><strong>COP Decision:</strong> {{ item.copDecision_s }}</p>
-                  <p v-if="item.copParagraph_s" class="mb-1"><strong>COP Paragraph:</strong> {{ item.copParagraph_s }}</p>
+                  <p v-if="displaySubjectLabels(item).length" class="mb-1"><strong>{{ t('calendar.labels.subjects') }}:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
+                  <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="mb-1"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                  <p v-if="item.copDecision_s" class="mb-1"><strong>{{ t('calendar.labels.decision') }}:</strong> {{ item.copDecision_s }}</p>
+                  <p v-if="item.copParagraph_s" class="mb-1"><strong>{{ t('calendar.labels.paragraph') }}:</strong> {{ item.copParagraph_s }}</p>
                 </div>
                 <div class="col-md-6">
                   <p v-if="item.responsibleUnit_s" class="mb-1">

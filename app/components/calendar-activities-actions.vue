@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>Activities & Actions Explorer - Accordion View</h2>
+      <h2>{{ t('calendar.headings.activitiesExplorerAccordion') }}</h2>
 
       <div class="card mb-3">
         <div class="card-body">
@@ -18,9 +18,9 @@
         </div>
       </div>
 
-      <div v-if="loading" class="alert">Loading meetings…</div>
+      <div v-if="loading" class="alert">{{ t('calendar.messages.loadingMeetings') }}</div>
       <div v-else>
-        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">No results</div>
+        <div v-if="filteredGrouped.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
 
         <div v-for="group in filteredGrouped" :key="group.key" class="mb-4">
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
@@ -62,21 +62,21 @@
                         <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
                         {{ t('calendar.common.yes') }}
                       </p>
-                      <p v-if="item.description_t"><strong>Description:</strong> {{ item.description_t }}</p>
-                      <p v-if="item.statusNarrative_t"><strong>Status Narrative:</strong> {{ item.statusNarrative_t }}</p>
+                        <p v-if="item.description_t"><strong>{{ t('calendar.labels.description') }}:</strong> {{ item.description_t }}</p>
+                        <p v-if="item.statusNarrative_t"><strong>{{ t('calendar.labels.statusNarrative') }}:</strong> {{ item.statusNarrative_t }}</p>
                     </div>
                     <div class="col-md-6">
-                      <p v-if="displaySubjectLabels(item).length"><strong>Subjects:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
-                      <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>Associated Body:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                      <p v-if="formattedCopDecision(item)"><strong>Decision:</strong> {{ formattedCopDecision(item) }}</p>
-                      <p v-if="item.copParagraph_s"><strong>Paragraph:</strong> {{ item.copParagraph_s }}</p>
+                        <p v-if="displaySubjectLabels(item).length"><strong>{{ t('calendar.labels.subjects') }}:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
+                        <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                        <p v-if="formattedCopDecision(item)"><strong>{{ t('calendar.labels.decision') }}:</strong> {{ formattedCopDecision(item) }}</p>
+                        <p v-if="item.copParagraph_s"><strong>{{ t('calendar.labels.paragraph') }}:</strong> {{ item.copParagraph_s }}</p>
                       <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
-                          <div class="card-header">
-                            <strong>Responsible</strong>
-                          </div>
-                          <ul class="list-group list-group-flush">
-                            <li class="list-group-item "><span class="fw-bold">Unit: </span>{{ item.responsibleUnit_s }}</li>
-                            <li class="list-group-item "><span class="fw-bold">Officer: </span>{{ item.responsibleOfficer_s }}</li>
+                            <div class="card-header">
+                              <strong>{{ t('calendar.labels.responsible') }}</strong>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit_s }}</li>
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer_s }}</li>
                           </ul>
 
                       </div>

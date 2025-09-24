@@ -1,7 +1,41 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "Обозреватель мероприятий и действий",
+      "activitiesExplorerAccordion": "Обозреватель мероприятий и действий — представление в виде аккордеона",
+      "activitiesExplorerDetailed": "Обозреватель мероприятий и действий — подробное представление",
+      "activitiesExplorerGrouped": "Обозреватель мероприятий и действий — мероприятия, сгруппированные по совещаниям"
+    },
+    "messages": {
+      "loadingMeetings": "Загрузка совещаний…",
+      "noResults": "Нет результатов"
+    },
     "labels": {
-      "cop": "КС"
+      "decision": "Решение",
+      "paragraph": "Параграф",
+      "subjects": "Темы",
+      "associatedBody": "Связанный орган",
+      "responsibleUnit": "Ответственное подразделение",
+      "responsibleOfficer": "Ответственный сотрудник",
+      "relatedDocuments": "Связанные документы",
+      "actionRequired": "Требуются действия",
+      "actionRequiredByParties": "Действия, требуемые от сторон",
+      "status": "Статус",
+      "type": "Тип",
+      "typeStripAria": "Элемент {type}",
+      "cop": "КС",
+      "description": "Описание",
+      "statusNarrative": "Описание статуса",
+      "responsible": "Ответственный",
+      "unit": "Подразделение",
+      "officer": "Сотрудник"
+    },
+    "links": {
+      "documents": "Документы »"
+    },
+    "debug": {
+      "collectedFieldNames": "Отладка: собранные имена полей ({count})",
+      "locale": "Язык: {locale}"
     },
     "filters": {
       "labels": {
@@ -52,6 +86,9 @@
       "consultation": "Консультация",
       "campaign": "Кампания",
       "other": "Другое"
+    },
+    "common": {
+      "yes": "Да"
     }
   }
 }

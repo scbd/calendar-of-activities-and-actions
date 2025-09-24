@@ -1,7 +1,41 @@
 {
   "calendar": {
+    "headings": {
+      "activitiesExplorer": "مستكشف الأنشطة والإجراءات",
+      "activitiesExplorerAccordion": "مستكشف الأنشطة والإجراءات - عرض أكورديون",
+      "activitiesExplorerDetailed": "مستكشف الأنشطة والإجراءات - عرض مفصل",
+      "activitiesExplorerGrouped": "مستكشف الأنشطة والإجراءات - أنشطة مجمعة في الاجتماعات"
+    },
+    "messages": {
+      "loadingMeetings": "جاري تحميل الاجتماعات…",
+      "noResults": "لا توجد نتائج"
+    },
     "labels": {
-      "cop": "مؤتمر الأطراف"
+      "decision": "قرار",
+      "paragraph": "فقرة",
+      "subjects": "الموضوعات",
+      "associatedBody": "الهيئة المرتبطة",
+      "responsibleUnit": "الوحدة المسؤولة",
+      "responsibleOfficer": "المسؤول",
+      "relatedDocuments": "الوثائق ذات الصلة",
+      "actionRequired": "الإجراء المطلوب",
+      "actionRequiredByParties": "الإجراء المطلوب من الأطراف",
+      "status": "الحالة",
+      "type": "النوع",
+      "typeStripAria": "عنصر {type}",
+      "cop": "مؤتمر الأطراف",
+      "description": "الوصف",
+      "statusNarrative": "سرد الحالة",
+      "responsible": "المسؤول",
+      "unit": "الوحدة",
+      "officer": "المسؤول"
+    },
+    "links": {
+      "documents": "الوثائق »"
+    },
+    "debug": {
+      "collectedFieldNames": "تصحيح: أسماء الحقول المجمعة ({count})",
+      "locale": "اللغة: {locale}"
     },
     "filters": {
       "labels": {
@@ -52,6 +86,9 @@
       "consultation": "مشاورة",
       "campaign": "حملة",
       "other": "أخرى"
+    },
+    "common": {
+      "yes": "نعم"
     }
   }
 }
