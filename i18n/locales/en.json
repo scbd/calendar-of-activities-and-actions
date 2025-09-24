@@ -41,7 +41,7 @@
       "labels": {
         "typeActivity": "Type",
         "activityTypes": "Activity types",
-        "globalTargets": "Global targets",
+        "globalTargets": "GBF Targets",
         "countries": "Countries",
         "subjects": "Subjects",
         "statuses": "Status",
@@ -55,7 +55,7 @@
       "placeholders": {
         "typeActivity": "Select types",
         "activityTypes": "Select activity types",
-        "globalTargets": "Select global targets",
+        "globalTargets": "Select GBF Targets",
         "countries": "Select countries",
         "subjects": "Select subjects",
         "statuses": "Select statuses",
@@ -72,8 +72,8 @@
       "typePlaceholder": "Select types",
       "activityLabel": "Activity types",
       "activityPlaceholder": "Select activity types",
-      "globalTargetLabel": "Global targets",
-      "globalTargetPlaceholder": "Select global targets",
+      "globalTargetLabel": "GBF Targets",
+      "globalTargetPlaceholder": "Select GBF Targets",
       "countryLabel": "Countries",
       "countryPlaceholder": "Select countries",
       "subjectLabel": "Subject",

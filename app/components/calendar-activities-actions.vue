@@ -26,7 +26,7 @@
           <div class="dgSep"><h3 class="m-0">{{ group.label }}</h3></div>
 
           <div :id="`accordion-${group.key}`" class="accordion">
-            <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="accordion-item">
+            <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="accordion-item mb-3">
               <h2 :id="`heading-${item._id}`" class="accordion-header">
                 <button
                   class="accordion-button"
@@ -36,12 +36,51 @@
                   :aria-controls="`collapse-${item._id}`"
                   @click="toggleAccordion(String(item._id || item.id || '') )"
                 >
-                  <div class="w-100">
-                    <div class="d-flex justify-content-between">
-                      <span class="flex-grow-1"><strong>{{ title(item) }}</strong></span>
-                      <span class="badge bg-secondary ms-2">{{ typeLabel(item) }}</span>
+                  <div
+                    class="calendar-row__type-strip d-flex align-items-center justify-content-center"
+                    :style="typeStripStyle(item)"
+                  >
+                    <span class="calendar-row__type-text">{{ typeLabel(item) }}</span>
+                  </div>
+                  <div class="calendar-accordion__summary">
+                    <div class="calendar-accordion__title">{{ title(item) }}</div>
+                    <div class="calendar-accordion__meta small text-muted">{{ formatDateRange(item) }}</div>
+                    <div
+                      v-if="displaySubjectLabels(item).length || status(item) || isActionRequired(item)"
+                      class="calendar-accordion__badges-row"
+                    >
+                      <div
+                        v-if="displaySubjectLabels(item).length"
+                        class="calendar-accordion__subjects small"
+                      >
+                  
+                        <span
+                          v-for="subject in displaySubjectLabels(item)"
+                          :key="subject"
+                          class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
+                        >
+                          {{ subject }}
+                        </span>
+                      </div>
+                      <div
+                        v-if="status(item) || isActionRequired(item)"
+                        class="calendar-accordion__status-badges"
+                      >
+                        <span
+                          v-if="isActionRequired(item)"
+                          class="badge bg-danger calendar-accordion__status-badge"
+                        >
+                          Party Action Required
+                        </span>
+                        <span
+                          v-if="status(item)"
+                          class="badge calendar-accordion__status-badge"
+                          :class="`bg-${statusColor(item)}`"
+                        >
+                          {{ status(item) }}
+                        </span>
+                      </div>
                     </div>
-                    <div class="small text-muted">{{ formatDateRange(item) }}</div>
                   </div>
                 </button>
               </h2>
@@ -54,11 +93,11 @@
                 <div class="accordion-body">
                   <div class="row">
                     <div class="col-md-6">
-                      <p>
+                      <p v-if="status(item)">
                         <strong>{{ t('calendar.labels.status') }}: </strong>
-                        <span :class="`badge bg-${statusColor(item)}`">{{ status(item) }}</span>
+                        {{ status(item) }}
                       </p>
-                      <p v-if="item.actionRequired_b">
+                      <p v-if="isActionRequired(item)">
                         <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
                         {{ t('calendar.common.yes') }}
                       </p>
@@ -66,10 +105,33 @@
                         <p v-if="item.statusNarrative_t"><strong>{{ t('calendar.labels.statusNarrative') }}:</strong> {{ item.statusNarrative_t }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p v-if="displaySubjectLabels(item).length"><strong>{{ t('calendar.labels.subjects') }}:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
+                        <div v-if="displaySubjectLabels(item).length" class="mb-2">
+                          <strong class="me-1">{{ t('calendar.labels.subjects') }}:</strong>
+                          <span
+                            v-for="subject in displaySubjectLabels(item)"
+                            :key="subject"
+                            class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
+                          >
+                            {{ subject }}
+                          </span>
+                        </div>
                         <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                        <p v-if="formattedCopDecision(item)"><strong>{{ t('calendar.labels.decision') }}:</strong> {{ formattedCopDecision(item) }}</p>
-                        <p v-if="item.copParagraph_s"><strong>{{ t('calendar.labels.paragraph') }}:</strong> {{ item.copParagraph_s }}</p>
+                        <p v-if="decisionEntries(item).length">
+                          <strong>{{ t('calendar.labels.decision') }}:</strong>
+                          <span class="ms-1">
+                            <template
+                              v-for="(entry, index) in decisionEntries(item)"
+                              :key="`${entry.href ?? entry.label}-${index}`"
+                            >
+                              <DecisionLink :href="entry.href" :label="entry.label" />
+                              <span v-if="index < decisionEntries(item).length - 1">, </span>
+                            </template>
+                          </span>
+                        </p>
+                        <p v-if="paragraphEntries(item).length">
+                          <strong>{{ t('calendar.labels.paragraph') }}:</strong>
+                          {{ paragraphEntries(item).join(', ') }}
+                        </p>
                       <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
                             <div class="card-header">
                               <strong>{{ t('calendar.labels.responsible') }}</strong>
@@ -103,9 +165,10 @@ import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
-import { extractDecisionEntries } from 'shared/utils/decision-links';
-import { normalizeTypeKey } from 'shared/utils/type-colors';
+import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
+import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
+import DecisionLink from './decision-link.vue';
 // Load markdown content at build-time for both client and server bundles
 const __mdModulesB = import.meta.glob('shared/data/2024-12-01.md', {
   query: '?raw',
@@ -129,6 +192,9 @@ interface FilterOption {
 
 const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
+
+const decisionEntriesCache = new WeakMap<AnyDoc, DecisionEntry[]>();
+const paragraphEntriesCache = new WeakMap<AnyDoc, string[]>();
 
 const openItems = ref<Record<string, boolean>>({});
 
@@ -577,26 +643,84 @@ function getCopLabel(): string {
   return 'COP';
 }
 
-function formattedCopDecision(doc: AnyDoc): string | null {
-  const raw = (doc as Record<string, unknown>)['copDecision_s'];
-  if (raw === null || raw === undefined) {
+function normalizeDecisionLabel(label: string | null | undefined): string | null {
+  if (label === null || label === undefined) {
     return null;
   }
 
-  const decision = String(raw).trim();
-  if (!decision) {
+  const trimmed = label.trim();
+  if (!trimmed) {
     return null;
   }
 
-  const normalized = decision.toUpperCase();
+  const normalized = trimmed.toUpperCase();
   const hasReservedToken = ['COP', 'NP', 'CP'].some(token => normalized.includes(token));
   if (hasReservedToken) {
-    return decision;
+    return trimmed;
   }
 
   const prefix = getCopLabel();
   const safePrefix = prefix.trim() || 'COP';
-  return `${safePrefix} ${decision}`;
+  return `${safePrefix} ${trimmed}`;
+}
+
+function decisionEntries(doc: AnyDoc): DecisionEntry[] {
+  const cached = decisionEntriesCache.get(doc);
+  if (cached) {
+    return cached;
+  }
+
+  const rawEntries = extractDecisionEntries(doc as Record<string, unknown>);
+  const normalized = rawEntries
+    .map(entry => {
+      const normalizedLabel = normalizeDecisionLabel(entry.label) ?? entry.label;
+      const finalLabel = normalizedLabel?.trim() ?? '';
+      if (!finalLabel) {
+        return null;
+      }
+      return {
+        ...entry,
+        label: finalLabel,
+      } satisfies DecisionEntry;
+    })
+    .filter((entry): entry is DecisionEntry => entry !== null);
+
+  if (normalized.length === 0) {
+    const fallback = normalizeDecisionLabel((doc as Record<string, unknown>)['copDecision_s'] as string | undefined);
+    if (fallback) {
+      normalized.push({ label: fallback });
+    }
+  }
+
+  decisionEntriesCache.set(doc, normalized);
+  return normalized;
+}
+
+function paragraphEntries(doc: AnyDoc): string[] {
+  const cached = paragraphEntriesCache.get(doc);
+  if (cached) {
+    return cached;
+  }
+
+  const record = doc as Record<string, unknown>;
+  const values = new Set<string>();
+  [
+    record['copParagraph_s'],
+    record['copParagraph'],
+    record['copParagraph_ss'],
+    record['copParagraphs_ss'],
+  ].forEach(value => {
+    splitValues(value).forEach(paragraph => {
+      const trimmed = paragraph.trim();
+      if (trimmed) {
+        values.add(trimmed);
+      }
+    });
+  });
+
+  const result = Array.from(values);
+  paragraphEntriesCache.set(doc, result);
+  return result;
 }
 
 const filteredDocs = computed(() => {
@@ -799,16 +923,28 @@ function typeValue(doc: AnyDoc): string {
   return typeof raw === 'string' ? raw.trim() : '';
 }
 
+function resolveTypeKey(doc: AnyDoc): ReturnType<typeof normalizeTypeKey> {
+  return normalizeTypeKey(typeValue(doc));
+}
+
 function typeLabel(doc: AnyDoc): string {
   const raw = typeValue(doc);
-  const key = `calendar.types.${normalizeTypeKey(raw)}`;
-  if (raw && te(key)) {
-    return t(key) as string;
+  const translationKey = `calendar.types.${resolveTypeKey(doc)}`;
+  if (te(translationKey)) {
+    return t(translationKey) as string;
   }
   if (te('calendar.types.default')) {
     return t('calendar.types.default') as string;
   }
   return raw || 'Activity';
+}
+
+function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string } {
+  const palette = getTypeColor(resolveTypeKey(doc));
+  return {
+    backgroundColor: palette.background,
+    color: palette.text,
+  };
 }
 
 function title(d: AnyDoc): string {
@@ -830,6 +966,10 @@ function statusColor(d: AnyDoc): string {
     if (s === 'to be confirmed') return 'warning';
     if (s === 'ongoing') return 'info';
     return 'secondary';
+}
+
+function isActionRequired(d: AnyDoc): boolean {
+  return d['actionRequired_b'] === true || d['actionRequired'] === true;
 }
 
 function formatDateRange(d: AnyDoc): string {
@@ -875,5 +1015,115 @@ h3 {
   margin-top: 0px;
   color: #009b48;
   padding: 0.5rem 0;
+}
+
+.accordion-button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+:deep(.accordion-button::after) {
+  display: none;
+}
+
+.calendar-row__type-strip {
+  width: 100%;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 0;
+  text-align: center;
+  text-transform: uppercase;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.calendar-row__type-text {
+  white-space: nowrap;
+}
+
+.calendar-row__type-strip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+:deep(.accordion-button.collapsed) .calendar-row__type-strip::after {
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+.calendar-accordion__summary {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.calendar-accordion__badges-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.calendar-accordion__subjects {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.calendar-accordion__status-badges {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+  text-align: right;
+}
+
+.calendar-accordion__status-badge {
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.45rem;
+}
+
+@media (max-width: 576px) {
+  .calendar-accordion__status-badges {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
+.calendar-accordion__title {
+  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  color: #1d1d1d;
+}
+
+.calendar-subject-badge {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 243, 245, 0.98));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #212529;
+  font-weight: 500;
 }
 </style>

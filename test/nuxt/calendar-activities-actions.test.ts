@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import CalendarActivitiesActions from '../../app/components/calendar-activities-actions.vue';
+import DecisionLink from '../../app/components/decision-link.vue';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
@@ -38,8 +39,29 @@ vi.mock('../../shared/utils/subjects', () => ({
   resolveSubjectLabel: (value: string) => value,
 }));
 
+const decisionEntriesMock = vi.hoisted(() => vi.fn((record: Record<string, unknown>) => {
+  const id = record._id ?? record.id;
+  if (id === 'test-1') {
+    return [
+      {
+        label: '15/3',
+        href: 'https://www.cbd.int/decisions/?m=cop-15-3',
+      },
+    ];
+  }
+  if (id === 'test-2') {
+    return [
+      {
+        label: 'NP-1',
+        href: 'https://www.cbd.int/decisions/?m=np-1',
+      },
+    ];
+  }
+  return [];
+})) as ReturnType<typeof vi.fn>;
+
 vi.mock('../../shared/utils/decision-links', () => ({
-  extractDecisionEntries: () => [],
+  extractDecisionEntries: decisionEntriesMock,
 }));
 
 vi.mock('../../shared/data/meetings.js', () => ({
@@ -70,6 +92,10 @@ vi.mock('../../shared/data/meetings.js', () => ({
 }));
 
 describe('CalendarActivitiesActions Component', () => {
+  beforeEach(() => {
+    decisionEntriesMock.mockClear();
+  });
+
   it('should mount successfully without filteredDocs error', async () => {
     const component = await mountComponent();
     expect(component.exists()).toBe(true);
@@ -85,30 +111,34 @@ describe('CalendarActivitiesActions Component', () => {
     const component = await mountComponent();
     await flushPromises();
 
-    const typeBadge = component.find('.badge.bg-secondary');
-    expect(typeBadge.exists()).toBe(true);
-    expect(typeBadge.text().trim().length).toBeGreaterThan(0);
+    const typeStrip = component.find('.calendar-row__type-strip');
+    expect(typeStrip.exists()).toBe(true);
+    expect(typeStrip.text().trim().length).toBeGreaterThan(0);
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {
     const component = await mountComponent('en');
     await flushPromises();
 
-    const decisionParagraphs = component.findAll('p').filter(paragraph => paragraph.text().includes('Decision:'));
-    const decisionTexts = decisionParagraphs.map(paragraph => paragraph.text());
+    const links = component.findAllComponents(DecisionLink);
+    const copLink = links.find(link => link.text() === 'COP 15/3');
+    const npLink = links.find(link => link.text() === 'NP-1');
 
-    expect(decisionTexts).toContain('Decision: COP 15/3');
-    expect(decisionTexts).toContain('Decision: NP-1');
+    expect(copLink).toBeTruthy();
+    expect(npLink).toBeTruthy();
+    expect(copLink?.props('href')).toBe('https://www.cbd.int/decisions/?m=cop-15-3');
+    expect(npLink?.props('href')).toBe('https://www.cbd.int/decisions/?m=np-1');
   });
 
   it('uses localized COP prefix when locale is French', async () => {
     const component = await mountComponent('fr');
     await flushPromises();
 
-    const decisionParagraphs = component.findAll('p').filter(paragraph => paragraph.text().includes('Decision:'));
-    const decisionTexts = decisionParagraphs.map(paragraph => paragraph.text());
+    const links = component.findAllComponents(DecisionLink);
+    const copLink = links.find(link => link.text() === 'CdP 15/3');
+    const npLink = links.find(link => link.text() === 'NP-1');
 
-    expect(decisionTexts).toContain('Decision: CdP 15/3');
-    expect(decisionTexts).toContain('Decision: NP-1');
+    expect(copLink).toBeTruthy();
+    expect(npLink).toBeTruthy();
   });
 });

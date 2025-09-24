@@ -48,10 +48,16 @@
                   <div class="meeting-title">{{ title(item) }}</div>
                   <div
                     v-if="displaySubjectLabels(item).length"
-                    class="small text-muted mt-1"
+                    class="small mt-1"
                   >
-                    <strong>{{ t('calendar.labels.subjects') }}:</strong>
-                    {{ displaySubjectLabels(item).join(', ') }}
+                    <strong class="me-1">{{ t('calendar.labels.subjects') }}:</strong>
+                    <span
+                      v-for="subject in displaySubjectLabels(item)"
+                      :key="subject"
+                      class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
+                    >
+                      {{ subject }}
+                    </span>
                   </div>
                   <div v-if="decisionEntries(item).length" class="small mt-1">
                     <strong>{{ t('calendar.labels.decision') }}:</strong>
@@ -1026,6 +1032,13 @@ function safeDate(v: unknown): DateTime | null {
 .calendar-row__type-text {
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.calendar-subject-badge {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 243, 245, 0.98));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #212529;
+  font-weight: 500;
 }
 
 code {

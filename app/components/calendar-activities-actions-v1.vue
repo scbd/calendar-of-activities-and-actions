@@ -52,10 +52,33 @@
               <hr>
               <div class="row small">
                 <div class="col-md-6">
-                  <p v-if="displaySubjectLabels(item).length" class="mb-1"><strong>{{ t('calendar.labels.subjects') }}:</strong> {{ displaySubjectLabels(item).join(', ') }}</p>
+                  <div v-if="displaySubjectLabels(item).length" class="mb-1">
+                    <strong class="me-1">{{ t('calendar.labels.subjects') }}:</strong>
+                    <span
+                      v-for="subject in displaySubjectLabels(item)"
+                      :key="subject"
+                      class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
+                    >
+                      {{ subject }}
+                    </span>
+                  </div>
                   <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="mb-1"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                  <p v-if="item.copDecision_s" class="mb-1"><strong>{{ t('calendar.labels.decision') }}:</strong> {{ item.copDecision_s }}</p>
-                  <p v-if="item.copParagraph_s" class="mb-1"><strong>{{ t('calendar.labels.paragraph') }}:</strong> {{ item.copParagraph_s }}</p>
+                  <p v-if="decisionEntries(item).length" class="mb-1">
+                    <strong>{{ t('calendar.labels.decision') }}:</strong>
+                    <span class="ms-1">
+                      <template
+                        v-for="(entry, index) in decisionEntries(item)"
+                        :key="`${entry.href ?? entry.label}-${index}`"
+                      >
+                        <DecisionLink :href="entry.href" :label="entry.label" />
+                        <span v-if="index < decisionEntries(item).length - 1">, </span>
+                      </template>
+                    </span>
+                  </p>
+                  <p v-if="paragraphEntries(item).length" class="mb-1">
+                    <strong>{{ t('calendar.labels.paragraph') }}:</strong>
+                    {{ paragraphEntries(item).join(', ') }}
+                  </p>
                 </div>
                 <div class="col-md-6">
                   <p v-if="item.responsibleUnit_s" class="mb-1">
@@ -87,9 +110,10 @@ import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
-import { extractDecisionEntries } from 'shared/utils/decision-links';
+import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { getTypeColor, getTypeForegroundColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
+import DecisionLink from './decision-link.vue';
 // Load markdown content at build-time for both client and server bundles
 const __mdModulesC = import.meta.glob('shared/data/2024-12-01.md', {
   query: '?raw',
@@ -104,7 +128,7 @@ const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 interface FilterOption {
   value: string;
@@ -113,6 +137,9 @@ interface FilterOption {
 
 const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
+
+const decisionEntriesCache = new WeakMap<AnyDoc, DecisionEntry[]>();
+const paragraphEntriesCache = new WeakMap<AnyDoc, string[]>();
 
 interface FilterState {
   types: string[];
@@ -543,6 +570,97 @@ function displaySubjectLabels(doc: AnyDoc): string[] {
     .filter(label => Boolean(label && label.trim()));
 }
 
+function getCopLabel(): string {
+  const key = 'calendar.labels.cop';
+  if (te(key)) {
+    const localized = t(key);
+    if (typeof localized === 'string' && localized.trim().length > 0) {
+      return localized.trim();
+    }
+  }
+  return 'COP';
+}
+
+function normalizeDecisionLabel(label: string | null | undefined): string | null {
+  if (label === null || label === undefined) {
+    return null;
+  }
+
+  const trimmed = label.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const normalized = trimmed.toUpperCase();
+  const hasReservedToken = ['COP', 'NP', 'CP'].some(token => normalized.includes(token));
+  if (hasReservedToken) {
+    return trimmed;
+  }
+
+  const prefix = getCopLabel();
+  const safePrefix = prefix.trim() || 'COP';
+  return `${safePrefix} ${trimmed}`;
+}
+
+function decisionEntries(doc: AnyDoc): DecisionEntry[] {
+  const cached = decisionEntriesCache.get(doc);
+  if (cached) {
+    return cached;
+  }
+
+  const rawEntries = extractDecisionEntries(doc as Record<string, unknown>);
+  const normalized = rawEntries
+    .map(entry => {
+      const normalizedLabel = normalizeDecisionLabel(entry.label) ?? entry.label;
+      const finalLabel = normalizedLabel?.trim() ?? '';
+      if (!finalLabel) {
+        return null;
+      }
+      return {
+        ...entry,
+        label: finalLabel,
+      };
+    })
+    .filter((entry): entry is DecisionEntry => entry !== null);
+
+  if (normalized.length === 0) {
+    const fallback = normalizeDecisionLabel((doc as Record<string, unknown>)['copDecision_s'] as string | undefined);
+    if (fallback) {
+      normalized.push({ label: fallback });
+    }
+  }
+
+  decisionEntriesCache.set(doc, normalized);
+  return normalized;
+}
+
+function paragraphEntries(doc: AnyDoc): string[] {
+  const cached = paragraphEntriesCache.get(doc);
+  if (cached) {
+    return cached;
+  }
+
+  const record = doc as Record<string, unknown>;
+  const values = new Set<string>();
+  [
+    record['copParagraph_s'],
+    record['copParagraph'],
+    record['copParagraph_ss'],
+    record['copParagraphs_ss'],
+  ].forEach(value => {
+    splitValues(value).forEach(paragraph => {
+      const trimmed = paragraph.trim();
+      if (trimmed) {
+        values.add(trimmed);
+      }
+    });
+  });
+
+  const result = Array.from(values);
+  paragraphEntriesCache.set(doc, result);
+  return result;
+}
+
 const filteredDocs = computed(() => {
   let filtered = docs.value;
   const filters = currentFilters.value;
@@ -876,5 +994,12 @@ h3 {
 .calendar-item__header-label {
   text-transform: uppercase;
   font-size: 0.875rem;
+}
+
+.calendar-subject-badge {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 243, 245, 0.98));
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #212529;
+  font-weight: 500;
 }
 </style>
