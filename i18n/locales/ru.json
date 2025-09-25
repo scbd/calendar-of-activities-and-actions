@@ -28,7 +28,10 @@
       "statusNarrative": "Описание статуса",
       "responsible": "Ответственный",
       "unit": "Подразделение",
-      "officer": "Сотрудник"
+      "officer": "Сотрудник",
+      "notifications": "Уведомления",
+      "untitled": "Без названия",
+      "unknownDate": "Неизвестная дата"
     },
     "links": {
       "documents": "Документы »"
@@ -87,6 +90,26 @@
       "campaign": "Кампания",
       "other": "Другое"
     },
+    "status": {
+      "confirm": "Подтверждено",
+      "confirmed": "Подтверждено",
+      "completed": "Завершено",
+      "ongoing": "В процессе",
+      "to_be_confirmed": "Подлежит подтверждению"
+    },
+    "notifications": {
+      "notificationLabel": "Уведомление {id}",
+      "deadline": "до {date}",
+      "publishedOnDate": "Опубликовано {date}",
+      "fromSource": "От {source}",
+      "loadingDetails": "Загрузка сведений об уведомлении…",
+      "recipients": "Получатели",
+      "themes": "Темы",
+      "attachments": "Вложения",
+      "viewNotification": "Просмотреть уведомление",
+      "notFound": "Уведомление не найдено",
+      "loadFailed": "Не удалось загрузить сведения об уведомлении."
+    },
     "common": {
       "yes": "Да"
     }
@@ -111,5 +134,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "Главная",
+    "suggestion1": "Вариант 1",
+    "suggestion2": "Вариант 2"
+  },
+  "home": {
+    "title": "Календарь мероприятий и действий КБР",
+    "lead": "Исследуйте варианты дизайна с помощью навигации выше.",
+    "description": "Используйте страницы «Вариант» для предварительного просмотра различных макетов обозревателя мероприятий и действий и поделитесь мнением о предпочтительном направлении."
   }
 }

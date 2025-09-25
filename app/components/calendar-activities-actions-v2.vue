@@ -107,13 +107,6 @@ import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decisio
 import { getTypeColor, normalizeTypeKey, type CalendarTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 import DecisionLink from './decision-link.vue';
-// Load markdown content at build-time for both client and server bundles
-const __mdModulesA = import.meta.glob('shared/data/2024-12-01.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-const calendarMarkdownRaw = Object.values(__mdModulesA)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
 
@@ -121,7 +114,7 @@ const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const supportedLocales: LocaleCode[] = ['en', 'fr', 'es', 'ar', 'ru', 'zh'];
-const { t, locale: nuxtLocale } = useI18n();
+const { t, te, locale: nuxtLocale } = useI18n();
 const locale = ref<LocaleCode>('en');
 
 watchEffect(() => {
@@ -191,7 +184,7 @@ async function ensureSubjectLabels(): Promise<void> {
 }
 
 onMounted(() => {
-  loadSnapshotData();
+  void loadSnapshotData();
   void ensureSubjectLabels();
 });
 
@@ -208,11 +201,12 @@ const regionDisplayNames = typeof RegionDisplayNames === 'function'
   ? new RegionDisplayNames(['en'], { type: 'region' })
   : null;
 
-function loadSnapshotData(): void {
+async function loadSnapshotData(): Promise<void> {
   loading.value = true;
   try {
+    const markdownRaw = await useCalendarMarkdown();
     const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
-    const markdownDocs = buildDocsFromMarkdown(calendarMarkdownRaw);
+    const markdownDocs = buildDocsFromMarkdown(markdownRaw);
 
     docs.value = [...normalizedMeetings, ...markdownDocs];
   } catch (error) {
@@ -368,7 +362,17 @@ function normalizeStatusKey(label: string | undefined): string | null {
 }
 
 function normalizeStatusLabel(key: string | null | undefined, fallback?: string): string {
-  if (key === 'CONFIRM') return 'Confirmed';
+  if (key) {
+    const normalized = String(key).toLowerCase();
+    const translationKey = `calendar.status.${normalized}`;
+
+    if (te(translationKey)) {
+      return t(translationKey) as string;
+    }
+    if (normalized === 'confirm') {
+      return t('calendar.status.confirmed') as string;
+    }
+  }
   if (typeof fallback === 'string' && fallback.trim().length > 0) return fallback.trim();
   return key ? key : '';
 }
@@ -722,7 +726,7 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
     const iso = startDate_dt || endDate_dt;
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
-    const label = dt ? dt.toFormat('LLLL yyyy') : 'Unknown';
+    const label = dt ? dt.toFormat('LLLL yyyy') : t('calendar.labels.unknownDate') as string;
 
     if (!buckets.has(key)) buckets.set(key, { label, items: [] });
     buckets.get(key)!.items.push(d);
@@ -871,24 +875,6 @@ function paragraphEntries(doc: AnyDoc): string[] {
   return result;
 }
 
-const FALLBACK_TYPE_LABELS: Record<CalendarTypeKey, string> = {
-  cop: 'COP meeting',
-  sbstta: 'SBSTTA meeting',
-  sbi: 'SBI meeting',
-  meeting: 'Meeting',
-  nominations: 'Nominations',
-  submission: 'Submission of Information',
-  peerReview: 'Peer-review',
-  report: 'Report',
-  forum: 'Forum',
-  activity: 'Activity',
-  webinar: 'Webinar',
-  workshop: 'Workshop',
-  training: 'Training',
-  consultation: 'Consultation',
-  campaign: 'Campaign',
-  other: 'Other',
-};
 
 function extractTypeKey(candidate: unknown): CalendarTypeKey | null {
   if (!candidate) return null;
@@ -934,12 +920,14 @@ function resolveTypeKey(doc: AnyDoc): CalendarTypeKey {
 
 function translateTypeKey(key: CalendarTypeKey): string {
   const translationKey = `calendar.types.${key}`;
-  const translated = t(translationKey);
 
-  if (typeof translated === 'string' && translated !== translationKey) {
-    return translated;
+  if (te(translationKey)) {
+    return t(translationKey) as string;
   }
-  return FALLBACK_TYPE_LABELS[key];
+  if (te('calendar.types.default')) {
+    return t('calendar.types.default') as string;
+  }
+  return humanizeIdentifier(key);
 }
 
 function primaryTypeValue(doc: AnyDoc): string | null {
@@ -982,8 +970,12 @@ function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string }
 
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
+  const titleValue = d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'];
 
-  return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
+  if (typeof titleValue === 'string' && titleValue.trim()) {
+    return titleValue;
+  }
+  return t('calendar.labels.untitled') as string;
 }
 
 function venue(d: AnyDoc): string | null {

@@ -28,7 +28,10 @@
       "statusNarrative": "سرد الحالة",
       "responsible": "المسؤول",
       "unit": "الوحدة",
-      "officer": "المسؤول"
+      "officer": "المسؤول",
+      "notifications": "الإشعارات",
+      "untitled": "بدون عنوان",
+      "unknownDate": "تاريخ غير معروف"
     },
     "links": {
       "documents": "الوثائق »"
@@ -87,6 +90,26 @@
       "campaign": "حملة",
       "other": "أخرى"
     },
+    "status": {
+      "confirm": "مؤكد",
+      "confirmed": "مؤكد",
+      "completed": "مكتمل",
+      "ongoing": "قيد التنفيذ",
+      "to_be_confirmed": "في انتظار التأكيد"
+    },
+    "notifications": {
+      "notificationLabel": "الإشعار {id}",
+      "deadline": "بحلول {date}",
+      "publishedOnDate": "نُشر في {date}",
+      "fromSource": "من {source}",
+      "loadingDetails": "جارٍ تحميل تفاصيل الإشعار…",
+      "recipients": "المستلمون",
+      "themes": "الموضوعات",
+      "attachments": "المرفقات",
+      "viewNotification": "عرض الإشعار",
+      "notFound": "لم يتم العثور على الإشعار",
+      "loadFailed": "تعذر تحميل تفاصيل الإشعار."
+    },
     "common": {
       "yes": "نعم"
     }
@@ -111,5 +134,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "suggestion1": "الاقتراح 1",
+    "suggestion2": "الاقتراح 2"
+  },
+  "home": {
+    "title": "تقويم أنشطة وإجراءات اتفاقية التنوع البيولوجي",
+    "lead": "استكشف مقترحات التصميم باستخدام شريط التنقل أعلاه.",
+    "description": "استخدم صفحات الاقتراح لمعاينة تخطيطات مختلفة لمستكشف الأنشطة والإجراءات وتقديم ملاحظاتك حول التوجه المفضل لديك."
   }
 }

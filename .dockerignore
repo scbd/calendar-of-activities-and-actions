@@ -1,0 +1,12 @@
+.dockerignore
+.git
+.gitignore
+node_modules
+.nuxt
+.output
+coverage
+.DS_Store
+.vscode
+.env
+.env.*
+playwright-report

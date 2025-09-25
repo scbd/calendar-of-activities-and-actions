@@ -16,6 +16,17 @@ function normalizeParagraphToken(token: string): string {
     return '';
   }
 
+  const digitLetterMatch = trimmed.match(/^([0-9]+)\s*\(?\s*([a-z])\s*\)?$/i);
+
+  if (digitLetterMatch) {
+    const numberPart = digitLetterMatch[1] ?? '';
+    const letterPart = digitLetterMatch[2] ?? '';
+
+    if (numberPart) {
+      return `${Number.parseInt(numberPart, 10)}(${letterPart.toLowerCase()})`;
+    }
+  }
+
   if (/^[0-9]+$/.test(trimmed)) {
     const numeric = Number.parseInt(trimmed, 10);
 
@@ -278,6 +289,109 @@ function forEachLabelCandidate(value: unknown, iteratee: (candidate: string) => 
   toStringArray(value).forEach(iteratee);
 }
 
+const PARAGRAPH_FIELD_KEYS: string[] = [
+  'copParagraph',
+  'copParagraph_s',
+  'copParagraph_ss',
+  'copParagraphs_s',
+  'copParagraphs_ss',
+  'copParagraphNo',
+  'copParagraphNo_s',
+  'copParagraphNo_ss',
+  'copParagraph_no',
+  'copParagraph_no_s',
+  'copParagraph_no_ss',
+  'paragraph',
+  'paragraph_s',
+  'paragraph_ss',
+  'paragraphs',
+  'paragraphs_s',
+  'paragraphs_ss',
+];
+
+function collectParagraphTokensFromValue(value: unknown): string[] {
+  const tokens: string[] = [];
+
+  toStringArray(value).forEach(raw => {
+    const extracted = extractParagraphTokens(raw);
+
+    if (extracted.length > 0) {
+      extracted.forEach(token => tokens.push(token));
+      return;
+    }
+
+    raw
+      .split(/[;,]/)
+      .map(part => normalizeParagraphToken(part))
+      .filter(Boolean)
+      .forEach(token => tokens.push(token));
+  });
+
+  return tokens;
+}
+
+function collectRecordParagraphTokens(record: Record<string, unknown>): string[] {
+  const tokens = new Set<string>();
+
+  PARAGRAPH_FIELD_KEYS.forEach(key => {
+    collectParagraphTokensFromValue(record[key]).forEach(token => {
+      if (token) {
+        tokens.add(token);
+      }
+    });
+  });
+
+  return Array.from(tokens);
+}
+
+function ensureDecisionPrefix(label: string, type: DecisionType): string {
+  const trimmed = label.trim();
+
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const upper = trimmed.toUpperCase();
+
+  if (
+    upper.startsWith(`${type} `) ||
+    upper.startsWith(`${type}-`) ||
+    upper.startsWith(`${type}/`) ||
+    upper === type
+  ) {
+    return trimmed;
+  }
+
+  if (type === 'COP') {
+    return `${type} ${trimmed}`;
+  }
+
+  return `${type}-${trimmed}`;
+}
+
+function mergeParagraphLists(primary: string[], secondary: string[]): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  const pushIfNew = (token: string) => {
+    const normalized = token.trim();
+
+    if (!normalized) {
+      return;
+    }
+
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      merged.push(normalized);
+    }
+  };
+
+  primary.forEach(pushIfNew);
+  secondary.forEach(pushIfNew);
+
+  return merged;
+}
+
 function labelFromUrl(rawUrl: string): string {
   const normalized = normalizeUrl(rawUrl);
 
@@ -345,12 +459,18 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
   const labelCandidates: string[] = [];
   const urlCandidates: string[] = [];
 
-  const pushLabelCandidate = (value: unknown) => {
+  const pushLabelCandidate = (value: unknown, forcedType?: DecisionType) => {
     forEachLabelCandidate(value, candidate => {
+      let labelCandidate = candidate;
+
+      if (forcedType) {
+        labelCandidate = ensureDecisionPrefix(labelCandidate, forcedType);
+      }
+
       if (isLikelyLink(candidate)) {
         urlCandidates.push(candidate);
       } else {
-        labelCandidates.push(candidate);
+        labelCandidates.push(labelCandidate);
       }
     });
   };
@@ -361,10 +481,10 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
     });
   };
 
-  pushLabelCandidate(record['copDecision_s']);
-  pushLabelCandidate(record['copDecision']);
-  pushLabelCandidate(record['copDecision_ss']);
-  pushLabelCandidate(record['copDecisions_ss']);
+  pushLabelCandidate(record['copDecision_s'], 'COP');
+  pushLabelCandidate(record['copDecision'], 'COP');
+  pushLabelCandidate(record['copDecision_ss'], 'COP');
+  pushLabelCandidate(record['copDecisions_ss'], 'COP');
   pushLabelCandidate(record['decision_s']);
   pushLabelCandidate(record['decision_ss']);
 
@@ -437,6 +557,7 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
     entries.push(entry);
   });
 
+  const recordParagraphTokens = collectRecordParagraphTokens(record);
   const expandedEntries: DecisionEntry[] = [];
   const seen = new Set<string>();
 
@@ -454,8 +575,10 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
       return;
     }
 
-    if (parsed.type === 'COP' && parsed.paragraphs.length > 0) {
-      parsed.paragraphs.forEach(paragraph => {
+    const mergedParagraphs = mergeParagraphLists(parsed.paragraphs, recordParagraphTokens);
+
+    if (parsed.type === 'COP' && mergedParagraphs.length > 0) {
+      mergedParagraphs.forEach(paragraph => {
         const singleParagraphParsed: ParsedDecisionLabel = {
           ...parsed,
           paragraphs: [paragraph],
@@ -473,7 +596,11 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
       return;
     }
 
-    const formattedLabel = formatDecisionLabel(parsed);
+    const parsedWithParagraphs: ParsedDecisionLabel = {
+      ...parsed,
+      paragraphs: mergedParagraphs,
+    };
+    const formattedLabel = formatDecisionLabel(parsedWithParagraphs);
     const resolvedHref = resolveDecisionHrefWithFallback(entry.href ?? null, formattedLabel);
     const key = `${formattedLabel}::${resolvedHref ?? ''}`;
 

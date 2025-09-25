@@ -28,7 +28,10 @@
       "statusNarrative": "Narrativa del estado",
       "responsible": "Responsable",
       "unit": "Unidad",
-      "officer": "Funcionario"
+      "officer": "Funcionario",
+      "notifications": "Notificaciones",
+      "untitled": "Sin título",
+      "unknownDate": "Fecha desconocida"
     },
     "links": {
       "documents": "Documentos »"
@@ -91,6 +94,26 @@
       "default": "Actividad",
       "unknown": "Actividad"
     },
+    "status": {
+      "confirm": "Confirmado",
+      "confirmed": "Confirmado",
+      "completed": "Completado",
+      "ongoing": "En curso",
+      "to_be_confirmed": "Por confirmar"
+    },
+    "notifications": {
+      "notificationLabel": "Notificación {id}",
+      "deadline": "antes de {date}",
+      "publishedOnDate": "Publicado el {date}",
+      "fromSource": "De {source}",
+      "loadingDetails": "Cargando los detalles de la notificación…",
+      "recipients": "Destinatarios",
+      "themes": "Temas",
+      "attachments": "Adjuntos",
+      "viewNotification": "Ver notificación",
+      "notFound": "Notificación no encontrada",
+      "loadFailed": "No se pudieron cargar los detalles de la notificación."
+    },
     "common": {
       "yes": "Sí"
     }
@@ -115,5 +138,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "Inicio",
+    "suggestion1": "Sugerencia 1",
+    "suggestion2": "Sugerencia 2"
+  },
+  "home": {
+    "title": "Calendario de actividades y acciones del CDB",
+    "lead": "Explore las propuestas de diseño usando la navegación superior.",
+    "description": "Utilice las páginas de Sugerencia para previsualizar diferentes diseños del explorador de actividades y acciones y brindar comentarios sobre la opción que prefiera."
   }
 }

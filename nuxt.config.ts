@@ -29,6 +29,10 @@ export default defineNuxtConfig({
     'vue-multiselect/dist/vue-multiselect.css'
   ],
 
+  build: {
+    manifest: true
+  },
+
   runtimeConfig: {
     public: {
       SCBD_INDEX_ENDPOINT: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT,
@@ -42,6 +46,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    assetsInclude: ['**/*.md'],
     resolve: {
       alias: {
         shared: fileURLToPath(new URL('./shared', import.meta.url))

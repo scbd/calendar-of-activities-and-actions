@@ -37,6 +37,7 @@ async function mountFilters(props = defaultProps) {
 describe('CalendarFilters Component', () => {
   it('mounts successfully', async () => {
     const wrapper = await mountFilters();
+
     expect(wrapper.exists()).toBe(true);
   });
 
@@ -45,12 +46,15 @@ describe('CalendarFilters Component', () => {
 
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
+
     typeSelect.vm.$emit('update:modelValue', ['meeting']);
     await nextTick();
 
     const emissions = wrapper.emitted('update:filters');
+
     expect(emissions).toBeTruthy();
     const latest = emissions?.[emissions.length - 1]?.[0];
+
     expect(latest?.types).toEqual(['meeting']);
   });
 
@@ -58,20 +62,25 @@ describe('CalendarFilters Component', () => {
     const wrapper = await mountFilters();
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
+
     typeSelect.vm.$emit('update:modelValue', ['Meeting']);
     await nextTick();
 
     const actionRequiredToggle = wrapper.find('#action-required-filter');
+
     await actionRequiredToggle.setValue(true);
     await nextTick();
 
     const clearButton = wrapper.find('button');
+
     await clearButton.trigger('click');
     await nextTick();
 
     const emissions = wrapper.emitted('update:filters');
+
     expect(emissions).toBeTruthy();
     const latest = emissions?.[emissions.length - 1]?.[0];
+
     expect(latest?.types).toEqual([]);
     expect(latest?.subjects).toEqual([]);
     expect(latest?.statuses).toEqual([]);

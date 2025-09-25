@@ -28,7 +28,10 @@
       "statusNarrative": "状态说明",
       "responsible": "责任",
       "unit": "部门",
-      "officer": "负责人"
+      "officer": "负责人",
+      "notifications": "通知",
+      "untitled": "未命名",
+      "unknownDate": "日期未知"
     },
     "links": {
       "documents": "文件 »"
@@ -87,6 +90,26 @@
       "campaign": "宣传活动",
       "other": "其他"
     },
+    "status": {
+      "confirm": "已确认",
+      "confirmed": "已确认",
+      "completed": "已完成",
+      "ongoing": "进行中",
+      "to_be_confirmed": "待确认"
+    },
+    "notifications": {
+      "notificationLabel": "通知 {id}",
+      "deadline": "在 {date} 前",
+      "publishedOnDate": "发布于 {date}",
+      "fromSource": "来自 {source}",
+      "loadingDetails": "正在加载通知详情…",
+      "recipients": "收件人",
+      "themes": "主题",
+      "attachments": "附件",
+      "viewNotification": "查看通知",
+      "notFound": "未找到通知",
+      "loadFailed": "无法加载通知详情。"
+    },
     "common": {
       "yes": "是"
     }
@@ -111,5 +134,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "首页",
+    "suggestion1": "方案一",
+    "suggestion2": "方案二"
+  },
+  "home": {
+    "title": "生物多样性公约活动与行动日历",
+    "lead": "使用上方导航探索设计方案。",
+    "description": "请使用方案页面预览活动与行动浏览器的不同布局，并就您偏好的方向提供反馈。"
   }
 }

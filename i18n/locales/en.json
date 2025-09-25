@@ -28,7 +28,10 @@
       "statusNarrative": "Status narrative",
       "responsible": "Responsible",
       "unit": "Unit",
-      "officer": "Officer"
+      "officer": "Officer",
+      "notifications": "Notifications",
+      "untitled": "Untitled",
+      "unknownDate": "Unknown date"
     },
     "links": {
       "documents": "Documents »"
@@ -113,6 +116,26 @@
       "default": "Activity",
       "unknown": "Activity"
     },
+    "status": {
+      "confirm": "Confirmed",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "ongoing": "Ongoing",
+      "to_be_confirmed": "To be confirmed"
+    },
+    "notifications": {
+      "notificationLabel": "Notification {id}",
+      "deadline": "by {date}",
+      "publishedOnDate": "Published {date}",
+      "fromSource": "From {source}",
+      "loadingDetails": "Loading notification details…",
+      "recipients": "Recipients",
+      "themes": "Themes",
+      "attachments": "Attachments",
+      "viewNotification": "View notification",
+      "notFound": "Notification not found",
+      "loadFailed": "Unable to load notification details."
+    },
     "common": {
       "yes": "Yes"
     }
@@ -137,5 +160,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "Home",
+    "suggestion1": "Suggestion 1",
+    "suggestion2": "Suggestion 2"
+  },
+  "home": {
+    "title": "CBD Activities & Actions Calendar",
+    "lead": "Explore the design suggestions using the navigation above.",
+    "description": "Use the Suggestion pages to preview different layouts of the Activities & Actions explorer and provide feedback on the direction you prefer."
   }
 }

@@ -280,6 +280,7 @@ const fallbackSubjectOptions = computed<FilterOption[]>(() => {
   }
 
   const uniqueSubjects = Array.from(new Set(props.availableSubjects));
+
   return uniqueSubjects.map(subject => ({
     value: subject,
     label: resolveSubjectLabel(subject, remoteSubjectLabelMap.value),
@@ -309,6 +310,7 @@ const schemaOptions = computed<FilterOption[]>(() => {
   const key = 'meeting';
   const translationKey = 'calendar.types.meeting';
   const label = te(translationKey) ? (t(translationKey) as string) : key;
+
   return [{ value: key, label }];
 });
 
@@ -327,6 +329,7 @@ function statusKeyToLabel(status: string): string {
   // Explicit mapping for known keys
   // If already mixed case (likely a label), return as-is
   const isAllCapsOrUnderscore = /^[A-Z0-9_]+$/.test(raw);
+
   if (!isAllCapsOrUnderscore) return raw;
   // Convert KEY_NAME to "Key name"
   return raw
@@ -385,6 +388,7 @@ function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
         return item.trim();
       }
       const raw = item?.value ?? '';
+
       return typeof raw === 'string' ? raw.trim() : String(raw);
     })
     .filter(value => value.length > 0);
@@ -427,6 +431,7 @@ function clearFilters(): void {
 function mapThesaurusTermToOption(term: ThesaurusTerm): FilterOption {
   if (term.title) {
     const english = term.title['en'];
+
     if (english) {
       return { value: term.identifier, label: english };
     }
@@ -443,6 +448,7 @@ function mapThesaurusTermToOption(term: ThesaurusTerm): FilterOption {
 async function loadDomainOptions(domain: ThesaurusDomainIdentifier): Promise<FilterOption[]> {
   try {
     const terms = await getDomainTerms(domain);
+
     return terms
       .map(mapThesaurusTermToOption)
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -461,6 +467,7 @@ interface LocalCalendarTerm {
 function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
   const label = (term.title && term.title['en']) || term.name || term.identifier;
   const value = term.name || term.identifier;
+
   return { value, label };
 }
 
@@ -496,6 +503,7 @@ function syncSelectionWithOptions(
         filtered.length !== selection.value.length ||
         filtered.some((option, index) => {
           const current = selection.value[index];
+
           if (!current || typeof current === 'string') {
             return true;
           }

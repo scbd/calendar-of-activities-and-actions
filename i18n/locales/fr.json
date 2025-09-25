@@ -28,7 +28,10 @@
       "statusNarrative": "Narratif du statut",
       "responsible": "Responsable",
       "unit": "Unité",
-      "officer": "Responsable"
+      "officer": "Responsable",
+      "notifications": "Notifications",
+      "untitled": "Sans titre",
+      "unknownDate": "Date inconnue"
     },
     "links": {
       "documents": "Documents »"
@@ -113,6 +116,26 @@
       "default": "Activité",
       "unknown": "Activité"
     },
+    "status": {
+      "confirm": "Confirmé",
+      "confirmed": "Confirmé",
+      "completed": "Terminé",
+      "ongoing": "En cours",
+      "to_be_confirmed": "À confirmer"
+    },
+    "notifications": {
+      "notificationLabel": "Notification {id}",
+      "deadline": "avant le {date}",
+      "publishedOnDate": "Publié le {date}",
+      "fromSource": "De {source}",
+      "loadingDetails": "Chargement des détails de la notification…",
+      "recipients": "Destinataires",
+      "themes": "Thèmes",
+      "attachments": "Pièces jointes",
+      "viewNotification": "Voir la notification",
+      "notFound": "Notification introuvable",
+      "loadFailed": "Impossible de charger les détails de la notification."
+    },
     "common": {
       "yes": "Oui"
     }
@@ -137,5 +160,15 @@
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
     }
+  },
+  "nav": {
+    "home": "Accueil",
+    "suggestion1": "Suggestion 1",
+    "suggestion2": "Suggestion 2"
+  },
+  "home": {
+    "title": "Calendrier des activités et actions de la CDB",
+    "lead": "Explorez les propositions de conception à l'aide de la navigation ci-dessus.",
+    "description": "Utilisez les pages de suggestion pour prévisualiser différentes mises en page de l'explorateur d'activités et d'actions et donner votre avis sur la direction que vous préférez."
   }
 }

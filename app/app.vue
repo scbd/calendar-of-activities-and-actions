@@ -2,9 +2,9 @@
   <NuxtLayout>
     <header class="container">
       <nav class="nav">
-        <NuxtLink class="nav-link" to="/">Home</NuxtLink>
-        <NuxtLink class="nav-link" to="/suggestion-1">Suggestion 1</NuxtLink>
-        <NuxtLink class="nav-link" to="/suggestion-2">Suggestion 2</NuxtLink>
+        <NuxtLink class="nav-link" to="/">{{ t('nav.home') }}</NuxtLink>
+        <NuxtLink class="nav-link" to="/suggestion-1">{{ t('nav.suggestion1') }}</NuxtLink>
+        <NuxtLink class="nav-link" to="/suggestion-2">{{ t('nav.suggestion2') }}</NuxtLink>
       </nav>
     </header>
     <NuxtRouteAnnouncer />
@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-// Root app wrapper; route content is rendered via <NuxtPage />
+const { t } = useI18n();
 </script>
 
 <style>
