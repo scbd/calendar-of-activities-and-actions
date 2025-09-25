@@ -62,17 +62,18 @@ const decisionEntriesMock = vi.hoisted(() => vi.fn((record: Record<string, unkno
 })) as ReturnType<typeof vi.fn>;
 
 vi.mock('../../shared/utils/decision-links', async () => {
-  const actual = await vi.importActual<typeof import('../../shared/utils/decision-links')>('../../shared/utils/decision-links');
+  const _actual = await vi.importActual<typeof import('../../shared/utils/decision-links')>('../../shared/utils/decision-links');
 
   return {
-    ...actual,
+    ..._actual,
     extractDecisionEntries: decisionEntriesMock,
   };
 });
 
-// Provide markdown table with one activity so component renders rows that include type strip
+// Provide markdown table with two non-meeting activity types to ensure they are visible by default
 vi.mock('../../composables/useCalendarMarkdown', () => ({
-  useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |`) }));
+  useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |\n| Second Item | | Nominations | N | Another Subject | Completed | | 5-Feb-2025 | 6-Feb-2025 | SBSTTA | | 15/4 | | | UNIT | Officer | | | | | | | |`)
+}));
 
 vi.mock('../../shared/data/meetings.js', () => ({
   meetings: [
@@ -147,6 +148,7 @@ describe('CalendarActivitiesActions Component', () => {
   it('uses localized COP prefix when locale is French', async () => {
     const component = await mountComponent('fr');
 
+
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);
@@ -155,5 +157,16 @@ describe('CalendarActivitiesActions Component', () => {
 
     expect(copLink).toBeTruthy();
     expect(npLink).toBeTruthy();
+  });
+
+  it('shows non-meeting types by default (no implicit meeting filter applied)', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const typeLabels = component.findAll('.calendar-row__type-strip').map(el => el.text().trim().toLowerCase());
+
+    expect(typeLabels.some(l => l === 'activity')).toBe(true);
+    expect(typeLabels.some(l => l === 'nominations')).toBe(true);
   });
 });

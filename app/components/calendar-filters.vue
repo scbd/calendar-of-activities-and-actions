@@ -3,10 +3,10 @@
     <div class="row g-3">
       <!-- Type Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.typeActivity') }}</label>
+        <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
-          v-model="selectedTypes"
+          v-model="selectedSchemas"
           :options="schemaOptions"
           :multiple="true"
           :close-on-select="false"
@@ -16,7 +16,7 @@
           :group-label="'label'"
           label="label"
           track-by="value"
-          :placeholder="t('calendar.filters.placeholders.typeActivity')"
+          :placeholder="t('calendar.filters.placeholders.schemas')"
         />
       </div>
 
@@ -302,16 +302,28 @@ const globalTargetOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
 );
 
-// Computed schema options (formerly typeOptions). Requirement: fixed schema 'meeting'.
-// We ignore provided availableTypes now per change request and present a single option whose
-// value is the schema key ('meeting') and label is translated (calendar.types.meeting) falling
-// back to the raw key if translation missing.
+// Dynamic schema/type options derived from provided available types.
+// Previous implementation hard-coded a single 'meeting' schema which
+// caused all non-meeting items to be filtered out by default since the
+// selectedTypes list was auto-synchronized to include only 'meeting'.
+// Restoring dynamic behaviour so that, by default (no selection), all
+// activities & actions are shown. Selecting one or more types will then
+// narrow results. This aligns with expected UX and allows markdown-
+// sourced activity types (e.g. Nominations, Workshop, Peer-Review) to
+// display without user intervention.
 const schemaOptions = computed<FilterOption[]>(() => {
-  const key = 'meeting';
-  const translationKey = 'calendar.types.meeting';
-  const label = te(translationKey) ? (t(translationKey) as string) : key;
+  if (!props.availableTypes || props.availableTypes.length === 0) return [];
+  const unique = Array.from(new Set(props.availableTypes));
 
-  return [{ value: key, label }];
+  return unique
+    .map(type => {
+      const key = String(type).trim();
+      const translationKey = `calendar.types.${key.toLowerCase().replace(/\s+/g, '-')}`;
+      const label = te(translationKey) ? (t(translationKey) as string) : key;
+
+      return { value: key, label };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
 });
 
 function statusKeyToLabel(status: string): string {
@@ -519,7 +531,9 @@ function syncSelectionWithOptions(
   );
 }
 
-syncSelectionWithOptions(selectedTypes, schemaOptions);
+// Intentionally NOT auto-syncing selectedTypes with schemaOptions to avoid
+// implicitly applying a type filter (which previously hid non-meeting items).
+// Users will explicitly choose types; empty selection means "show all".
 syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
 syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);

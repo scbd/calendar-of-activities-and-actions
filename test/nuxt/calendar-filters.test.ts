@@ -41,21 +41,24 @@ describe('CalendarFilters Component', () => {
     expect(wrapper.exists()).toBe(true);
   });
 
-  it('emits filter updates when schema (meeting) selection changes', async () => {
+  it('emits filter updates when schema selection changes', async () => {
     const wrapper = await mountFilters();
-
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
 
-    typeSelect.vm.$emit('update:modelValue', ['meeting']);
+    // Simulate selecting the first available option object (matches availableTypes prop)
+  const optionObj = { value: 'Meeting', label: 'Meeting' };
+
+  typeSelect.vm.$emit('update:modelValue', [optionObj]);
     await nextTick();
+    await nextTick(); // allow watchEffect + updateFilters cycle
 
     const emissions = wrapper.emitted('update:filters');
 
     expect(emissions).toBeTruthy();
     const latest = emissions?.[emissions.length - 1]?.[0];
 
-    expect(latest?.types).toEqual(['meeting']);
+    expect(latest?.types).toEqual(['Meeting']);
   });
 
   it('clears all filters when the clear button is clicked', async () => {
