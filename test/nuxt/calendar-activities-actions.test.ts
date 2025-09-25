@@ -70,6 +70,10 @@ vi.mock('../../shared/utils/decision-links', async () => {
   };
 });
 
+// Provide markdown table with one activity so component renders rows that include type strip
+vi.mock('../../composables/useCalendarMarkdown', () => ({
+  useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |`) }));
+
 vi.mock('../../shared/data/meetings.js', () => ({
   meetings: [
     {
@@ -117,7 +121,6 @@ describe('CalendarActivitiesActions Component', () => {
 
   it('renders a type strip with a centered label', async () => {
     const component = await mountComponent();
-
     await flushPromises();
 
     const typeStrip = component.find('.calendar-row__type-strip');

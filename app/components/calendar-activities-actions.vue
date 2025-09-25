@@ -90,58 +90,87 @@
                 :aria-labelledby="`heading-${item._id}`"
               >
                 <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <p v-if="status(item)">
-                        <strong>{{ t('calendar.labels.status') }}: </strong>
-                          <span v-if="status(item)" class="badge calendar-accordion__status-badge" :class="`bg-${statusColor(item)}`">
-                            {{ status(item) }}
-                          </span> <br>
-                        <span v-if="item.statusNarrative_t">{{ item.statusNarrative_t }}</span>
-                      </p>
-
-                      <p v-if="isActionRequired(item)">
-                        <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
-                        {{ t('calendar.common.yes') }}
-                      </p>
-
-                      <p v-if="item.description_t"><strong>{{ t('calendar.labels.description') }}:</strong> {{ item.description_t }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <div v-if="displaySubjectLabels(item).length" class="mb-3 calendar-subjects">
-                          <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
-                          <div class="calendar-pill-row">
-                            <span
-                              v-for="subject in displaySubjectLabels(item)"
-                              :key="subject"
-                              class="calendar-pill"
-                            >
-                              {{ subject }}
-                            </span>
-                          </div>
+                  <div class="calendar-details">
+                    <div
+                      v-if="status(item) || item.statusNarrative_t || isActionRequired(item) || item.description_t"
+                      class="calendar-notification-card"
+                    >
+                      <div class="calendar-notification-card__content">
+                        <div v-if="status(item)" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.status') }}</span>
+                          <span class="badge calendar-accordion__status-badge" :class="`bg-${statusColor(item)}`">{{ status(item) }}</span>
                         </div>
-                        <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
-                        <p v-if="decisionEntries(item).length">
-                          <strong>{{ t('calendar.labels.decision') }}:</strong>
-                          <span class="ms-1">
-                            <template
-                              v-for="(entry, index) in decisionEntries(item)"
-                              :key="`${entry.href ?? entry.label}-${index}`"
-                            >
-                              <DecisionLink :href="entry.href" :label="entry.label" />
-                              <span v-if="index < decisionEntries(item).length - 1">, </span>
-                            </template>
-                          </span>
-                        </p>
-                      <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
-                            <div class="card-header">
-                              <strong>{{ t('calendar.labels.responsible') }}</strong>
-                            </div>
-                            <ul class="list-group list-group-flush">
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit_s }}</li>
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer_s }}</li>
-                          </ul>
+                        <div v-if="isActionRequired(item)" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.actionRequiredByParties') }}</span>
+                          <span>{{ t('calendar.common.yes') }}</span>
+                        </div>
+                        <div v-if="item.statusNarrative_t" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.statusNarrative') }}</span>
+                          <div>{{ item.statusNarrative_t }}</div>
+                        </div>
+                        <div v-if="item.description_t" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.description') }}</span>
+                          <div>{{ item.description_t }}</div>
+                        </div>
+                      </div>
+                    </div>
 
+                    <div v-if="displaySubjectLabels(item).length" class="calendar-notification-card">
+                      <div class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
+                        <div class="calendar-pill-row">
+                          <span
+                            v-for="subject in displaySubjectLabels(item)"
+                            :key="subject"
+                            class="calendar-pill"
+                          >
+                            {{ subject }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="(item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length) || decisionEntries(item).length"
+                      class="calendar-notification-card"
+                    >
+                      <div v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.associatedBody') }}</span>
+                        <div class="calendar-pill-row">
+                          <span
+                            v-for="body in item.subsidiaryBodies_ss"
+                            :key="body"
+                            class="calendar-pill calendar-pill--muted"
+                          >
+                            {{ body }}
+                          </span>
+                        </div>
+                      </div>
+                      <div v-if="decisionEntries(item).length" class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.decision') }}</span>
+                        <span class="ms-1">
+                          <template
+                            v-for="(entry, index) in decisionEntries(item)"
+                            :key="`${entry.href ?? entry.label}-${index}`"
+                          >
+                            <DecisionLink :href="entry.href" :label="entry.label" />
+                            <span v-if="index < decisionEntries(item).length - 1">, </span>
+                          </template>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="calendar-notification-card">
+                      <div class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.responsible') }}</span>
+                      </div>
+                      <div v-if="item.responsibleUnit_s" class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.unit') }}</span>
+                        <span class="calendar-pill calendar-pill--muted">{{ item.responsibleUnit_s }}</span>
+                      </div>
+                      <div v-if="item.responsibleOfficer_s" class="calendar-notification-card__section">
+                        <span class="calendar-pill-label">{{ t('calendar.labels.officer') }}</span>
+                        <span>{{ item.responsibleOfficer_s }}</span>
                       </div>
                     </div>
                   </div>
