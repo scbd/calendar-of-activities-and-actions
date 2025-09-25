@@ -1,9 +1,5 @@
-export interface Dictionary<T> {
-  [key: string]: T;
-}
-
 // Localized string dictionary, e.g., { en: 'Title', fr: 'Titre' }
-export type ELstring = Dictionary<string>;
+export type ELstring = Record<string, string>;
 
 export interface ThesaurusTerm {
   termId: number;
@@ -19,4 +15,3 @@ export interface ThesaurusTerm {
   relatedTerms: string[];
   nonPreferedTerms: string[];
 }
-

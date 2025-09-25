@@ -1,4 +1,6 @@
-// Rely on Nuxt auto-imports for useFetch and refs
+import { useFetch } from '#imports';
+
+// Rely on Nuxt auto-imports for refs
 let cachedMarkdown: string | null = null;
 let inflightRequest: Promise<string> | null = null;
 
@@ -22,10 +24,12 @@ export const useCalendarMarkdown = async (): Promise<string> => {
       throw new Error(message);
     }
 
-    cachedMarkdown = data.value ?? '';
+    const markdown = data.value ?? '';
+
+    cachedMarkdown = markdown;
     inflightRequest = null;
 
-    return cachedMarkdown;
+    return markdown;
   })();
 
   return inflightRequest;

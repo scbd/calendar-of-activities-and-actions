@@ -25,7 +25,7 @@ async function mountComponent(locale: string = 'en') {
 }
 
 // Mock the useQueryIndex composable to prevent actual API calls
-vi.mock('../../composables/useQueryIndex', () => ({
+vi.mock('../../app/composables/useQueryIndex', () => ({
   useQueryIndex: () => ({
     data: { value: null },
     error: { value: null },
@@ -71,7 +71,7 @@ vi.mock('../../shared/utils/decision-links', async () => {
 });
 
 // Provide markdown table with two non-meeting activity types to ensure they are visible by default
-vi.mock('../../composables/useCalendarMarkdown', () => ({
+vi.mock('../../app/composables/useCalendarMarkdown', () => ({
   useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |\n| Second Item | | Nominations | N | Another Subject | Completed | | 5-Feb-2025 | 6-Feb-2025 | SBSTTA | | 15/4 | | | UNIT | Officer | | | | | | | |`)
 }));
 
@@ -139,7 +139,7 @@ describe('CalendarActivitiesActions Component', () => {
     // Wait for asynchronous data normalization to complete
     await flushPromises();
 
-    const documentLinks = component.findAll('.calendar-meeting-link a');
+  const documentLinks = component.findAll('.calendar-accordion__cta');
 
     expect(documentLinks.length).toBeGreaterThan(0);
     const firstLink = documentLinks[0];
@@ -148,6 +148,26 @@ describe('CalendarActivitiesActions Component', () => {
     expect(firstLink?.attributes('href')).toBe('https://www.cbd.int/meetings/test-1');
     expect(firstLink?.attributes('target')).toBe('_blank');
     expect(firstLink?.attributes('rel')).toContain('noopener');
+  });
+
+  it('renders the meeting documents link alongside the status badges in the same row', async () => {
+    const component = await mountComponent();
+
+    await flushPromises();
+
+    const badgeRows = component.findAll('.calendar-accordion__badges-row');
+
+    expect(badgeRows.length).toBeGreaterThan(0);
+    const rowWithCta = badgeRows.find(row => row.find('.calendar-accordion__cta').exists());
+
+    expect(rowWithCta).toBeDefined();
+    const cta = rowWithCta?.find('.calendar-accordion__cta');
+    const statusContainer = rowWithCta?.find('.calendar-accordion__status-badges');
+
+    expect(cta?.exists()).toBe(true);
+    expect(statusContainer?.exists()).toBe(true);
+    expect(statusContainer?.find('.calendar-accordion__cta').exists()).toBe(false);
+    expect(statusContainer?.findAll('.calendar-accordion__status-badge').length).toBeGreaterThan(0);
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {

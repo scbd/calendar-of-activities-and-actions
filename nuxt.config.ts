@@ -23,15 +23,15 @@ export default defineNuxtConfig({
     defaultLocale: 'en',
     langDir: 'locales',
     strategy: 'no_prefix',
-    detectBrowserLanguage: true
+    detectBrowserLanguage: {
+      alwaysRedirect: false,
+      useCookie: true,
+      cookieKey: 'i18n_redirected'
+    }
   },
   css: [
     'vue-multiselect/dist/vue-multiselect.css'
   ],
-
-  build: {
-    manifest: true
-  },
 
   runtimeConfig: {
     public: {

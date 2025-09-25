@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { useCalendarMarkdown as UseCalendarMarkdown } from '../../composables/useCalendarMarkdown';
+import type { useCalendarMarkdown as UseCalendarMarkdown } from '../../app/composables/useCalendarMarkdown';
 
 // Helper to reset internal module state between tests by re-importing.
 const reloadComposable = async () => {
-  const mod = await import('../../composables/useCalendarMarkdown');
+  const mod = await import('../../app/composables/useCalendarMarkdown');
 
   return mod.useCalendarMarkdown as unknown as typeof UseCalendarMarkdown;
 };

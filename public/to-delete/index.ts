@@ -1,6 +1,11 @@
 import { consola, type ConsolaInstance } from 'consola';
-import type { IndexerOptions, FsAdapter, IndexRecord, MdRecord } from '../../../../server/types/tasks';
-import type { MergedRecord } from '../../../../shared/types/records';
+import type { IndexerOptions, FsAdapter } from '../../../../server/types/tasks';
+
+type IndexRecord = Record<string, unknown>;
+type MdRecord = Record<string, string>;
+type MergedRecord = {
+  provenance: { index?: IndexRecord; md?: MdRecord };
+};
 
 /**
  * Default filesystem adapter implementation for scaffolding

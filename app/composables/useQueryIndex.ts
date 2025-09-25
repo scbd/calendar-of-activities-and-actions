@@ -1,5 +1,5 @@
-import type { SolrSelectBody, SolrResponse } from '../shared/types/solr';
-// Rely on Nuxt auto-imports for composables (useFetch, useRuntimeConfig)
+import { useRuntimeConfig, useFetch } from '#imports';
+import type { SolrSelectBody, SolrResponse } from '../../shared/types/solr';
 
 export const useQueryIndex = <TDoc = Record<string, unknown>>(
   body: SolrSelectBody,

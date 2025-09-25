@@ -15,7 +15,7 @@ Notes:
 
 - [ ] clean status
 
-- [ ] view docs
+- [x] view docs
 
 - [x] translations  
 

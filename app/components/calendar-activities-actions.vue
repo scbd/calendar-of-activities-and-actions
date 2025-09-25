@@ -46,12 +46,12 @@
                     <div class="calendar-accordion__title">{{ title(item) }}</div>
                     <div class="calendar-accordion__meta small text-muted">{{ formatDateRange(item) }}</div>
                     <div
-                      v-if="displaySubjectLabels(item).length || status(item) || isActionRequired(item)"
+                      v-if="displaySubjectLabels(item).length || status(item) || isActionRequired(item) || primaryMeetingLink(item)"
                       class="calendar-accordion__badges-row mt-2"
                     >
                       <div
                         v-if="displaySubjectLabels(item).length"
-                        class="calendar-accordion__subjects"
+                        class="calendar-accordion__subjects w-100"
                       >
                         <span
                           v-for="subject in displaySubjectLabels(item)"
@@ -61,6 +61,17 @@
                           {{ subject }}
                         </span>
                       </div>
+                      
+                      <a
+                        v-if="primaryMeetingLink(item)"
+                        :href="primaryMeetingLink(item)"
+                        target="_blank"
+                        rel="noopener"
+                        class="calendar-notification-card__cta calendar-accordion__cta"
+                        :aria-label="t('calendar.actions.viewDocumentsAria', { title: title(item) })"
+                      >
+                        {{ t('calendar.actions.viewDocuments') }}
+                      </a>
                       <div
                         v-if="status(item) || isActionRequired(item)"
                         class="calendar-accordion__status-badges"
@@ -133,17 +144,6 @@
                             </template>
                           </span>
                         </p>
-                        <div v-if="primaryMeetingLink(item)" class="calendar-meeting-link mb-3">
-                          <a
-                            :href="primaryMeetingLink(item)"
-                            target="_blank"
-                            rel="noopener"
-                            class="btn btn-outline-success"
-                            :aria-label="t('calendar.actions.viewDocumentsAria', { title: title(item) })"
-                          >
-                            {{ t('calendar.actions.viewDocuments') }}
-                          </a>
-                        </div>
                         <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
                             <div class="card-header">
                               <strong>{{ t('calendar.labels.responsible') }}</strong>
@@ -274,7 +274,7 @@
 import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
-import { useCalendarMarkdown } from '../../composables/useCalendarMarkdown';
+import { useCalendarMarkdown } from '../composables/useCalendarMarkdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
@@ -1093,14 +1093,14 @@ function meetingLinks(doc: AnyDoc): string[] {
   return normalized;
 }
 
-function primaryMeetingLink(doc: AnyDoc): string | null {
+function primaryMeetingLink(doc: AnyDoc): string | undefined {
   const links = meetingLinks(doc);
 
   if (links.length === 0) {
-    return null;
+    return undefined;
   }
 
-  return links[0] ?? null;
+  return links[0] ?? undefined;
 }
 
 function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
@@ -1860,7 +1860,7 @@ h3 {
 
 .calendar-accordion__badges-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -1876,10 +1876,10 @@ h3 {
 .calendar-accordion__status-badges {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.35rem;
-  margin-left: auto;
+  gap: 0.5rem;
   flex-wrap: wrap;
+  margin-left: auto;
+  justify-content: flex-end;
   text-align: right;
 }
 
@@ -2082,15 +2082,9 @@ h3 {
 .calendar-notification-card__attachments a:hover {
   background: rgba(12, 74, 50, 0.18);
 }
-
-.calendar-meeting-link {
-  display: flex;
-  align-items: center;
-}
-
-.calendar-meeting-link .btn {
-  font-weight: 600;
-  letter-spacing: 0.02em;
+.calendar-accordion__cta {
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .calendar-notification-card__actions {

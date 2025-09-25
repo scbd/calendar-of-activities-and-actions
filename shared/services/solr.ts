@@ -3,7 +3,7 @@
  * This mirrors the approach in the online reporting tool and follows the example-index-call.
  */
 
-import { useQueryIndex } from '../../composables/useQueryIndex';
+import { useQueryIndex } from '../../app/composables/useQueryIndex';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
 
@@ -71,6 +71,7 @@ export function localizeFields(fields?: string | string[], locale?: LocaleCode):
   if (!locale || locale === 'en') return fields;
 
   const replace = (f: string) => f.replace(/_EN/gi, `_${locale.toUpperCase()}`);
+
   if (Array.isArray(fields)) return fields.map(replace);
   return replace(fields);
 }
@@ -135,6 +136,7 @@ export async function fetchMeetingsUpdatedSince(
 ) {
   const body = buildSelectBody({ locale, schema: 'meeting', sinceUpdatedDateISO });
   const { data, error } = useQueryIndex(body);
+
   if (error.value) {
     throw new Error(`Solr query failed: ${error.value.message || error.value}`);
   }
@@ -143,6 +145,7 @@ export async function fetchMeetingsUpdatedSince(
 
 export function collectAllFieldNames(docs: Array<Record<string, unknown>>): string[] {
   const set = new Set<string>();
+
   for (const doc of docs) {
     Object.keys(doc).forEach((k) => set.add(k));
   }

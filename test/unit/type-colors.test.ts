@@ -3,7 +3,6 @@ import {
   CBD_GREEN,
   getTypeColor,
   getTypeForegroundColor,
-  isReservedGreen,
   normalizeTypeKey,
 } from '../../shared/utils/type-colors';
 
@@ -13,7 +12,6 @@ describe('calendar type color helpers', () => {
     specialTypes.forEach(type => {
       const color = getTypeColor(type);
       expect(color.background).toBe(CBD_GREEN);
-      expect(isReservedGreen(type)).toBe(true);
     });
   });
 
@@ -33,7 +31,6 @@ describe('calendar type color helpers', () => {
     otherTypes.forEach(type => {
       const color = getTypeColor(type);
       expect(color.background).not.toBe(CBD_GREEN);
-      expect(isReservedGreen(type)).toBe(false);
     });
   });
 

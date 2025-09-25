@@ -1,3 +1,4 @@
+import { useI18n } from '#imports';
 import { SCBD_UNITS_DIVISIONS } from 'shared/constants/scbd-units-divisions';
 
 type UnitsDivisionsKey = keyof typeof SCBD_UNITS_DIVISIONS;
@@ -38,7 +39,6 @@ const EXTRA_ALIASES: Record<string, UnitsDivisionsKey> = {
   'BSPG': 'BSPG',
   'MRNR': 'MRNR',
   'FB': 'FB',
-  'ABS': 'ABS',
   'BS': 'BS',
   'BETI': 'BETI',
   'PB': 'PB',
@@ -58,11 +58,15 @@ const normalize = (value: string) =>
 const buildAliasIndex = () => {
   const idx = new Map<string, UnitsDivisionsKey>();
   // Abbreviation aliases (normalized)
-  (Object.keys(SCBD_UNITS_DIVISIONS) as UnitsDivisionsKey[]).forEach((abbr) => {
+
+  for (const abbr of Object.keys(SCBD_UNITS_DIVISIONS) as UnitsDivisionsKey[]) {
+
     idx.set(normalize(abbr), abbr);
+
     const name = SCBD_UNITS_DIVISIONS[abbr];
+
     idx.set(normalize(name), abbr);
-  });
+  }
   // Extra aliases
   for (const [alias, abbr] of Object.entries(EXTRA_ALIASES)) {
     idx.set(normalize(alias), abbr);
@@ -72,6 +76,14 @@ const buildAliasIndex = () => {
 
 const aliasIndex = buildAliasIndex();
 
+interface UnitsMessages {
+  [locale: string]: {
+    scbd?: {
+      unitsDivisions?: Record<string, string>;
+    };
+  } | undefined;
+}
+
 export const useScbdUnitsNames = (
   keyOrAlias: string,
   targetLocale?: string,
@@ -80,15 +92,18 @@ export const useScbdUnitsNames = (
 
   const normalized = normalize(keyOrAlias);
   const abbr = aliasIndex.get(normalized);
+
   if (!abbr) return keyOrAlias; // Unknown: return input as-is
 
   const desiredLocale = targetLocale || locale.value;
-  const msgs = messages.value as Record<string, any>;
+  const msgs = messages.value as UnitsMessages;
   const byLocale = msgs?.[desiredLocale]?.scbd?.unitsDivisions?.[abbr];
+
   if (byLocale) return byLocale as string;
 
   // Fallback to English, then constant name
   const en = msgs?.en?.scbd?.unitsDivisions?.[abbr];
+
   return (en as string) || SCBD_UNITS_DIVISIONS[abbr] || keyOrAlias;
 };
 

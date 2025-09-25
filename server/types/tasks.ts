@@ -1,5 +1,6 @@
-// Deliberately re-export from shared; no local use to avoid unused warnings
 import type { ConsolaInstance } from 'consola';
+
+// Task-related type definitions consumed by scaffolding indexer utilities
 
 // File-system adapter abstraction used by indexers
 export type FsAdapter = {
@@ -30,6 +31,3 @@ export type MergePayload = {
   rawIndexPath?: string // default: shared/data/raw-index.json
   dryRun?: boolean
 }
-
-// Re-export commonly used shared types for server modules
-export type { IndexRecord, MdRecord } from 'shared/types/records';

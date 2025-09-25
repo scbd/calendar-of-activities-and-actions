@@ -1,7 +1,12 @@
 import type { Task, TaskEvent } from 'nitropack';
 import { consola, type ConsolaInstance } from 'consola';
-import type { IndexerPayload, IndexerOptions, FsAdapter, IndexRecord, MdRecord } from '../../server/types/tasks';
-import type { MergedRecord } from '../types/records';
+import type { IndexerPayload, IndexerOptions, FsAdapter } from '../../server/types/tasks';
+
+type IndexRecord = Record<string, unknown>;
+type MdRecord = Record<string, string>;
+type MergedRecord = {
+  provenance: { index?: IndexRecord; md?: MdRecord };
+};
 
 /**
  * Default filesystem adapter implementation for scaffolding
@@ -170,4 +175,3 @@ const indexerTask: Task = {
   },
 };
 export default indexerTask;
-

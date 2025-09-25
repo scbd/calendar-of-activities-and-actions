@@ -104,7 +104,3 @@ export function getTypeForegroundColor(
   return color.text;
 }
 
-export function isReservedGreen(type: string | null | undefined): boolean {
-  const normalized = normalizeTypeKey(type);
-  return normalized === 'cop' || normalized === 'sbstta' || normalized === 'sbi';
-}

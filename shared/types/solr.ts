@@ -1,7 +1,5 @@
 // Shared Solr type definitions primarily for client composables
 
-export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
-
 export interface SolrSelectBody {
 	df: string;
 	fq: string[];

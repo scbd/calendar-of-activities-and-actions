@@ -235,6 +235,8 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
 
+  const typeFallbacks = [record['type_s'], record['type']].find((value) => typeof value === 'string') as string | undefined;
+
   const normalized: AnyDoc = {
     ...record,
     _id: id,
@@ -243,7 +245,7 @@ function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
     subject_EN_s: record['subject_EN_s'] ?? (subjects.length > 0 ? subjects.join(', ') : null),
     subsidiaryBody_s: record['subsidiaryBody_s'] ?? (bodies.length > 0 ? bodies[0] : null),
     subsidiaryBodies_ss: bodies,
-    type_s: record['type_s'] ?? record['type'] ?? 'Meeting',
+    type_s: typeFallbacks ?? 'Meeting',
     links_ss: Array.isArray(record['links_ss']) ? record['links_ss'] as string[] : [],
     statusKey_s: statusKey ?? null,
     status_s: statusLabel,
