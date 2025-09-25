@@ -8,6 +8,7 @@ import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
 const defaultProps = {
+  // availableTypes now ignored by component logic; kept for compatibility
   availableTypes: ['Meeting', 'Workshop'],
   availableSubjects: ['Biodiversity', 'Climate'],
   availableStatuses: ['Confirmed', 'Tentative'],
@@ -39,18 +40,18 @@ describe('CalendarFilters Component', () => {
     expect(wrapper.exists()).toBe(true);
   });
 
-  it('emits filter updates when type selection changes', async () => {
+  it('emits filter updates when schema (meeting) selection changes', async () => {
     const wrapper = await mountFilters();
 
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
-    typeSelect.vm.$emit('update:modelValue', ['Meeting']);
+    typeSelect.vm.$emit('update:modelValue', ['meeting']);
     await nextTick();
 
     const emissions = wrapper.emitted('update:filters');
     expect(emissions).toBeTruthy();
     const latest = emissions?.[emissions.length - 1]?.[0];
-    expect(latest?.types).toEqual(['Meeting']);
+    expect(latest?.types).toEqual(['meeting']);
   });
 
   it('clears all filters when the clear button is clicked', async () => {

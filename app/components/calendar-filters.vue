@@ -7,7 +7,7 @@
         <Multiselect
           id="type-filter"
           v-model="selectedTypes"
-          :options="typeOptions"
+          :options="schemaOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
@@ -236,7 +236,7 @@ const emit = defineEmits<{
   'update:filters': [filters: FilterState];
 }>();
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 // Filter state
 interface FilterState {
@@ -301,16 +301,30 @@ const globalTargetOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
 );
 
-// Computed filter options
-const typeOptions = computed<FilterOption[]>(() =>
-  props.availableTypes.map(type => ({ value: type, label: type }))
-);
+// Computed schema options (formerly typeOptions). Requirement: fixed schema 'meeting'.
+// We ignore provided availableTypes now per change request and present a single option whose
+// value is the schema key ('meeting') and label is translated (calendar.types.meeting) falling
+// back to the raw key if translation missing.
+const schemaOptions = computed<FilterOption[]>(() => {
+  const key = 'meeting';
+  const translationKey = 'calendar.types.meeting';
+  const label = te(translationKey) ? (t(translationKey) as string) : key;
+  return [{ value: key, label }];
+});
 
 function statusKeyToLabel(status: string): string {
   if (!status) return '';
   const raw = String(status).trim();
+  const normalizedKey = raw.replace(/\s+/g, '_').toLowerCase();
+  const translationKey = `calendar.status.${normalizedKey}`;
+
+  if (te(translationKey)) {
+    return t(translationKey) as string;
+  }
+  if (normalizedKey === 'confirm') {
+    return t('calendar.status.confirmed') as string;
+  }
   // Explicit mapping for known keys
-  if (raw.toUpperCase() === 'CONFIRM') return 'Confirmed';
   // If already mixed case (likely a label), return as-is
   const isAllCapsOrUnderscore = /^[A-Z0-9_]+$/.test(raw);
   if (!isAllCapsOrUnderscore) return raw;
@@ -497,7 +511,7 @@ function syncSelectionWithOptions(
   );
 }
 
-syncSelectionWithOptions(selectedTypes, typeOptions);
+syncSelectionWithOptions(selectedTypes, schemaOptions);
 syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
 syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);

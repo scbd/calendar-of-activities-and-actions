@@ -51,13 +51,12 @@
                     >
                       <div
                         v-if="displaySubjectLabels(item).length"
-                        class="calendar-accordion__subjects small"
+                        class="calendar-accordion__subjects"
                       >
-                  
                         <span
                           v-for="subject in displaySubjectLabels(item)"
                           :key="subject"
-                          class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
+                          class="calendar-pill"
                         >
                           {{ subject }}
                         </span>
@@ -70,7 +69,7 @@
                           v-if="isActionRequired(item)"
                           class="badge bg-danger calendar-accordion__status-badge"
                         >
-                          Party Action Required
+                          {{ t('calendar.labels.actionRequiredByParties') }}
                         </span>
                         <span
                           v-if="status(item)"
@@ -109,15 +108,17 @@
                       <p v-if="item.description_t"><strong>{{ t('calendar.labels.description') }}:</strong> {{ item.description_t }}</p>
                     </div>
                     <div class="col-md-6">
-                        <div v-if="displaySubjectLabels(item).length" class="mb-2">
-                          <strong class="me-1">{{ t('calendar.labels.subjects') }}:</strong>
-                          <span
-                            v-for="subject in displaySubjectLabels(item)"
-                            :key="subject"
-                            class="badge bg-light text-dark me-1 mb-1 calendar-subject-badge"
-                          >
-                            {{ subject }}
-                          </span>
+                        <div v-if="displaySubjectLabels(item).length" class="mb-3 calendar-subjects">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
+                          <div class="calendar-pill-row">
+                            <span
+                              v-for="subject in displaySubjectLabels(item)"
+                              :key="subject"
+                              class="calendar-pill"
+                            >
+                              {{ subject }}
+                            </span>
+                          </div>
                         </div>
                         <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
                         <p v-if="decisionEntries(item).length">
@@ -132,10 +133,6 @@
                             </template>
                           </span>
                         </p>
-                        <p v-if="paragraphEntries(item).length">
-                          <strong>{{ t('calendar.labels.paragraph') }}:</strong>
-                          {{ paragraphEntries(item).join(', ') }}
-                        </p>
                       <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
                             <div class="card-header">
                               <strong>{{ t('calendar.labels.responsible') }}</strong>
@@ -148,9 +145,107 @@
                       </div>
                     </div>
                   </div>
-                  <div v-if="Array.isArray(item.relatedDocuments_ss) && item.relatedDocuments_ss.length > 0" class="mt-3">
-                    <strong>{{ t('calendar.labels.relatedDocuments') }}:</strong>
-                    <a v-for="doc in item.relatedDocuments_ss" :key="doc" href="#" class="ms-2">{{ doc }}</a>
+                      <div v-if="notificationDisplayEntries(item).length" class="calendar-notifications mt-4">
+                        <div class="calendar-notifications__header">
+                          <strong>{{ t('calendar.labels.notifications') }}</strong>
+                        </div>
+                        <div
+                          v-for="entry in notificationDisplayEntries(item)"
+                      :key="entry.key"
+                      class="calendar-notification-card"
+                    >
+                      <div class="calendar-notification-card__pill-row">
+                        <a
+                          :href="buildNotificationLink(entry.key)"
+                          target="_blank"
+                          rel="noopener"
+                          class="calendar-notification-card__pill"
+                        >
+                          {{ t('calendar.notifications.notificationLabel', { id: entry.key }) }}
+                        </a>
+                        <span
+                          v-if="entry.details?.actionRequired"
+                          class="calendar-notification-card__badge"
+                        >
+                          {{ t('calendar.labels.actionRequired') }}
+                          <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
+                          {{ t('calendar.notifications.deadline', { date: formatNotificationDate(entry.details.actionDeadline) || '' }) }}
+                          </span>
+                        </span>
+                      </div>
+                      <div
+                        v-if="entry.details?.publishedOn || entry.details?.from"
+                        class="calendar-notification-card__meta"
+                      >
+                        <div v-if="entry.details?.publishedOn" class="calendar-notification-card__meta-line">
+                          {{ t('calendar.notifications.publishedOnDate', { date: formatNotificationDate(entry.details.publishedOn) || '' }) }}
+                        </div>
+                        <div v-if="entry.details?.from" class="calendar-notification-card__meta-line">
+                          {{ t('calendar.notifications.fromSource', { source: entry.details.from }) }}
+                        </div>
+                      </div>
+                      <div v-if="entry.loading" class="calendar-notification-card__status">
+                        {{ t('calendar.notifications.loadingDetails') }}
+                      </div>
+                      <div v-else-if="entry.error" class="calendar-notification-card__status calendar-notification-card__status--error">
+                        {{ entry.error }}
+                      </div>
+                      <div v-else-if="entry.details" class="calendar-notification-card__content">
+                        <a
+                          :href="entry.details.link"
+                          target="_blank"
+                          rel="noopener"
+                          class="calendar-notification-card__title"
+                        >
+                          {{ entry.details.title }}
+                        </a>
+                        <div v-if="entry.details.recipients.length" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.notifications.recipients') }}</span>
+                          <span
+                            v-for="recipient in entry.details.recipients"
+                            :key="recipient"
+                            class="calendar-pill"
+                          >
+                            {{ recipient }}
+                          </span>
+                        </div>
+                        <div v-if="entry.details.thematicAreas.length" class="calendar-notification-card__section">
+                          <span class="calendar-pill-label">{{ t('calendar.notifications.themes') }}</span>
+                          <span
+                            v-for="theme in entry.details.thematicAreas"
+                            :key="theme"
+                            class="calendar-pill calendar-pill--muted"
+                          >
+                            {{ theme }}
+                          </span>
+                        </div>
+                        <div
+                          v-if="entry.details.attachments.length"
+                          class="calendar-notification-card__section calendar-notification-card__attachments"
+                        >
+                          <span class="calendar-pill-label">{{ t('calendar.notifications.attachments') }}</span>
+                          <a
+                            v-for="attachment in entry.details.attachments"
+                            :key="attachment.url"
+                            :href="attachment.url"
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            {{ attachment.name }}
+                          </a>
+                        </div>
+                        <div class="calendar-notification-card__actions">
+                          <a
+                            :href="entry.details.link"
+                            target="_blank"
+                            rel="noopener"
+                            class="calendar-notification-card__cta"
+                          >
+                            {{ t('calendar.notifications.viewNotification') }}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -164,30 +259,90 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed, watchEffect } from 'vue';
+import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
+import { useCalendarMarkdown } from '../../composables/useCalendarMarkdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 import DecisionLink from './decision-link.vue';
-// Load markdown content at build-time for both client and server bundles
-const __mdModulesB = import.meta.glob('shared/data/2024-12-01.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-const calendarMarkdownRaw = Object.values(__mdModulesB)[0] ?? '';
 
 type AnyDoc = MeetingDoc & { [key: string]: unknown };
+
+type NotificationKey = string;
+
+interface NotificationAttachment {
+  name?: string;
+  url: string;
+  type?: string;
+  language?: string;
+}
+
+interface NotificationSolrDoc {
+  symbol?: string;
+  title?: string;
+  title_EN?: string;
+  fulltext?: string;
+  from?: string;
+  date?: string;
+  url?: string[];
+  files?: string[];
+  recipients?: string[];
+  thematicAreas?: string[];
+  actionDate?: string;
+}
+
+interface NotificationSolrResponse {
+  response?: {
+    docs?: NotificationSolrDoc[];
+  };
+}
+
+interface NotificationArticleRecord {
+  content?: Record<string, string | undefined>;
+  summary?: Record<string, string | undefined>;
+  title?: Record<string, string | undefined>;
+}
+
+interface NotificationDetails {
+  key: NotificationKey;
+  title: string;
+  excerpt?: string;
+  fullText?: string;
+  from?: string;
+  publishedOn?: string;
+  actionDeadline?: string | null;
+  actionRequired: boolean;
+  recipients: string[];
+  thematicAreas: string[];
+  attachments: NotificationAttachment[];
+  link: string;
+  article?: NotificationArticleRecord | null;
+}
+
+interface NotificationDisplayEntry {
+  key: NotificationKey;
+  details?: NotificationDetails;
+  loading: boolean;
+  error?: string;
+}
+
+const NOTIFICATION_BASE_URL = 'https://www.cbd.int';
 
 const loading = ref<boolean>(false);
 const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
 const { t, te } = useI18n();
+
+const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
+const notificationErrors = ref<Record<NotificationKey, string>>({});
+const notificationLoadingMap = ref<Record<NotificationKey, boolean>>({});
+
+const notificationKeyCache = new WeakMap<AnyDoc, NotificationKey[]>();
 
 interface FilterOption {
   value: string;
@@ -198,7 +353,6 @@ const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
 
 const decisionEntriesCache = new WeakMap<AnyDoc, DecisionEntry[]>();
-const paragraphEntriesCache = new WeakMap<AnyDoc, string[]>();
 
 const openItems = ref<Record<string, boolean>>({});
 
@@ -244,6 +398,76 @@ watchEffect(() => {
   allFieldNames.value = collectAllFieldNames(docs.value as Array<Record<string, unknown>>);
 });
 
+const notificationKeys = computed<NotificationKey[]>(() => {
+  const keys = new Set<NotificationKey>();
+
+  docs.value.forEach(doc => {
+    getNotificationKeys(doc).forEach(key => keys.add(key));
+  });
+
+  return Array.from(keys).sort();
+});
+
+watch(notificationKeys, async (keys) => {
+  if (!keys.length) {
+    return;
+  }
+
+  const missing = keys.filter(key => {
+    return !notificationDetailsMap.value[key]
+      && !notificationLoadingMap.value[key]
+      && !notificationErrors.value[key];
+  });
+
+  if (missing.length === 0) {
+    return;
+  }
+
+  const nextLoading = { ...notificationLoadingMap.value };
+
+  missing.forEach(key => {
+    nextLoading[key] = true;
+  });
+
+  notificationLoadingMap.value = nextLoading;
+
+  await Promise.all(missing.map(async key => {
+    try {
+      const details = await fetchNotificationDetails(key);
+
+      if (details) {
+        notificationDetailsMap.value = {
+          ...notificationDetailsMap.value,
+          [key]: details,
+        };
+
+        if (notificationErrors.value[key]) {
+          const { [key]: _removed, ...restErrors } = notificationErrors.value;
+
+          notificationErrors.value = restErrors;
+        }
+      } else {
+        notificationErrors.value = {
+          ...notificationErrors.value,
+          [key]: t('calendar.notifications.notFound') as string,
+        };
+      }
+    } catch (error) {
+      console.error(`Failed to fetch notification ${key}`, error);
+      notificationErrors.value = {
+        ...notificationErrors.value,
+        [key]: (error instanceof Error && error.message)
+          ? error.message
+          : t('calendar.notifications.loadFailed') as string,
+      };
+    } finally {
+      const { [key]: _removed, ...restLoading } = notificationLoadingMap.value;
+
+      notificationLoadingMap.value = restLoading;
+    }
+  }));
+}, { immediate: true });
+
 async function ensureSubjectLabels(): Promise<void> {
   if (subjectOptionsCache.value.length > 0) {
     return;
@@ -258,7 +482,7 @@ async function ensureSubjectLabels(): Promise<void> {
 }
 
 onMounted(() => {
-  loadSnapshotData();
+  void loadSnapshotData();
   void ensureSubjectLabels();
 });
 
@@ -275,11 +499,12 @@ const regionDisplayNames = typeof RegionDisplayNames === 'function'
   ? new RegionDisplayNames(['en'], { type: 'region' })
   : null;
 
-function loadSnapshotData(): void {
+async function loadSnapshotData(): Promise<void> {
   loading.value = true;
   try {
+    const markdownRaw = await useCalendarMarkdown();
     const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
-    const markdownDocs = buildDocsFromMarkdown(calendarMarkdownRaw);
+    const markdownDocs = buildDocsFromMarkdown(markdownRaw);
 
     docs.value = [...normalizedMeetings, ...markdownDocs];
   } catch (error) {
@@ -433,7 +658,18 @@ function normalizeStatusKey(label: string | undefined): string | null {
 }
 
 function normalizeStatusLabel(key: string | null | undefined, fallback?: string): string {
-  if (key === 'CONFIRM') return 'Confirmed';
+  if (key) {
+    const normalized = String(key).toLowerCase();
+    const translationKey = `calendar.status.${normalized}`;
+
+    if (te(translationKey)) {
+      return t(translationKey) as string;
+    }
+
+    if (normalized === 'confirm') {
+      return t('calendar.status.confirmed') as string;
+    }
+  }
   if (typeof fallback === 'string' && fallback.trim().length > 0) return fallback.trim();
   return key ? key : '';
 }
@@ -735,35 +971,349 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
   return normalized;
 }
 
-function paragraphEntries(doc: AnyDoc): string[] {
-  const cached = paragraphEntriesCache.get(doc);
+function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
+  const cached = notificationKeyCache.get(doc);
 
   if (cached) {
     return cached;
   }
 
   const record = doc as Record<string, unknown>;
-  const values = new Set<string>();
+  const candidateProperties: Array<keyof typeof record> = [
+    'relatedNotifications_ss',
+    'relatedNotification_ss',
+    'relatedNotifications_s',
+    'relatedDocuments_ss',
+    'relatedDocuments',
+    'notification_ss',
+    'notifications_ss',
+    'notification_s',
+    'notifications_s',
+    'notificationKey_s',
+    'notificationKey_ss',
+    'notificationKeys_ss',
+    'links_ss',
+    'links',
+  ];
 
-  [
-    record['copParagraph_s'],
-    record['copParagraph'],
-    record['copParagraph_ss'],
-    record['copParagraphs_ss'],
-  ].forEach(value => {
-    splitValues(value).forEach(paragraph => {
-      const trimmed = paragraph.trim();
+  const candidates: string[] = [];
 
-      if (trimmed) {
-        values.add(trimmed);
-      }
-    });
+  candidateProperties.forEach(property => {
+    const value = record[property];
+
+    if (!value) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach(entry => {
+        if (entry !== null && entry !== undefined) {
+          candidates.push(String(entry));
+        }
+      });
+    } else if (typeof value === 'string') {
+      candidates.push(value);
+    }
   });
 
-  const result = Array.from(values);
+  const keys: NotificationKey[] = [];
+  const seen = new Set<NotificationKey>();
+  const pattern = /\b(\d{4}-\d{2,4}[A-Z]?)\b/g;
 
-  paragraphEntriesCache.set(doc, result);
-  return result;
+  candidates.forEach(candidate => {
+    const normalized = candidate.replace(/[\r\n]+/g, ' ');
+
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(normalized)) !== null) {
+      const key = match[1]?.trim();
+
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        keys.push(key);
+      }
+    }
+  });
+
+  notificationKeyCache.set(doc, keys);
+  return keys;
+}
+
+function notificationDisplayEntries(doc: AnyDoc): NotificationDisplayEntry[] {
+  const keys = getNotificationKeys(doc);
+
+  if (keys.length === 0) {
+    return [];
+  }
+
+  return keys.map(key => ({
+    key,
+    details: notificationDetailsMap.value[key],
+    loading: Boolean(notificationLoadingMap.value[key]),
+    error: notificationErrors.value[key],
+  }));
+}
+
+async function fetchNotificationDetails(key: NotificationKey): Promise<NotificationDetails | null> {
+  const trimmedKey = key.trim();
+
+  if (!trimmedKey) {
+    return null;
+  }
+
+  const solrParams = new URLSearchParams({
+    fl: 'symbol:symbol_s,title:title_t,title_EN:title_EN_t,fulltext:fulltext_t,from:from_t,date:date_dt,url:url_ss,files:files_ss,actionDate:actionDate_dt,recipients:recipient_ss,thematicAreas:thematicAreas_EN_txt',
+    q: `schema_s:notification AND symbol_s:"${trimmedKey}"`,
+    rows: '1',
+    wt: 'json',
+  });
+
+  const solrUrl = `https://api.cbd.int/api/v2013/index?${solrParams.toString()}`;
+  const solrResponse = await fetch(solrUrl);
+
+  if (!solrResponse.ok) {
+    throw new Error(`Notification lookup failed (${solrResponse.status})`);
+  }
+
+  const solrJson = await solrResponse.json() as NotificationSolrResponse;
+  const doc = solrJson.response?.docs?.[0];
+
+  if (!doc) {
+    return null;
+  }
+
+  const article = await fetchNotificationArticle(trimmedKey);
+
+  const attachments = parseNotificationAttachments(doc.files);
+  const recipients = normalizeList(doc.recipients);
+  const thematicAreas = normalizeList(doc.thematicAreas);
+  const title = selectNotificationTitle(trimmedKey, doc, article);
+  const excerpt = buildNotificationExcerpt(article?.summary?.en ?? doc.fulltext ?? null);
+  const fullText = doc.fulltext ? normalizeWhitespace(doc.fulltext) : undefined;
+
+  return {
+    key: trimmedKey,
+    title,
+    excerpt,
+    fullText,
+    from: doc.from?.trim() || undefined,
+    publishedOn: doc.date ?? undefined,
+    actionDeadline: doc.actionDate ?? null,
+    actionRequired: Boolean(doc.actionDate),
+    recipients,
+    thematicAreas,
+    attachments,
+    link: buildNotificationLink(trimmedKey),
+    article,
+  } satisfies NotificationDetails;
+}
+
+async function fetchNotificationArticle(key: NotificationKey): Promise<NotificationArticleRecord | null> {
+  const params = new URLSearchParams();
+
+  params.set('q', JSON.stringify({ adminTags: { $all: ['notification', key] } }));
+  params.set('s', JSON.stringify({ 'meta.updatedOn': -1 }));
+  params.set('fo', '1');
+
+  const url = `https://api.cbd.int/api/v2017/articles?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    throw new Error(`Notification article request failed (${response.status})`);
+  }
+
+  const payload = await response.text();
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(payload) as NotificationArticleRecord;
+  } catch (error) {
+    console.error('Failed to parse notification article payload', error);
+    return null;
+  }
+}
+
+function selectNotificationTitle(key: NotificationKey, doc: NotificationSolrDoc, article: NotificationArticleRecord | null): string {
+  const candidates = [
+    article?.title?.en,
+    doc.title_EN,
+    doc.title,
+    doc.symbol,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+
+  return t('calendar.notifications.notificationLabel', { id: key }) as string;
+}
+
+function buildNotificationExcerpt(source: string | null | undefined): string | undefined {
+  if (!source) {
+    return undefined;
+  }
+
+  const plain = source.includes('<') && source.includes('>')
+    ? htmlToText(source)
+    : normalizeWhitespace(source);
+
+  if (!plain) {
+    return undefined;
+  }
+
+  if (plain.length <= 280) {
+    return plain;
+  }
+
+  return `${plain.slice(0, 277).trimEnd()}...`;
+}
+
+function parseNotificationAttachments(files?: string[]): NotificationAttachment[] {
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  const attachments: NotificationAttachment[] = [];
+
+  files.forEach(entry => {
+    if (!entry) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(entry);
+      const collection = Array.isArray(parsed) ? parsed : [parsed];
+
+      collection.forEach(item => {
+        if (!item || typeof item !== 'object') {
+          return;
+        }
+
+        const candidate = item as Record<string, unknown>;
+        const url = typeof candidate.url === 'string' ? candidate.url : typeof candidate.link === 'string' ? candidate.link : '';
+
+        if (!url) {
+          return;
+        }
+
+        attachments.push({
+          url: resolveNotificationUrl(url),
+          name: typeof candidate.name === 'string' ? candidate.name : undefined,
+          type: typeof candidate.type === 'string' ? candidate.type : undefined,
+          language: typeof candidate.language === 'string' ? candidate.language : undefined,
+        });
+      });
+    } catch {
+      attachments.push({
+        url: resolveNotificationUrl(entry),
+        name: deriveNameFromUrl(entry),
+      });
+    }
+  });
+
+  const seen = new Set<string>();
+
+  return attachments.filter(attachment => {
+    if (!attachment.url || seen.has(attachment.url)) {
+      return false;
+    }
+
+    seen.add(attachment.url);
+    if (!attachment.name || attachment.name.trim().length === 0) {
+      attachment.name = deriveNameFromUrl(attachment.url);
+    }
+    return true;
+  });
+}
+
+function normalizeList(value: unknown): string[] {
+  if (!value) {
+    return [];
+  }
+
+  const values = Array.isArray(value) ? value : [value];
+
+  return values
+    .map(entry => String(entry).trim())
+    .filter(entry => entry.length > 0);
+}
+
+function normalizeWhitespace(value: string): string {
+  return value
+    .replace(/\r\n|\r|\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function resolveNotificationUrl(path: string): string {
+  try {
+    return new URL(path, NOTIFICATION_BASE_URL).toString();
+  } catch {
+    return path;
+  }
+}
+
+function deriveNameFromUrl(url: string): string {
+  if (!url) {
+    return '';
+  }
+
+  const normalized = url.split('?')[0] ?? url;
+  const segments = normalized.split('/').filter(Boolean);
+
+  return segments.length > 0 ? segments[segments.length - 1] ?? url : url;
+}
+
+function buildNotificationLink(key: NotificationKey): string {
+  return resolveNotificationUrl(`/notifications/${key}`);
+}
+
+function htmlToText(html: string): string {
+  return decodeEntities(
+    html
+      .replace(/<\s*br\s*\/?>/gi, ' ')
+      .replace(/<\s*\/p\s*>/gi, ' ')
+      .replace(/<\s*\/li\s*>/gi, '; ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
+}
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&ldquo;/gi, '"')
+    .replace(/&rdquo;/gi, '"')
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&rsquo;/gi, "'")
+    .replace(/&mdash;/gi, '--')
+    .replace(/&ndash;/gi, '-');
+}
+
+function formatNotificationDate(iso?: string | null): string | null {
+  if (!iso) {
+    return null;
+  }
+
+  const dt = DateTime.fromISO(String(iso));
+
+  if (!dt.isValid) {
+    return null;
+  }
+
+  return dt.toUTC().toFormat('d MMM yyyy');
 }
 
 const filteredDocs = computed(() => {
@@ -875,7 +1425,7 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
     const iso = startDate_dt || endDate_dt;
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
-    const label = dt ? dt.toFormat('LLLL yyyy') : 'Unknown';
+    const label = dt ? dt.toFormat('LLLL yyyy') : t('calendar.labels.unknownDate') as string;
 
     if (!buckets.has(key)) buckets.set(key, { label, items: [] as AnyDoc[] });
     buckets.get(key)!.items.push(d as AnyDoc);
@@ -1003,7 +1553,10 @@ function typeLabel(doc: AnyDoc): string {
   if (te('calendar.types.default')) {
     return t('calendar.types.default') as string;
   }
-  return raw || 'Activity';
+  if (!raw && te('calendar.types.activity')) {
+    return t('calendar.types.activity') as string;
+  }
+  return raw;
 }
 
 function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string } {
@@ -1018,7 +1571,12 @@ function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string }
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
 
-  return String(d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'] ?? 'Untitled');
+  const titleValue = d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'];
+
+  if (typeof titleValue === 'string' && titleValue.trim()) {
+    return titleValue;
+  }
+  return t('calendar.labels.untitled') as string;
 }
 
 function status(d: AnyDoc): string {
@@ -1031,13 +1589,22 @@ function status(d: AnyDoc): string {
 }
 
 function statusColor(d: AnyDoc): string {
-    const s = status(d).toLowerCase();
+  const keyRaw = (d['statusKey_s'] as string | undefined)?.toUpperCase();
+  const normalizedKey = keyRaw ?? normalizeStatusKey(status(d)) ?? '';
 
-    if (s === 'completed') return 'success';
-    if (s === 'confirmed') return 'primary';
-    if (s === 'to be confirmed') return 'warning';
-    if (s === 'ongoing') return 'info';
-    return 'secondary';
+  switch (normalizedKey) {
+    case 'COMPLETED':
+      return 'success';
+    case 'CONFIRM':
+    case 'CONFIRMED':
+      return 'primary';
+    case 'TO_BE_CONFIRMED':
+      return 'warning';
+    case 'ONGOING':
+      return 'info';
+    default:
+      return 'secondary';
+  }
 }
 
 function isActionRequired(d: AnyDoc): boolean {
@@ -1171,6 +1738,7 @@ h3 {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .calendar-accordion__status-badges {
@@ -1190,6 +1758,242 @@ h3 {
   padding: 0.25rem 0.45rem;
 }
 
+.calendar-notifications {
+  border-top: 1px solid rgba(12, 74, 50, 0.12);
+  padding-top: 1.5rem;
+}
+
+.calendar-notifications__header {
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: #4d7c68;
+}
+
+.calendar-notification-card {
+  background: #f8fdf9;
+  border: 1px solid rgba(12, 74, 50, 0.15);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 28px -18px rgba(12, 74, 50, 0.45);
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calendar-notification-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -18px rgba(12, 74, 50, 0.55);
+}
+
+.calendar-notification-card__pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-notification-card__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: #0c4a32;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.calendar-notification-card__pill:hover {
+  background: #0f5d3e;
+}
+
+.calendar-notification-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(214, 58, 47, 0.12);
+  color: #d63a2f;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.calendar-notification-card__badge-deadline {
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: 0.68rem;
+}
+
+.calendar-notification-card__status {
+  background: rgba(12, 74, 50, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: #0c4a32;
+}
+
+.calendar-notification-card__status--error {
+  background: rgba(214, 58, 47, 0.12);
+  color: #a5271e;
+}
+
+.calendar-notification-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.calendar-notification-card__title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #093021;
+  text-decoration: none;
+  line-height: 1.35;
+}
+
+.calendar-notification-card__title:hover {
+  text-decoration: underline;
+}
+
+.calendar-notification-card__meta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+  color: rgba(9, 48, 33, 0.7);
+}
+
+.calendar-notification-card__meta-line {
+  width: 100%;
+}
+
+.calendar-notification-card__section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.calendar-pill-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(9, 48, 33, 0.65);
+}
+
+.calendar-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.calendar-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(12, 74, 50, 0.15);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0c4a32;
+}
+
+.calendar-pill--muted {
+  color: rgba(9, 48, 33, 0.7);
+}
+
+.calendar-subjects {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.calendar-notification-card__attachments {
+  gap: 0.75rem;
+}
+
+.calendar-notification-card__attachments a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(12, 74, 50, 0.1);
+  color: #0c4a32;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.calendar-notification-card__attachments a:hover {
+  background: rgba(12, 74, 50, 0.18);
+}
+
+.calendar-notification-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.calendar-notification-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0c4a32;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 0.1rem;
+  transition: border-color 0.2s ease;
+}
+
+.calendar-notification-card__cta::after {
+  content: '>';
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.calendar-notification-card__cta:hover {
+  border-color: #0c4a32;
+}
+
+@media (max-width: 576px) {
+  .calendar-notification-card {
+    padding: 1rem;
+  }
+
+  .calendar-notification-card__section {
+    align-items: flex-start;
+  }
+
+  .calendar-notification-card__pill-row {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 576px) {
   .calendar-accordion__status-badges {
     width: 100%;
@@ -1200,16 +2004,9 @@ h3 {
 
 .calendar-accordion__title {
   font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 700;
   letter-spacing: 0.4px;
   color: #1d1d1d;
-}
-
-.calendar-subject-badge {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 243, 245, 0.98));
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #212529;
-  font-weight: 500;
 }
 </style>
