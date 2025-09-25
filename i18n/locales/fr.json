@@ -36,6 +36,10 @@
     "links": {
       "documents": "Documents »"
     },
+    "actions": {
+      "viewDocuments": "Voir les documents",
+      "viewDocumentsAria": "Voir les documents pour {title}"
+    },
     "debug": {
       "collectedFieldNames": "Debug : Noms de champs collectés ({count})",
       "locale": "Langue : {locale}"

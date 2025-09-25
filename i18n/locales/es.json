@@ -36,6 +36,10 @@
     "links": {
       "documents": "Documentos »"
     },
+    "actions": {
+      "viewDocuments": "Ver documentos",
+      "viewDocumentsAria": "Ver documentos para {title}"
+    },
     "debug": {
       "collectedFieldNames": "Depuración: Nombres de campos recopilados ({count})",
       "locale": "Idioma: {locale}"

@@ -90,99 +90,77 @@
                 :aria-labelledby="`heading-${item._id}`"
               >
                 <div class="accordion-body">
-                  <div class="calendar-details">
-                    <div
-                      v-if="status(item) || item.statusNarrative_t || isActionRequired(item) || item.description_t"
-                      class="calendar-notification-card"
-                    >
-                      <div class="calendar-notification-card__content">
-                        <div v-if="status(item)" class="calendar-notification-card__section">
-                          <span class="calendar-pill-label">{{ t('calendar.labels.status') }}</span>
-                          <span class="badge calendar-accordion__status-badge" :class="`bg-${statusColor(item)}`">{{ status(item) }}</span>
-                        </div>
-                        <div v-if="isActionRequired(item)" class="calendar-notification-card__section">
-                          <span class="calendar-pill-label">{{ t('calendar.labels.actionRequiredByParties') }}</span>
-                          <span>{{ t('calendar.common.yes') }}</span>
-                        </div>
-                        <div v-if="item.statusNarrative_t" class="calendar-notification-card__section">
-                          <span class="calendar-pill-label">{{ t('calendar.labels.statusNarrative') }}</span>
-                          <div>{{ item.statusNarrative_t }}</div>
-                        </div>
-                        <div v-if="item.description_t" class="calendar-notification-card__section">
-                          <span class="calendar-pill-label">{{ t('calendar.labels.description') }}</span>
-                          <div>{{ item.description_t }}</div>
-                        </div>
-                      </div>
-                    </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p v-if="status(item)">
+                        <strong>{{ t('calendar.labels.status') }}: </strong>
+                          <span v-if="status(item)" class="badge calendar-accordion__status-badge" :class="`bg-${statusColor(item)}`">
+                            {{ status(item) }}
+                          </span> <br>
+                        <span v-if="item.statusNarrative_t">{{ item.statusNarrative_t }}</span>
+                      </p>
 
-                    <div v-if="displaySubjectLabels(item).length" class="calendar-notification-card">
-                      <div class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
-                        <div class="calendar-pill-row">
-                          <span
-                            v-for="subject in displaySubjectLabels(item)"
-                            :key="subject"
-                            class="calendar-pill"
-                          >
-                            {{ subject }}
+                      <p v-if="isActionRequired(item)">
+                        <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
+                        {{ t('calendar.common.yes') }}
+                      </p>
+
+                      <p v-if="item.description_t"><strong>{{ t('calendar.labels.description') }}:</strong> {{ item.description_t }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div v-if="displaySubjectLabels(item).length" class="mb-3 calendar-subjects">
+                          <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
+                          <div class="calendar-pill-row">
+                            <span
+                              v-for="subject in displaySubjectLabels(item)"
+                              :key="subject"
+                              class="calendar-pill"
+                            >
+                              {{ subject }}
+                            </span>
+                          </div>
+                        </div>
+                        <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                        <p v-if="decisionEntries(item).length">
+                          <strong>{{ t('calendar.labels.decision') }}:</strong>
+                          <span class="ms-1">
+                            <template
+                              v-for="(entry, index) in decisionEntries(item)"
+                              :key="`${entry.href ?? entry.label}-${index}`"
+                            >
+                              <DecisionLink :href="entry.href" :label="entry.label" />
+                              <span v-if="index < decisionEntries(item).length - 1">, </span>
+                            </template>
                           </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      v-if="(item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length) || decisionEntries(item).length"
-                      class="calendar-notification-card"
-                    >
-                      <div v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length" class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.associatedBody') }}</span>
-                        <div class="calendar-pill-row">
-                          <span
-                            v-for="body in item.subsidiaryBodies_ss"
-                            :key="body"
-                            class="calendar-pill calendar-pill--muted"
+                        </p>
+                        <div v-if="primaryMeetingLink(item)" class="calendar-meeting-link mb-3">
+                          <a
+                            :href="primaryMeetingLink(item)"
+                            target="_blank"
+                            rel="noopener"
+                            class="btn btn-outline-success"
+                            :aria-label="t('calendar.actions.viewDocumentsAria', { title: title(item) })"
                           >
-                            {{ body }}
-                          </span>
+                            {{ t('calendar.actions.viewDocuments') }}
+                          </a>
                         </div>
-                      </div>
-                      <div v-if="decisionEntries(item).length" class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.decision') }}</span>
-                        <span class="ms-1">
-                          <template
-                            v-for="(entry, index) in decisionEntries(item)"
-                            :key="`${entry.href ?? entry.label}-${index}`"
-                          >
-                            <DecisionLink :href="entry.href" :label="entry.label" />
-                            <span v-if="index < decisionEntries(item).length - 1">, </span>
-                          </template>
-                        </span>
-                      </div>
-                    </div>
+                        <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
+                            <div class="card-header">
+                              <strong>{{ t('calendar.labels.responsible') }}</strong>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit_s }}</li>
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer_s }}</li>
+                          </ul>
 
-                    <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="calendar-notification-card">
-                      <div class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.responsible') }}</span>
-                      </div>
-                      <div v-if="item.responsibleUnit_s" class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.unit') }}</span>
-                        <span class="calendar-pill calendar-pill--muted">{{ item.responsibleUnit_s }}</span>
-                      </div>
-                      <div v-if="item.responsibleOfficer_s" class="calendar-notification-card__section">
-                        <span class="calendar-pill-label">{{ t('calendar.labels.officer') }}</span>
-                        <span>{{ item.responsibleOfficer_s }}</span>
                       </div>
                     </div>
                   </div>
-                      <div v-if="notificationDisplayEntries(item).length" class="calendar-notifications mt-4">
+                  <div v-if="notificationDisplayEntries(item).length" class="calendar-notifications mt-4">
                         <div class="calendar-notifications__header">
                           <strong>{{ t('calendar.labels.notifications') }}</strong>
                         </div>
-                        <div
-                          v-for="entry in notificationDisplayEntries(item)"
-                      :key="entry.key"
-                      class="calendar-notification-card"
-                    >
+                        <div v-for="entry in notificationDisplayEntries(item)" :key="entry.key" class="calendar-notification-card">
                       <div class="calendar-notification-card__pill-row">
                         <a
                           :href="buildNotificationLink(entry.key)"
@@ -276,7 +254,12 @@
                       </div>
                     </div>
                   </div>
+
                 </div>
+
+                <div class="alert alert-info"><pre>
+{{ item }} 
+                </pre></div>
               </div>
             </div>
           </div>
@@ -293,6 +276,7 @@ import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { useCalendarMarkdown } from '../../composables/useCalendarMarkdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
+import activitiesSnapshot from 'shared/data/25-26-activities.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
@@ -382,6 +366,7 @@ const subjectOptionsCache = ref<SubjectOption[]>([]);
 const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptionsCache.value));
 
 const decisionEntriesCache = new WeakMap<AnyDoc, DecisionEntry[]>();
+const meetingLinksCache = new WeakMap<AnyDoc, string[]>();
 
 const openItems = ref<Record<string, boolean>>({});
 
@@ -522,6 +507,7 @@ interface GroupedItem {
 }
 
 type SnapshotMeeting = (typeof meetingSnapshot)[number];
+type SnapshotActivity = (typeof activitiesSnapshot)[number];
 
 const RegionDisplayNames = (Intl as typeof Intl & { DisplayNames?: typeof Intl.DisplayNames }).DisplayNames;
 const regionDisplayNames = typeof RegionDisplayNames === 'function'
@@ -530,15 +516,25 @@ const regionDisplayNames = typeof RegionDisplayNames === 'function'
 
 async function loadSnapshotData(): Promise<void> {
   loading.value = true;
+  const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
+
   try {
     const markdownRaw = await useCalendarMarkdown();
-    const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
-    const markdownDocs = buildDocsFromMarkdown(markdownRaw);
+
+    let markdownDocs = buildDocsFromMarkdown(markdownRaw);
+
+    if (markdownDocs.length === 0 && activitiesSnapshot.length > 0) {
+      markdownDocs = buildDocsFromActivities(activitiesSnapshot);
+    }
 
     docs.value = [...normalizedMeetings, ...markdownDocs];
   } catch (error) {
     console.error('Failed to load snapshot data', error);
-    docs.value = [];
+    const fallbackActivities = activitiesSnapshot.length > 0
+      ? buildDocsFromActivities(activitiesSnapshot)
+      : [];
+
+    docs.value = [...normalizedMeetings, ...fallbackActivities];
   } finally {
     loading.value = false;
   }
@@ -619,7 +615,7 @@ function parseMarkdownTable(raw: string): MarkdownRow[] {
   return rows;
 }
 
-function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
+function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: string = 'markdown:2024-12-01'): AnyDoc {
   const subjects = splitValues(row['Subject']);
   const bodies = splitValues(row['Associatedbody']);
   const relatedDocs = splitValues(row['Related_documents']);
@@ -641,7 +637,7 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
     _id: id,
     id,
     identifier_s: id,
-    source: 'markdown:2024-12-01',
+    source: sourceId,
     title_EN_t: row['Title'],
     description_t: row['Description'] || null,
   type_s: String(row['Type'] || 'Activity'),
@@ -674,6 +670,40 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number): AnyDoc {
   };
 
   return doc;
+}
+
+function buildDocsFromActivities(records: SnapshotActivity[]): AnyDoc[] {
+  return records.map((record, index) => {
+    const row: MarkdownRow = {
+      Title: record.title ?? '',
+      Description: record.description ?? '',
+      Type: record.type ?? '',
+      'Action Required by Parties': record.actionRequiredByParties ?? '',
+      Subject: record.subject ?? '',
+      Status: record.status ?? '',
+      Status_narrative: record.statusNarrative ?? '',
+      Startdate: record.startDate ?? '',
+      Enddate: record.endDate ?? '',
+      Associatedbody: record.associatedBody ?? '',
+      AgendaItem: record.agendaItem ?? '',
+      COPDecision: record.copDecision ?? '',
+      COPParagraph_no: record.copParagraphNo ?? '',
+      COPParagraph_type: record.copParagraphType ?? '',
+      Responsible_Unit: record.responsibleUnit ?? '',
+      Responsible_Officer: record.responsibleOfficer ?? '',
+      Funding_source: record.fundingSource ?? '',
+      Funding_allocated: record.fundingAllocated ?? '',
+      Actors: record.actors ?? '',
+      Actors_comments: record.actorsComments ?? '',
+      GBF_Targets: record.gbfTargets ?? '',
+      Related_documents: record.relatedDocuments ?? '',
+      Outcome: record.outcome ?? '',
+      Country: (record as Record<string, string | undefined>)['country'] ?? '',
+      Countries: (record as Record<string, string | undefined>)['countries'] ?? '',
+    };
+
+    return mapMarkdownRowToDoc(row, index, 'activities-json:25-26');
+  });
 }
 
 // Status normalization helpers
@@ -1000,6 +1030,79 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
   return normalized;
 }
 
+function meetingLinks(doc: AnyDoc): string[] {
+  const cached = meetingLinksCache.get(doc);
+
+  if (cached) {
+    return cached;
+  }
+
+  const record = doc as Record<string, unknown>;
+  const candidateFields: Array<keyof typeof record> = [
+    'links_ss',
+    'links',
+    'links_s',
+    'link_s',
+    'link',
+    'meetingLinks_ss',
+    'meetingLinks',
+    'meetingLink_s',
+    'meetingLink',
+    'meeting_url_s',
+    'meeting_url',
+    'meetingUrl_s',
+    'meetingUrl',
+    'url_ss',
+    'url_s',
+    'urls_ss',
+  ];
+
+  const collected: string[] = [];
+
+  candidateFields.forEach(field => {
+    const value = record[field];
+
+    if (!value) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach(entry => {
+        if (typeof entry === 'string') {
+          const trimmed = entry.trim();
+
+          if (trimmed) {
+            collected.push(trimmed);
+          }
+        }
+      });
+    } else if (typeof value === 'string') {
+      const trimmed = value.trim();
+
+      if (trimmed) {
+        collected.push(trimmed);
+      }
+    }
+  });
+
+  const normalized = Array.from(new Set(
+    collected.map(link => resolveNotificationUrl(link)),
+  )).filter(link => /^https?:/i.test(link));
+
+  meetingLinksCache.set(doc, normalized);
+  return normalized;
+}
+
+function primaryMeetingLink(doc: AnyDoc): string | null {
+  const links = meetingLinks(doc);
+
+  if (links.length === 0) {
+    return null;
+  }
+
+  return links[0] ?? null;
+}
+
 function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
   const cached = notificationKeyCache.get(doc);
 
@@ -1021,8 +1124,8 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
     'notificationKey_s',
     'notificationKey_ss',
     'notificationKeys_ss',
-    'links_ss',
-    'links',
+  
+  
   ];
 
   const candidates: string[] = [];
@@ -1980,6 +2083,16 @@ h3 {
   background: rgba(12, 74, 50, 0.18);
 }
 
+.calendar-meeting-link {
+  display: flex;
+  align-items: center;
+}
+
+.calendar-meeting-link .btn {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .calendar-notification-card__actions {
   display: flex;
   align-items: center;
@@ -2007,6 +2120,23 @@ h3 {
 
 .calendar-notification-card__cta:hover {
   border-color: #0c4a32;
+}
+
+/* Expanded details layout, reusing notification card styling */
+.calendar-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calendar-details .calendar-notification-card__section {
+  align-items: flex-start;
+}
+
+.calendar-details .calendar-pill {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 576px) {

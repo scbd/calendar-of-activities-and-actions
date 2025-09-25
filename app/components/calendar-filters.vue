@@ -6,14 +6,12 @@
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
-          v-model="selectedSchemas"
+          v-model="selectedTypes"
           :options="schemaOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :group-values="'options'"
-          :group-label="'label'"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.schemas')"

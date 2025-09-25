@@ -36,6 +36,10 @@
     "links": {
       "documents": "الوثائق »"
     },
+    "actions": {
+      "viewDocuments": "عرض المستندات",
+      "viewDocumentsAria": "عرض المستندات الخاصة بـ {title}"
+    },
     "debug": {
       "collectedFieldNames": "تصحيح: أسماء الحقول المجمعة ({count})",
       "locale": "اللغة: {locale}"

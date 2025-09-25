@@ -36,6 +36,10 @@
     "links": {
       "documents": "Документы »"
     },
+    "actions": {
+      "viewDocuments": "Просмотреть документы",
+      "viewDocumentsAria": "Просмотреть документы для {title}"
+    },
     "debug": {
       "collectedFieldNames": "Отладка: собранные имена полей ({count})",
       "locale": "Язык: {locale}"

@@ -86,7 +86,8 @@ vi.mock('../../shared/data/meetings.js', () => ({
       startDate_dt: '2025-01-01T00:00:00Z',
       endDate_dt: '2025-01-02T00:00:00Z',
       copDecision_s: '15/3',
-      status_s: 'Confirmed'
+      status_s: 'Confirmed',
+      links_ss: ['https://www.cbd.int/meetings/test-1']
     },
     {
       _id: 'test-2',
@@ -97,7 +98,8 @@ vi.mock('../../shared/data/meetings.js', () => ({
       startDate_dt: '2025-02-01T00:00:00Z',
       endDate_dt: '2025-02-02T00:00:00Z',
       copDecision_s: 'NP-1',
-      status_s: 'Confirmed'
+      status_s: 'Confirmed',
+      links_ss: ['https://www.cbd.int/meetings/test-2']
     }
   ]
 }));
@@ -122,12 +124,30 @@ describe('CalendarActivitiesActions Component', () => {
 
   it('renders a type strip with a centered label', async () => {
     const component = await mountComponent();
+
     await flushPromises();
 
     const typeStrip = component.find('.calendar-row__type-strip');
 
     expect(typeStrip.exists()).toBe(true);
     expect(typeStrip.text().trim().length).toBeGreaterThan(0);
+  });
+
+  it('renders a meeting documents link when meeting URLs are provided', async () => {
+    const component = await mountComponent();
+
+    // Wait for asynchronous data normalization to complete
+    await flushPromises();
+
+    const documentLinks = component.findAll('.calendar-meeting-link a');
+
+    expect(documentLinks.length).toBeGreaterThan(0);
+    const firstLink = documentLinks[0];
+
+    expect(firstLink?.text()).toBe('View documents');
+    expect(firstLink?.attributes('href')).toBe('https://www.cbd.int/meetings/test-1');
+    expect(firstLink?.attributes('target')).toBe('_blank');
+    expect(firstLink?.attributes('rel')).toContain('noopener');
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {

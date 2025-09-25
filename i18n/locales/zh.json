@@ -36,6 +36,10 @@
     "links": {
       "documents": "文件 »"
     },
+    "actions": {
+      "viewDocuments": "查看文件",
+      "viewDocumentsAria": "查看 {title} 的文件"
+    },
     "debug": {
       "collectedFieldNames": "调试：收集的字段名称 ({count})",
       "locale": "语言：{locale}"
