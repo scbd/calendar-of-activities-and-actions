@@ -2083,18 +2083,28 @@ function title(d: AnyDoc): string {
 }
 
 function status(d: AnyDoc): string {
-  const label = getDocStringValue(d, 'status', 'status_s');
+  const rawStatus = getDocStringValue(d, 'status', 'status_s');
+  const statusKey = getDocStringValue(d, 'statusKey', 'statusKey_s');
 
-  if (label) {
-    return label;
+  if (shouldDisplayCompleted(d, statusKey, rawStatus)) {
+    return t('calendar.status.completed') as string;
   }
-  const key = getDocStringValue(d, 'statusKey', 'statusKey_s');
 
-  return normalizeStatusLabel(key ?? null);
+  if (rawStatus) {
+    return rawStatus;
+  }
+
+  return normalizeStatusLabel(statusKey ?? null);
 }
 
 function statusColor(d: AnyDoc): string {
+  const rawStatus = getDocStringValue(d, 'status', 'status_s');
   const keyRaw = getDocStringValue(d, 'statusKey', 'statusKey_s');
+
+  if (shouldDisplayCompleted(d, keyRaw, rawStatus)) {
+    return 'success';
+  }
+
   const normalizedKey = keyRaw?.toUpperCase() ?? normalizeStatusKey(status(d)) ?? '';
 
   switch (normalizedKey) {
@@ -2110,6 +2120,37 @@ function statusColor(d: AnyDoc): string {
     default:
       return 'secondary';
   }
+}
+
+function shouldDisplayCompleted(
+  doc: AnyDoc,
+  statusKey: string | undefined | null,
+  rawStatus?: string,
+): boolean {
+  const normalizedStatus = normalizeStatusKey(statusKey ?? rawStatus);
+
+  if (normalizedStatus !== 'CONFIRM') {
+    return false;
+  }
+
+  const now = DateTime.now().toUTC().startOf('day');
+  const endDate = safeDate(getDocStringValue(doc, 'endDate', 'endDate_dt', 'endDate_s'));
+
+  if (endDate && now > endDate.toUTC().endOf('day')) {
+    return true;
+  }
+
+  const startDate = safeDate(getDocStringValue(doc, 'startDate', 'startDate_dt', 'startDate_s'));
+
+  if (startDate) {
+    const completionThreshold = startDate.toUTC().plus({ days: 1 }).endOf('day');
+
+    if (now > completionThreshold) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function isActionRequired(d: AnyDoc): boolean {
