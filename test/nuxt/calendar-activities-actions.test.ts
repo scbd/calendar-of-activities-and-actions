@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
@@ -84,8 +84,9 @@ describe('CalendarActivitiesActions Component', () => {
   it('should display the correct title', async () => {
     const component = await mountComponent();
     const title = component.find('h2');
+    const expectedTitle = createI18nPlugin().global.t('calendar.headings.activitiesExplorerAccordion') as string;
 
-    expect(title.text()).toBe('Activities & Actions Explorer - Activities grouped in meetings');
+    expect(title.text()).toBe(expectedTitle);
   });
 
   it('renders a type strip with a centered label', async () => {
@@ -93,39 +94,47 @@ describe('CalendarActivitiesActions Component', () => {
 
     await flushPromises();
 
-    const typeStrip = component.find('[data-testid="calendar-row-type-strip"]');
+    const typeStrips = component.findAll('.calendar-row__type-text');
 
-    expect(typeStrip.exists()).toBe(true);
-    expect(typeStrip.text().trim().length).toBeGreaterThan(0);
+    expect(typeStrips.length).toBeGreaterThan(0);
+    expect(typeStrips[0]?.text().trim().length).toBeGreaterThan(0);
   });
 
-  it('renders a meeting documents link when meeting URLs are provided', async () => {
+  it('renders a meeting documents link in the accordion summary when meeting URLs are provided', async () => {
     const component = await mountComponent();
 
-    // Wait for asynchronous data normalization to complete
     await flushPromises();
 
-    const documentLinks = component.findAll('.links a');
+    const documentLinks = component.findAll('[data-testid="calendar-accordion-view-documents"]');
 
     expect(documentLinks.length).toBeGreaterThan(0);
     const firstLink = documentLinks[0];
 
-    expect(firstLink?.text()).toBe('Documents »');
+    expect(firstLink?.text()).toBe('View documents');
     expect(firstLink?.attributes('href')).toBe('https://www.cbd.int/meetings/test-1');
+    expect(firstLink?.attributes('target')).toBe('_blank');
   });
 
-  it('renders the meeting documents link alongside the status badges in the same row', async () => {
+  it('places the documents link on the left with status badges grouped on the right', async () => {
     const component = await mountComponent();
 
     await flushPromises();
 
-    const rows = component.findAll('.calendar-row');
+    const footers = component.findAll('.calendar-accordion__footer');
+    const footerWithLink = footers.find(footer => footer.find('[data-testid="calendar-accordion-view-documents"]').exists());
 
-    expect(rows.length).toBeGreaterThan(0);
-    const firstRow = rows[0];
+    expect(footerWithLink).toBeTruthy();
 
-    expect(firstRow.find('[data-testid="calendar-row-type-strip"]').exists()).toBe(true);
-    expect(firstRow.find('.links a').exists()).toBe(true);
+    const documentsLink = footerWithLink!.find('[data-testid="calendar-accordion-view-documents"]');
+    const statusBlock = footerWithLink!.find('[data-testid="calendar-accordion-status-block"]');
+
+    expect(statusBlock.exists()).toBe(true);
+
+    const footerChildren = Array.from(footerWithLink!.element.children);
+
+    expect(footerChildren[0]).toBe(documentsLink.element);
+    expect(footerChildren[footerChildren.length - 1]).toBe(statusBlock.element);
+    expect(statusBlock.text()).toContain('Confirmed');
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {
@@ -167,9 +176,21 @@ describe('CalendarActivitiesActions Component', () => {
 
     await flushPromises();
 
-    const typeLabels = component.findAll('[data-testid="calendar-row-type-strip"]').map(el => el.text().trim().toLowerCase());
+    const typeLabels = component.findAll('.calendar-row__type-text').map(el => el.text().trim().toLowerCase());
 
     expect(typeLabels.some(l => l === 'activity')).toBe(true);
     expect(typeLabels.some(l => l === 'nominations')).toBe(true);
+  });
+
+  it('renders meeting entries grouped by month when meeting data is available', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const groupHeadings = component.findAll('.dg-sep h3').map(el => el.text().trim()).filter(Boolean);
+    const accordionTitles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+
+    expect(groupHeadings).toEqual(expect.arrayContaining(['January 2025', 'February 2025']));
+    expect(accordionTitles).toEqual(expect.arrayContaining(['Decision Without Prefix', 'Decision With NP']));
   });
 });

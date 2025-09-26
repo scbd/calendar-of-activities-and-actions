@@ -26,15 +26,15 @@
           <div class="dg-sep"><h3 class="m-0">{{ group.label }}</h3></div>
 
           <div :id="`accordion-${group.key}`" class="accordion">
-            <div v-for="item in group.items" :key="String(item._id || item.id || '')" class="accordion-item mb-3">
-              <h2 :id="`heading-${item._id}`" class="accordion-header">
+            <div v-for="item in group.items" :key="String(item.id || '')" class="accordion-item mb-3">
+              <h2 :id="`heading-${item.id}`" class="accordion-header">
                 <button
                   class="accordion-button"
-                  :class="{ collapsed: !openItems[String(item._id || item.id || '')] }"
+                  :class="{ collapsed: !openItems[String(item.id || '')] }"
                   type="button"
-                  :aria-expanded="openItems[String(item._id || item.id || '')] ? 'true' : 'false'"
-                  :aria-controls="`collapse-${item._id}`"
-                  @click="toggleAccordion(String(item._id || item.id || '') )"
+                  :aria-expanded="openItems[String(item.id || '')] ? 'true' : 'false'"
+                  :aria-controls="`collapse-${item.id}`"
+                  @click="toggleAccordion(String(item.id || '') )"
                 >
                   <div
                     class="calendar-row__type-strip d-flex align-items-center justify-content-center"
@@ -47,11 +47,11 @@
                     <div class="calendar-accordion__meta small text-muted">{{ formatDateRange(item) }}</div>
                     <div
                       v-if="displaySubjectLabels(item).length || status(item) || isActionRequired(item) || primaryMeetingLink(item)"
-                      class="calendar-accordion__badges-row mt-2"
+                      class="calendar-accordion__meta-block mt-2"
                     >
                       <div
                         v-if="displaySubjectLabels(item).length"
-                        class="calendar-accordion__subjects w-100"
+                        class="calendar-accordion__subjects"
                       >
                         <span
                           v-for="subject in displaySubjectLabels(item)"
@@ -61,44 +61,50 @@
                           {{ subject }}
                         </span>
                       </div>
-                      
-                      <a
-                        v-if="primaryMeetingLink(item)"
-                        :href="primaryMeetingLink(item)"
-                        target="_blank"
-                        rel="noopener"
-                        class="calendar-notification-card__cta calendar-accordion__cta"
-                        :aria-label="t('calendar.actions.viewDocumentsAria', { title: title(item) })"
-                      >
-                        {{ t('calendar.actions.viewDocuments') }}
-                      </a>
                       <div
-                        v-if="status(item) || isActionRequired(item)"
-                        class="calendar-accordion__status-badges"
+                        v-if="primaryMeetingLink(item) || status(item) || isActionRequired(item)"
+                        class="calendar-accordion__footer"
                       >
-                        <span
-                          v-if="isActionRequired(item)"
-                          class="badge bg-danger calendar-accordion__status-badge"
+                        <a
+                          v-if="primaryMeetingLink(item)"
+                          :href="primaryMeetingLink(item)"
+                          target="_blank"
+                          rel="noopener"
+                          class="calendar-notification-card__cta calendar-accordion__cta calendar-accordion__cta--documents"
+                          :aria-label="t('calendar.actions.viewDocumentsAria', { title: title(item) })"
+                          data-testid="calendar-accordion-view-documents"
                         >
-                          {{ t('calendar.labels.actionRequiredByParties') }}
-                        </span>
-                        <span
-                          v-if="status(item)"
-                          class="badge calendar-accordion__status-badge"
-                          :class="`bg-${statusColor(item)}`"
+                          {{ t('calendar.actions.viewDocuments') }}
+                        </a>
+                        <div
+                          v-if="status(item) || isActionRequired(item)"
+                          class="calendar-accordion__status-badges"
+                          data-testid="calendar-accordion-status-block"
                         >
-                          {{ status(item) }}
-                        </span>
+                          <span
+                            v-if="isActionRequired(item)"
+                            class="badge bg-danger calendar-accordion__status-badge"
+                          >
+                            {{ t('calendar.labels.actionRequiredByParties') }}
+                          </span>
+                          <span
+                            v-if="status(item)"
+                            class="badge calendar-accordion__status-badge"
+                            :class="`bg-${statusColor(item)}`"
+                          >
+                            {{ status(item) }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </button>
               </h2>
               <div
-                :id="`collapse-${item._id}`"
+                :id="`collapse-${item.id}`"
                 class="accordion-collapse collapse"
-                :class="{ show: openItems[String(item._id || item.id || '')] }"
-                :aria-labelledby="`heading-${item._id}`"
+                :class="{ show: openItems[String(item.id || '')] }"
+                :aria-labelledby="`heading-${item.id}`"
               >
                 <div class="accordion-body">
                   <div class="row">
@@ -108,7 +114,7 @@
                           <span v-if="status(item)" class="badge calendar-accordion__status-badge" :class="`bg-${statusColor(item)}`">
                             {{ status(item) }}
                           </span> <br>
-                        <span v-if="item.statusNarrative_t">{{ item.statusNarrative_t }}</span>
+                        <span v-if="item.statusNarrative">{{ item.statusNarrative }}</span>
                       </p>
 
                       <p v-if="isActionRequired(item)">
@@ -116,7 +122,7 @@
                         {{ t('calendar.common.yes') }}
                       </p>
 
-                      <p v-if="item.description_t"><strong>{{ t('calendar.labels.description') }}:</strong> {{ item.description_t }}</p>
+                      <p v-if="descriptionText(item)"><strong>{{ t('calendar.labels.description') }}:</strong> {{ descriptionText(item) }}</p>
                     </div>
                     <div class="col-md-6">
                         <div v-if="displaySubjectLabels(item).length" class="mb-3 calendar-subjects">
@@ -131,7 +137,7 @@
                             </span>
                           </div>
                         </div>
-                        <p v-if="item.subsidiaryBodies_ss && item.subsidiaryBodies_ss.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies_ss.join(', ') }}</p>
+                        <p v-if="item.subsidiaryBodies && item.subsidiaryBodies.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ item.subsidiaryBodies.join(', ') }}</p>
                         <p v-if="decisionEntries(item).length">
                           <strong>{{ t('calendar.labels.decision') }}:</strong>
                           <span class="ms-1">
@@ -144,13 +150,13 @@
                             </template>
                           </span>
                         </p>
-                        <div v-if="item.responsibleUnit_s || item.responsibleOfficer_s" class="card">
+                        <div v-if="item.responsibleUnit || item.responsibleOfficer" class="card">
                             <div class="card-header">
                               <strong>{{ t('calendar.labels.responsible') }}</strong>
                             </div>
                             <ul class="list-group list-group-flush">
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit_s }}</li>
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer_s }}</li>
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit }}</li>
+                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer }}</li>
                           </ul>
 
                       </div>
@@ -273,7 +279,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
-import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
+import { collectAllFieldNames, getTitleFieldForLocale, normalizeSolrDocument, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { useCalendarMarkdown } from '../composables/use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
@@ -283,7 +289,32 @@ import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import CalendarFilters from './calendar-filters.vue';
 import DecisionLink from './decision-link.vue';
 
-type AnyDoc = MeetingDoc & { [key: string]: unknown };
+interface CalendarDoc extends MeetingDoc {
+  id: string;
+  subjects?: string[];
+  subsidiaryBodies?: string[];
+  countries?: string[];
+  countriesEn?: string[];
+  links?: string[];
+  status?: string;
+  statusKey?: string | null;
+  startDate?: string;
+  endDate?: string;
+  responsibleUnit?: string;
+  responsibleOfficer?: string;
+  statusNarrative?: string | null;
+  actors?: string[];
+  gbfTargets?: string[];
+  relatedDocuments?: string[];
+  country?: string;
+  countryEn?: string;
+  outcome?: string;
+  actionRequired?: boolean;
+}
+
+const rawDocMap = new WeakMap<AnyDoc, Record<string, unknown>>();
+
+type AnyDoc = CalendarDoc;
 
 type NotificationKey = string;
 
@@ -542,36 +573,111 @@ async function loadSnapshotData(): Promise<void> {
 
 function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
   const record = { ...(meeting as Record<string, unknown>) };
-  const subjectsRaw = record['subjects_ss'];
-  const subjects = Array.isArray(subjectsRaw)
-    ? (subjectsRaw as unknown[]).map(String)
-    : splitValues(record['subject_EN_s']);
-  const bodiesRaw = record['subsidiaryBodies_ss'];
-  const bodies = Array.isArray(bodiesRaw)
-    ? (bodiesRaw as unknown[]).map(String)
-    : splitValues(record['subsidiaryBody_s']);
+  const subjectsSource = record['subjects_ss'] ?? record['subjects'] ?? record['subjectIdentifiers_ss'];
+  const subjects = Array.isArray(subjectsSource)
+    ? (subjectsSource as unknown[]).map(String).map(subject => subject.trim()).filter(Boolean)
+    : splitValues(record['subject_EN_s'] ?? record['subjectEn'] ?? record['subjects']);
+  const bodiesSource = record['subsidiaryBodies_ss'] ?? record['subsidiaryBodies'];
+  const bodies = Array.isArray(bodiesSource)
+    ? (bodiesSource as unknown[]).map(String).map(body => body.trim()).filter(Boolean)
+    : splitValues(record['subsidiaryBody_s'] ?? record['subsidiaryBody']);
 
-  const id = String(record['_id'] ?? record['id'] ?? record['identifier_s'] ?? `meeting-${index}`);
+  const id = String(record['_id'] ?? record['id'] ?? record['identifier_s'] ?? record['identifier'] ?? `meeting-${index}`);
 
   const rawStatus = (record['status_s'] ?? record['status']) as string | undefined;
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
 
-  const normalized: AnyDoc = {
+  const startDateRaw = record['startDate_dt'] ?? record['startDate'] ?? record['startDate_s'];
+  const endDateRaw = record['endDate_dt'] ?? record['endDate'] ?? record['endDate_s'];
+  const startDateIso = typeof startDateRaw === 'string' && startDateRaw.trim() ? startDateRaw : null;
+  const endDateIso = typeof endDateRaw === 'string' && endDateRaw.trim() ? endDateRaw : null;
+
+  const linkSources: unknown[] = Array.isArray(record['links_ss'])
+    ? (record['links_ss'] as unknown[])
+    : Array.isArray(record['links'])
+      ? (record['links'] as unknown[])
+      : record['meetingLink']
+        ? [record['meetingLink']]
+        : record['meetingUrl']
+          ? [record['meetingUrl']]
+          : [];
+  const links = linkSources
+    .map(entry => (typeof entry === 'string' ? entry : String(entry ?? '')))
+    .map(link => link.trim())
+    .filter(Boolean);
+
+  const countriesSource: unknown[] = Array.isArray(record['countries_ss'])
+    ? (record['countries_ss'] as unknown[])
+    : Array.isArray(record['countries'])
+      ? (record['countries'] as unknown[])
+      : record['country']
+        ? [record['country']]
+        : [];
+  const countries = countriesSource.map(entry => (typeof entry === 'string' ? entry : String(entry ?? ''))).map(country => country.trim()).filter(Boolean);
+
+  const countryLabelsSource: unknown[] = Array.isArray(record['countries_EN_ss'])
+    ? (record['countries_EN_ss'] as unknown[])
+    : Array.isArray(record['countriesEn'])
+      ? (record['countriesEn'] as unknown[])
+      : record['countryEn']
+        ? [record['countryEn']]
+        : [];
+  const countryLabels = countryLabelsSource
+    .map(entry => (typeof entry === 'string' ? entry : String(entry ?? '')))
+    .map(label => label.trim())
+    .filter(Boolean);
+
+  const solrLikeRecord: Record<string, unknown> = {
     ...record,
-    _id: id,
     id,
+    startDate_dt: startDateIso ?? undefined,
+    endDate_dt: endDateIso ?? undefined,
     subjects_ss: subjects,
-    subject_EN_s: record['subject_EN_s'] ?? (subjects.length > 0 ? subjects.join(', ') : null),
-    subsidiaryBody_s: record['subsidiaryBody_s'] ?? (bodies.length > 0 ? bodies[0] : null),
+    subject_EN_s: record['subject_EN_s'] ?? record['subjectEn'] ?? (subjects.length > 0 ? subjects.join(', ') : null),
+    subsidiaryBody_s: record['subsidiaryBody_s'] ?? record['subsidiaryBody'] ?? (bodies.length > 0 ? bodies[0] : null),
     subsidiaryBodies_ss: bodies,
-  type_s: String(record['type_s'] ?? record['type'] ?? 'Meeting'),
-    links_ss: Array.isArray(record['links_ss']) ? record['links_ss'] as string[] : [],
+    type_s: String(record['type_s'] ?? record['type'] ?? 'Meeting'),
+    links_ss: links,
     statusKey_s: statusKey ?? null,
     status_s: statusLabel,
+    country_s: record['country_s'] ?? (countries.length > 0 ? countries[0] : undefined),
+    country_EN_s: record['country_EN_s'] ?? record['countryEn'] ?? (countryLabels.length > 0 ? countryLabels[0] : undefined),
+    countries_ss: Array.isArray(record['countries_ss']) ? (record['countries_ss'] as unknown[]).map(String) : countries,
+    countries_EN_ss: Array.isArray(record['countries_EN_ss']) ? (record['countries_EN_ss'] as unknown[]).map(String) : (countryLabels.length > 0 ? countryLabels : (countries.length > 0 ? countries : [])),
   };
 
-  return normalized;
+  const normalizedSolr = normalizeSolrDocument(solrLikeRecord);
+  const doc = {
+    ...normalizedSolr,
+    id,
+    subjects,
+    subsidiaryBodies: bodies,
+    links,
+    status: statusLabel,
+    statusKey,
+    startDate: startDateIso ?? undefined,
+    endDate: endDateIso ?? undefined,
+    countries,
+    countriesEn: countryLabels.length > 0 ? countryLabels : countries,
+    country: (normalizedSolr['country'] as string | undefined) ?? (countries[0] ?? undefined),
+    countryEn: (normalizedSolr['countryEn'] as string | undefined) ?? (countryLabels[0] ?? countries[0] ?? undefined),
+  } as AnyDoc;
+
+  delete (doc as Record<string, unknown>)._id;
+  rawDocMap.set(doc, record);
+
+  if (!doc.type) {
+    doc.type = 'Meeting';
+  }
+  if (!doc.subjectEn && subjects.length > 0) {
+    doc.subjectEn = subjects.join(', ');
+  }
+  if (!doc.subsidiaryBody && bodies.length > 0) {
+    doc.subsidiaryBody = bodies[0] ?? null;
+  }
+
+  return doc;
 }
 
 function buildDocsFromMarkdown(raw: string): AnyDoc[] {
@@ -633,41 +739,74 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: string =
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
 
-  const doc: AnyDoc = {
-    _id: id,
+  const solrLikeRecord: Record<string, unknown> = {
     id,
     identifier_s: id,
     source: sourceId,
     title_EN_t: row['Title'],
     description_t: row['Description'] || null,
-  type_s: String(row['Type'] || 'Activity'),
+    type_s: String(row['Type'] || 'Activity'),
     actionRequired_b: row['Action Required by Parties']?.toUpperCase() === 'Y',
     subjects_ss: subjects,
-  subject_EN_s: subjects.join(', '),
-  status_s: statusLabel,
-  statusKey_s: statusKey ?? null,
+    subject_EN_s: subjects.join(', '),
+    status_s: statusLabel,
+    statusKey_s: statusKey ?? null,
     statusNarrative_t: row['Status_narrative'] || null,
-  startDate_dt: startDate ?? undefined,
-  endDate_dt: endDate ?? undefined,
-  subsidiaryBody_s: bodies[0] ?? undefined,
+    startDate_dt: startDate ?? undefined,
+    endDate_dt: endDate ?? undefined,
+    subsidiaryBody_s: bodies[0] ?? undefined,
     subsidiaryBodies_ss: bodies,
-  copDecision_s: row['COPDecision'] || undefined,
-  copParagraph_s: row['COPParagraph_no'] || undefined,
-  responsibleUnit_s: row['Responsible_Unit'] || undefined,
-  responsibleOfficer_s: row['Responsible_Officer'] || undefined,
-  fundingSource_s: row['Funding_source'] || undefined,
-  fundingAllocated_s: row['Funding_allocated'] || undefined,
+    copDecision_s: row['COPDecision'] || undefined,
+    copParagraph_s: row['COPParagraph_no'] || undefined,
+    responsibleUnit_s: row['Responsible_Unit'] || undefined,
+    responsibleOfficer_s: row['Responsible_Officer'] || undefined,
+    fundingSource_s: row['Funding_source'] || undefined,
+    fundingAllocated_s: row['Funding_allocated'] || undefined,
     actors_ss: actors,
-  actorsComments_t: row['Actors_comments'] || undefined,
+    actorsComments_t: row['Actors_comments'] || undefined,
     gbfTargets_ss: targets,
     relatedDocuments_ss: relatedDocs,
     links_ss: [],
-  country_s: countries[0] ?? undefined,
+    country_s: countries[0] ?? undefined,
     countries_ss: countries,
-  country_EN_s: countries[0] ?? undefined,
+    country_EN_s: countries[0] ?? undefined,
     countries_EN_ss: countries,
     outcome_s: row['Outcome'] || undefined,
   };
+
+  const normalizedSolr = normalizeSolrDocument(solrLikeRecord);
+  const doc = {
+    ...normalizedSolr,
+    id,
+    source: sourceId,
+    subjects,
+    subsidiaryBodies: bodies,
+    links: Array.isArray(normalizedSolr['links']) ? normalizedSolr['links'] as string[] : [],
+    status: statusLabel,
+    statusKey,
+    statusNarrative: row['Status_narrative'] || null,
+    startDate: startDate ?? undefined,
+    endDate: endDate ?? undefined,
+    actors,
+    gbfTargets: targets,
+    relatedDocuments: relatedDocs,
+    countries,
+    countriesEn: countries,
+    country: countries[0] ?? undefined,
+    countryEn: countries[0] ?? undefined,
+    outcome: row['Outcome'] || undefined,
+    actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
+  } as AnyDoc;
+
+  delete (doc as Record<string, unknown>)._id;
+  rawDocMap.set(doc, solrLikeRecord);
+
+  if (!doc.type) {
+    doc.type = String(row['Type'] || 'Activity');
+  }
+  if (!doc.title && typeof row['Title'] === 'string') {
+    doc.title = row['Title'];
+  }
 
   return doc;
 }
@@ -790,6 +929,82 @@ function splitValues(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function getDocRaw(doc: AnyDoc): Record<string, unknown> | null {
+  return rawDocMap.get(doc) ?? null;
+}
+
+function getDocStringValue(doc: AnyDoc, ...keys: string[]): string | undefined {
+  const anyDoc = doc as Record<string, unknown>;
+
+  for (const key of keys) {
+    const value = anyDoc[key];
+
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    for (const key of keys) {
+      const value = raw[key];
+
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function getDocBooleanValue(doc: AnyDoc, ...keys: string[]): boolean | undefined {
+  const anyDoc = doc as Record<string, unknown>;
+
+  for (const key of keys) {
+    const value = anyDoc[key];
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+
+      if (normalized === 'true' || normalized === 'yes' || normalized === 'y') {
+        return true;
+      }
+      if (normalized === 'false' || normalized === 'no' || normalized === 'n') {
+        return false;
+      }
+    }
+  }
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    for (const key of keys) {
+      const value = raw[key];
+
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+
+        if (normalized === 'true' || normalized === 'yes' || normalized === 'y') {
+          return true;
+        }
+        if (normalized === 'false' || normalized === 'no' || normalized === 'n') {
+          return false;
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -821,25 +1036,71 @@ function humanizeIdentifier(value: string): string {
 }
 
 function getDocSubjects(doc: AnyDoc): string[] {
-  if (Array.isArray((doc as Record<string, unknown>).subjects_ss)) {
-    return ((doc as Record<string, unknown>).subjects_ss as unknown[]).map(String).filter(Boolean);
+  if (Array.isArray(doc.subjects)) {
+    return doc.subjects.map(String).filter(Boolean);
   }
-  if (Array.isArray((doc as Record<string, unknown>).subjectIdentifiers_ss)) {
-    return ((doc as Record<string, unknown>).subjectIdentifiers_ss as unknown[]).map(String).filter(Boolean);
-  }
-  const subjectField = (doc as Record<string, unknown>).subject_EN_s ?? (doc as Record<string, unknown>).subject_s ?? (doc as Record<string, unknown>).subject;
+  const anyDoc = doc as Record<string, unknown>;
 
-  if (typeof subjectField === 'string') return splitValues(subjectField);
+  if (Array.isArray(anyDoc.subjectIdentifiers)) {
+    return (anyDoc.subjectIdentifiers as unknown[]).map(String).filter(Boolean);
+  }
+  const subjectField = anyDoc.subjectEn ?? anyDoc.subject ?? anyDoc.subjects;
+
+  if (typeof subjectField === 'string') {
+    const split = splitValues(subjectField);
+
+    if (split.length > 0) {
+      return split;
+    }
+  }
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    if (Array.isArray(raw['subjects_ss'])) {
+      return (raw['subjects_ss'] as unknown[]).map(String).filter(Boolean);
+    }
+    if (Array.isArray(raw['subjectIdentifiers_ss'])) {
+      return (raw['subjectIdentifiers_ss'] as unknown[]).map(String).filter(Boolean);
+    }
+    const rawField = raw['subject_EN_s'] ?? raw['subject_s'] ?? raw['subject'];
+
+    if (typeof rawField === 'string') {
+      return splitValues(rawField);
+    }
+  }
+
   return [];
 }
 
 function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
-  if (Array.isArray((doc as Record<string, unknown>).subsidiaryBodies_ss)) {
-    return ((doc as Record<string, unknown>).subsidiaryBodies_ss as unknown[]).map(String).filter(Boolean);
+  if (Array.isArray(doc.subsidiaryBodies)) {
+    return doc.subsidiaryBodies.map(String).filter(Boolean);
   }
-  const bodyField = (doc as Record<string, unknown>).subsidiaryBody_s ?? (doc as Record<string, unknown>).subsidiaryBody;
+  const anyDoc = doc as Record<string, unknown>;
+  const bodyField = anyDoc.subsidiaryBody;
 
-  if (typeof bodyField === 'string') return splitValues(bodyField);
+  if (typeof bodyField === 'string') {
+    const split = splitValues(bodyField);
+
+    if (split.length > 0) {
+      return split;
+    }
+  }
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    if (Array.isArray(raw['subsidiaryBodies_ss'])) {
+      return (raw['subsidiaryBodies_ss'] as unknown[]).map(String).filter(Boolean);
+    }
+    const rawField = raw['subsidiaryBody_s'] ?? raw['subsidiaryBody'];
+
+    if (typeof rawField === 'string') {
+      return splitValues(rawField);
+    }
+  }
+
   return [];
 }
 
@@ -872,34 +1133,63 @@ function collectValueLabelPairs(value: unknown, label?: unknown): ValueLabelPair
 
 function collectGlobalTargetEntries(doc: AnyDoc): ValueLabelPair[] {
   const record = doc as Record<string, unknown>;
+  const entries: ValueLabelPair[] = [];
 
-  return [
-    ...collectValueLabelPairs(record['gbfTargets_ss'], record['gbfTargets_EN_ss']),
-    ...collectValueLabelPairs(record['globalTargets_ss'], record['globalTargets_EN_ss']),
-    ...collectValueLabelPairs(record['gbfTarget_ss'], record['gbfTarget_EN_ss']),
-    ...collectValueLabelPairs(record['gbfTargets_s'], record['gbfTargets_EN_s']),
-    ...collectValueLabelPairs(record['gbfTarget_s'], record['gbfTarget_EN_s']),
-    ...collectValueLabelPairs(record['gbfTargets'], record['gbfTargets_EN']),
-    ...collectValueLabelPairs(record['GBF_Targets'], record['GBF_Targets']),
-  ];
+  const push = (value: unknown, label?: unknown) => {
+    entries.push(...collectValueLabelPairs(value, label));
+  };
+
+  push(record['gbfTargets'], record['gbfTargetsEn']);
+  push(record['globalTargets'], record['globalTargetsEn']);
+  push(record['gbfTarget'], record['gbfTargetEn']);
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    push(raw['gbfTargets_ss'], raw['gbfTargets_EN_ss']);
+    push(raw['globalTargets_ss'], raw['globalTargets_EN_ss']);
+    push(raw['gbfTarget_ss'], raw['gbfTarget_EN_ss']);
+    push(raw['gbfTargets_s'], raw['gbfTargets_EN_s']);
+    push(raw['gbfTarget_s'], raw['gbfTarget_EN_s']);
+    push(raw['gbfTargets'], raw['gbfTargets_EN']);
+    push(raw['GBF_Targets'], raw['GBF_Targets']);
+  }
+
+  return entries;
 }
 
 function collectCountryEntries(doc: AnyDoc): ValueLabelPair[] {
   const record = doc as Record<string, unknown>;
+  const entries: ValueLabelPair[] = [];
 
-  return [
-    ...collectValueLabelPairs(record['country_s'], record['country_EN_s']),
-    ...collectValueLabelPairs(record['countryCode_s'], record['countryName_s']),
-    ...collectValueLabelPairs(record['country_ss'], record['country_EN_ss']),
-    ...collectValueLabelPairs(record['countries_ss'], record['countries_EN_ss']),
-    ...collectValueLabelPairs(record['countryCodes_ss'], record['countryNames_ss']),
-    ...collectValueLabelPairs(record['country_ISO2_ss'], record['countryNames_ss']),
-    ...collectValueLabelPairs(record['countries_s'], record['countries_EN_ss']),
-    ...collectValueLabelPairs(record['hostCountry_s'], record['hostCountry_EN_s']),
-    ...collectValueLabelPairs(record['hostCountries_ss'], record['hostCountries_EN_ss']),
-    ...collectValueLabelPairs(record['country_EN_s'], record['country_EN_s']),
-    ...collectValueLabelPairs(record['countries_EN_ss'], record['countries_EN_ss']),
-  ];
+  const push = (value: unknown, label?: unknown) => {
+    entries.push(...collectValueLabelPairs(value, label));
+  };
+
+  push(record['country'], record['countryEn']);
+  push(record['countries'], record['countriesEn']);
+  push(record['countryCode'], record['countryName']);
+  push(record['countryCodes'], record['countryNames']);
+  push(record['hostCountry'], record['hostCountryEn']);
+  push(record['hostCountries'], record['hostCountriesEn']);
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    push(raw['country_s'], raw['country_EN_s']);
+    push(raw['countryCode_s'], raw['countryName_s']);
+    push(raw['country_ss'], raw['country_EN_ss']);
+    push(raw['countries_ss'], raw['countries_EN_ss']);
+    push(raw['countryCodes_ss'], raw['countryNames_ss']);
+    push(raw['country_ISO2_ss'], raw['countryNames_ss']);
+    push(raw['countries_s'], raw['countries_EN_ss']);
+    push(raw['hostCountry_s'], raw['hostCountry_EN_s']);
+    push(raw['hostCountries_ss'], raw['hostCountries_EN_ss']);
+    push(raw['country_EN_s'], raw['country_EN_s']);
+    push(raw['countries_EN_ss'], raw['countries_EN_ss']);
+  }
+
+  return entries;
 }
 
 function getDocGlobalTargets(doc: AnyDoc): string[] {
@@ -1039,6 +1329,13 @@ function meetingLinks(doc: AnyDoc): string[] {
 
   const record = doc as Record<string, unknown>;
   const candidateFields: Array<keyof typeof record> = [
+    'links',
+    'link',
+    'meetingLinks',
+    'meetingLink',
+    'meetingUrl',
+    'url',
+    'urls',
     'links_ss',
     'links',
     'links_s',
@@ -1085,6 +1382,41 @@ function meetingLinks(doc: AnyDoc): string[] {
     }
   });
 
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    const rawFields = [
+      'links_ss',
+      'links_s',
+      'link_s',
+      'meetingLinks_ss',
+      'meetingLinks_s',
+      'meetingLink_s',
+      'meeting_url_s',
+      'meetingUrl_s',
+      'url_ss',
+      'urls_ss',
+    ] as const;
+
+    rawFields.forEach(field => {
+      const value = raw[field];
+
+      if (!value) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach(entry => {
+          if (typeof entry === 'string' && entry.trim()) {
+            collected.push(entry.trim());
+          }
+        });
+      } else if (typeof value === 'string' && value.trim()) {
+        collected.push(value.trim());
+      }
+    });
+  }
+
   const normalized = Array.from(new Set(
     collected.map(link => resolveNotificationUrl(link)),
   )).filter(link => /^https?:/i.test(link));
@@ -1112,11 +1444,20 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
 
   const record = doc as Record<string, unknown>;
   const candidateProperties: Array<keyof typeof record> = [
+    'relatedNotifications',
+    'relatedNotification',
+    'relatedDocuments',
+    'notification',
+    'notifications',
+    'notificationKey',
+    'notificationKeys',
+  ];
+  const raw = getDocRaw(doc);
+  const rawCandidateProperties = [
     'relatedNotifications_ss',
     'relatedNotification_ss',
     'relatedNotifications_s',
     'relatedDocuments_ss',
-    'relatedDocuments',
     'notification_ss',
     'notifications_ss',
     'notification_s',
@@ -1124,9 +1465,7 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
     'notificationKey_s',
     'notificationKey_ss',
     'notificationKeys_ss',
-  
-  
-  ];
+  ] as const;
 
   const candidates: string[] = [];
 
@@ -1147,6 +1486,26 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
       candidates.push(value);
     }
   });
+
+  if (raw) {
+    rawCandidateProperties.forEach(property => {
+      const value = raw[property];
+
+      if (!value) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach(entry => {
+          if (entry !== null && entry !== undefined) {
+            candidates.push(String(entry));
+          }
+        });
+      } else if (typeof value === 'string') {
+        candidates.push(value);
+      }
+    });
+  }
 
   const keys: NotificationKey[] = [];
   const seen = new Set<NotificationKey>();
@@ -1393,6 +1752,10 @@ function resolveNotificationUrl(path: string): string {
   }
 }
 
+function descriptionText(doc: AnyDoc): string | undefined {
+  return getDocStringValue(doc, 'description', 'description_t', 'descriptionTxt', 'descriptionText');
+}
+
 function deriveNameFromUrl(url: string): string {
   if (!url) {
     return '';
@@ -1454,7 +1817,7 @@ const filteredDocs = computed(() => {
 
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
-      const type = doc['type_s'] || doc['type'];
+      const type = getDocStringValue(doc, 'type', 'type_s');
 
       return type && filters.types.includes(String(type));
     });
@@ -1462,9 +1825,9 @@ const filteredDocs = computed(() => {
 
   if (filters.activityTypes.length > 0) {
     filtered = filtered.filter(doc => {
-      const type = doc['type_s'] || doc['type'];
+      const activityType = getDocStringValue(doc, 'activityType', 'activity_type_s', 'activity_type');
 
-      return type && filters.activityTypes.includes(String(type));
+      return activityType && filters.activityTypes.includes(activityType);
     });
   }
 
@@ -1494,7 +1857,8 @@ const filteredDocs = computed(() => {
 
   if (filters.statuses.length > 0) {
     filtered = filtered.filter(doc => {
-      const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
+      const key = getDocStringValue(doc, 'statusKey', 'statusKey_s')
+        ?? normalizeStatusKey(getDocStringValue(doc, 'status', 'status_s'));
 
       return !!key && filters.statuses.includes(key);
     });
@@ -1518,8 +1882,8 @@ const filteredDocs = computed(() => {
 
   if (filters.startDate || filters.endDate) {
     filtered = filtered.filter(doc => {
-      const startDate = safeDate(doc['startDate_dt']);
-      const endDate = safeDate(doc['endDate_dt']);
+      const startDate = safeDate(getDocStringValue(doc, 'startDate', 'startDate_dt', 'startDate_s'));
+      const endDate = safeDate(getDocStringValue(doc, 'endDate', 'endDate_dt', 'endDate_s'));
       const docDate = startDate || endDate;
 
       if (!docDate) return false;
@@ -1542,7 +1906,9 @@ const filteredDocs = computed(() => {
 
   if (filters.actionRequired) {
     filtered = filtered.filter(doc => {
-      return doc['actionRequired_b'] === true || doc['actionRequired'] === true;
+      const actionRequired = getDocBooleanValue(doc, 'actionRequired', 'actionRequired_b');
+
+      return actionRequired === true;
     });
   }
 
@@ -1553,8 +1919,9 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
   const buckets = new Map<string, { label: string; items: AnyDoc[] }>();
 
   for (const d of filteredDocs.value) {
-    const { startDate_dt, endDate_dt } = d as MeetingDoc;
-    const iso = startDate_dt || endDate_dt;
+    const startDate = getDocStringValue(d, 'startDate', 'startDate_dt', 'startDate_s');
+    const endDate = getDocStringValue(d, 'endDate', 'endDate_dt', 'endDate_s');
+    const iso = startDate || endDate;
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
     const label = dt ? dt.toFormat('LLLL yyyy') : t('calendar.labels.unknownDate') as string;
@@ -1571,7 +1938,7 @@ const availableTypes = computed(() => {
   const types = new Set<string>();
 
   docs.value.forEach(doc => {
-    const type = doc['type_s'] || doc['type'];
+    const type = getDocStringValue(doc, 'type', 'type_s');
 
     if (type) types.add(String(type));
   });
@@ -1591,7 +1958,8 @@ const availableStatuses = computed(() => {
   const statuses = new Set<string>();
 
   docs.value.forEach(doc => {
-    const key = (doc['statusKey_s'] as string | undefined) ?? normalizeStatusKey((doc['status_s'] as string | undefined) ?? (doc['status'] as string | undefined));
+    const key = getDocStringValue(doc, 'statusKey', 'statusKey_s')
+      ?? normalizeStatusKey(getDocStringValue(doc, 'status', 'status_s'));
 
     if (key) statuses.add(key);
   });
@@ -1666,9 +2034,7 @@ const handleFiltersUpdate = (filters: FilterState) => {
 };
 
 function typeValue(doc: AnyDoc): string {
-  const raw = (doc as Record<string, unknown>).type_s ?? (doc as Record<string, unknown>).type;
-
-  return typeof raw === 'string' ? raw.trim() : '';
+  return getDocStringValue(doc, 'type', 'type_s') ?? '';
 }
 
 function resolveTypeKey(doc: AnyDoc): ReturnType<typeof normalizeTypeKey> {
@@ -1703,26 +2069,28 @@ function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string }
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
 
-  const titleValue = d[tField] ?? d['title_EN_t'] ?? d['title_t'] ?? d['title'];
+  const titleValue = getDocStringValue(d, tField, 'title', 'title_EN_t', 'title_t');
 
-  if (typeof titleValue === 'string' && titleValue.trim()) {
+  if (titleValue) {
     return titleValue;
   }
   return t('calendar.labels.untitled') as string;
 }
 
 function status(d: AnyDoc): string {
-  const label = d['status_s'];
+  const label = getDocStringValue(d, 'status', 'status_s');
 
-  if (typeof label === 'string' && label.trim()) return label;
-  const key = d['statusKey_s'] as string | undefined;
+  if (label) {
+    return label;
+  }
+  const key = getDocStringValue(d, 'statusKey', 'statusKey_s');
 
   return normalizeStatusLabel(key ?? null);
 }
 
 function statusColor(d: AnyDoc): string {
-  const keyRaw = (d['statusKey_s'] as string | undefined)?.toUpperCase();
-  const normalizedKey = keyRaw ?? normalizeStatusKey(status(d)) ?? '';
+  const keyRaw = getDocStringValue(d, 'statusKey', 'statusKey_s');
+  const normalizedKey = keyRaw?.toUpperCase() ?? normalizeStatusKey(status(d)) ?? '';
 
   switch (normalizedKey) {
     case 'COMPLETED':
@@ -1740,12 +2108,12 @@ function statusColor(d: AnyDoc): string {
 }
 
 function isActionRequired(d: AnyDoc): boolean {
-  return d['actionRequired_b'] === true || d['actionRequired'] === true;
+  return getDocBooleanValue(d, 'actionRequired', 'actionRequired_b') === true;
 }
 
 function formatDateRange(d: AnyDoc): string {
-  const start = safeDate(d['startDate_dt']);
-  const end = safeDate(d['endDate_dt']);
+  const start = safeDate(getDocStringValue(d, 'startDate', 'startDate_dt', 'startDate_s'));
+  const end = safeDate(getDocStringValue(d, 'endDate', 'endDate_dt', 'endDate_s'));
 
   if (start && end) {
     if (start.hasSame(end, 'day')) return start.toFormat('d LLLL yyyy');
@@ -1858,26 +2226,37 @@ h3 {
   padding: 0.75rem 1rem 1rem;
 }
 
-.calendar-accordion__badges-row {
+
+.calendar-accordion__meta-block {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .calendar-accordion__subjects {
-  flex: 1 1 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.45rem;
 }
 
+.calendar-accordion__footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.calendar-accordion__cta--documents {
+  margin-right: auto;
+}
+
 .calendar-accordion__status-badges {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin-left: auto;
   justify-content: flex-end;
   text-align: right;
@@ -2148,10 +2527,8 @@ h3 {
 }
 
 @media (max-width: 576px) {
-  .calendar-accordion__status-badges {
-    width: 100%;
-    justify-content: flex-start;
-    margin-left: 0;
+  .calendar-accordion__footer {
+    gap: 0.75rem;
   }
 }
 
