@@ -22,3 +22,11 @@ Notes:
 - [ ] normalize variables
 
 - [ ] refactor code
+
+- [ ] default date to show (all future dates)
+
+- [ ] programatically change status that is confirmed to complete if date exceeds the end date if exists else 1 day after start date.
+
+- [ ] fix schemas 
+
+- [x] fix dir structure

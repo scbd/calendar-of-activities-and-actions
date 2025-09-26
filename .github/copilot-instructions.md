@@ -26,6 +26,7 @@ Key points for Copilot:
 - Always use useFetch instead of fetch for HTTP requests in Nuxt applications or useLazyFetch for lazy loading data where appropriate.  Use $fetch on the server.
 - always use https://vue-multiselect.js.org  for select inputs.
 - always use NuxtLink for <a> links within nuxtjs applications, except where the component will be exported alone out of nuxtjs.
+- always follow nuxtjs4 directory structure.  https://nuxt.com/docs/4.x/guide/directory-structure
 
 
 Memory & voice workflow (for Copilot Chat in VS Code):
