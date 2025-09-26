@@ -2324,4 +2324,4 @@ export default [
     "relatedDocuments": "",
     "outcome": ""
   }
-]
+];

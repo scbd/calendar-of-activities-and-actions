@@ -274,7 +274,7 @@
 import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, getTitleFieldForLocale, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
-import { useCalendarMarkdown } from '../composables/useCalendarMarkdown';
+import { useCalendarMarkdown } from '../composables/use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';

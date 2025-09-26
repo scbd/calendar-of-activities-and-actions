@@ -57,7 +57,8 @@
         "dateRange": "Date range",
         "startDate": "Start date",
         "endDate": "End date",
-        "actionRequired": "Action required"
+        "actionRequired": "Action required",
+        "schemas": "Schemas"
       },
       "placeholders": {
         "typeActivity": "Select types",
@@ -67,7 +68,8 @@
         "subjects": "Select subjects",
         "statuses": "Select statuses",
         "subsidiaryBodies": "Select subsidiary bodies",
-        "decisions": "Select decisions"
+        "decisions": "Select decisions",
+        "schemas": "Select schemas"
       },
       "toggles": {
         "actionRequiredOnly": "Show only items requiring action"

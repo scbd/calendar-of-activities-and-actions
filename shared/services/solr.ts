@@ -3,9 +3,103 @@
  * This mirrors the approach in the online reporting tool and follows the example-index-call.
  */
 
-import { useQueryIndex } from '../../app/composables/useQueryIndex';
+import { useQueryIndex } from '../../app/composables/use-query-index';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
+
+const SOLR_SUFFIXES = ['_ss', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l'];
+
+const isAllUpperCase = (segment: string): boolean => segment.toUpperCase() === segment && segment.toLowerCase() !== segment;
+
+const stripSolrSuffix = (field: string): string => {
+  const lowerField = field.toLowerCase();
+
+  for (const suffix of SOLR_SUFFIXES) {
+    if (lowerField.endsWith(suffix)) {
+      return field.slice(0, -suffix.length);
+    }
+  }
+  return field;
+};
+
+const camelizeSegments = (segments: string[]): string => {
+  if (segments.length === 0) {
+    return '';
+  }
+
+  return segments
+    .map((segment, index) => {
+      if (index === 0) {
+        if (!segment) {
+          return segment;
+        }
+        if (isAllUpperCase(segment)) {
+          return segment.toLowerCase();
+        }
+        return segment.charAt(0).toLowerCase() + segment.slice(1);
+      }
+
+      const lower = segment.toLowerCase();
+
+      if (!lower) {
+        return lower;
+      }
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join('');
+};
+
+export const normalizeSolrFieldName = (field: string): string => {
+  if (field.startsWith('_')) {
+    return field;
+  }
+
+  const withoutSuffix = stripSolrSuffix(field);
+  const segments = withoutSuffix.split('_').filter(Boolean);
+
+  if (segments.length === 0) {
+    return withoutSuffix;
+  }
+  return camelizeSegments(segments);
+};
+
+export const normalizeSolrDocument = <T extends Record<string, unknown>>(doc: T): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = {};
+
+  for (const [rawKey, value] of Object.entries(doc)) {
+    const key = normalizeSolrFieldName(rawKey);
+
+    if (!(key in normalized)) {
+      normalized[key] = value;
+      continue;
+    }
+
+    const existing = normalized[key];
+
+    if (Array.isArray(existing)) {
+      const candidates = Array.isArray(value) ? value : [value];
+      const filtered = candidates.filter(item => item !== undefined && item !== null);
+
+      for (const candidate of filtered) {
+        if (!existing.some(entry => entry === candidate)) {
+          existing.push(candidate);
+        }
+      }
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      normalized[key] = (value as unknown[]).slice();
+      continue;
+    }
+
+    if (existing === null || existing === undefined) {
+      normalized[key] = value;
+    }
+  }
+
+  return normalized;
+};
 
 export interface SolrSelectBody {
   df: string;
@@ -56,9 +150,13 @@ export const getTextFieldForLocale = (locale: LocaleCode = 'en'): string => {
   return `text_${locale.toUpperCase()}_txt`;
 };
 
-export const getTitleFieldForLocale = (locale: LocaleCode = 'en'): string => {
+export const getSolrTitleFieldForLocale = (locale: LocaleCode = 'en'): string => {
   // Common title field pattern across CBD indexes
   return `title_${locale.toUpperCase()}_t`;
+};
+
+export const getTitleFieldForLocale = (locale: LocaleCode = 'en'): string => {
+  return normalizeSolrFieldName(getSolrTitleFieldForLocale(locale));
 };
 
 /**
@@ -161,19 +259,39 @@ function escapeSolrDate(iso: string): string {
 export interface MeetingDoc extends Record<string, unknown> {
   _id?: string;
   id?: string;
-  startDate_dt?: string;
-  endDate_dt?: string;
-  city_EN_s?: string;
-  country_EN_s?: string;
-  country_s?: string;
-  meetingCode_s?: string;
-  identifier_s?: string;
-  status_s?: string;
-  statusKey_s?: string | null;
-  description_t?: string | null;
-  type_s?: string;
-  links_ss?: string[];
-  subjects_ss?: string[];
-  subsidiaryBodies_ss?: string[];
-  actionRequired_b?: boolean;
+  identifier?: string;
+  titleEn?: string;
+  titleFr?: string;
+  titleEs?: string;
+  title?: string;
+  subjectEn?: string | null;
+  subjects?: string[];
+  subjectIdentifiers?: string[];
+  subsidiaryBody?: string | null;
+  subsidiaryBodies?: string[];
+  copDecision?: string | null;
+  copDecisions?: string[];
+  copParagraph?: string | null;
+  copParagraphs?: string[];
+  cityEn?: string;
+  city?: string;
+  countryEn?: string;
+  country?: string;
+  meetingCode?: string;
+  meetingType?: string;
+  eventType?: string;
+  activityType?: string;
+  status?: string;
+  statusKey?: string | null;
+  description?: string | null;
+  notesEn?: string | null;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  updatedDate?: string;
+  links?: string[];
+  decision?: string | null;
+  decisionUrl?: string | null;
+  decisionLinks?: string[];
+  actionRequired?: boolean;
 }

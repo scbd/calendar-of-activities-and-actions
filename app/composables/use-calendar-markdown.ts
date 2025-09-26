@@ -1,5 +1,3 @@
-import { useFetch } from '#imports';
-
 // Rely on Nuxt auto-imports for refs
 let cachedMarkdown: string | null = null;
 let inflightRequest: Promise<string> | null = null;

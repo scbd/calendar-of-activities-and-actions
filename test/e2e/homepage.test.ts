@@ -10,19 +10,23 @@ describe.skip('Activities Calendar E2E', async () => {
   describe('Home page', () => {
     it('should load the main page', async () => {
   const page = await createPage('/');
+
   await page.waitForLoadState();
 
       // Check if the main heading is visible
       const heading = page.getByRole('heading', { name: 'Activities & Actions Explorer' });
+
       await expect(heading).toBeVisible();
     });
 
     it('should display a data table', async () => {
   const page = await createPage('/');
+
   await page.waitForLoadState();
 
       // Check if table exists and has expected headers
   const table = page.locator('table');
+
   await expect(table).toBeVisible();
 
       // Check for table headers
@@ -37,6 +41,7 @@ describe.skip('Activities Calendar E2E', async () => {
 
     it('should have pagination controls', async () => {
   const page = await createPage('/');
+
   await page.waitForLoadState();
 
       // Check for pagination buttons
@@ -48,6 +53,7 @@ describe.skip('Activities Calendar E2E', async () => {
 
       // Check for page indicator
       const pageIndicator = page.getByText('Page 1 / 1');
+
       await expect(pageIndicator).toBeVisible();
     });
   });

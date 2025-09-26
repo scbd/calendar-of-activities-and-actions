@@ -9,8 +9,10 @@ import {
 describe('calendar type color helpers', () => {
   it('uses CBD green for COP, SBSTTA and SBI variants', () => {
     const specialTypes = ['cop', 'COP-16', 'SBSTTA-27', 'Subsidiary Body on Implementation'];
+
     specialTypes.forEach(type => {
       const color = getTypeColor(type);
+
       expect(color.background).toBe(CBD_GREEN);
     });
   });
@@ -28,8 +30,10 @@ describe('calendar type color helpers', () => {
       'Workshop',
       'Campaign'
     ];
+
     otherTypes.forEach(type => {
       const color = getTypeColor(type);
+
       expect(color.background).not.toBe(CBD_GREEN);
     });
   });
@@ -46,6 +50,7 @@ describe('calendar type color helpers', () => {
 
   it('derives text color from either type keys or palettes', () => {
     const palette = getTypeColor('meeting');
+
     expect(getTypeForegroundColor('meeting')).toBe(palette.text);
     expect(getTypeForegroundColor(palette)).toBe(palette.text);
   });

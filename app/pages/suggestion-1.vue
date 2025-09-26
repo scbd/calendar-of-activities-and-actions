@@ -1,9 +1,9 @@
 <template>
   <div>
-    <CalendarActivitiesActionsV3 />
+    <CalendarActivitiesActions />
   </div>
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActionsV3 from '~/components/calendar-activities-actions-v1.vue';
+import CalendarActivitiesActions from '~/components/calendar-activities-actions.vue';
 </script>

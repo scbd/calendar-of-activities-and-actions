@@ -58,6 +58,7 @@ export async function loadSubjectOptions(): Promise<SubjectOption[]> {
   }
 
   const options = await inflightPromise;
+
   inflightPromise = null;
   cachedSubjectOptions = options;
   return options;

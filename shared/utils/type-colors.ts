@@ -66,6 +66,7 @@ export function normalizeTypeKey(value: string | null | undefined): CalendarType
   }
 
   const trimmed = value.trim();
+
   if (!trimmed) {
     return 'other';
   }
@@ -81,6 +82,7 @@ export function normalizeTypeKey(value: string | null | undefined): CalendarType
 
 export function getTypeColor(type: CalendarTypeKey | string | null | undefined): CalendarTypeColor {
   const normalized = typeof type === 'string' ? normalizeTypeKey(type) : type ?? 'other';
+
   return TYPE_COLOR_MAP[normalized] ?? TYPE_COLOR_MAP.other;
 }
 
@@ -90,6 +92,7 @@ function isCalendarTypeColor(value: unknown): value is CalendarTypeColor {
   }
 
   const record = value as Record<string, unknown>;
+
   return typeof record.background === 'string' && typeof record.text === 'string';
 }
 
@@ -101,6 +104,7 @@ export function getTypeForegroundColor(
   }
 
   const color = getTypeColor(typeOrColor as CalendarTypeKey | string | null | undefined);
+
   return color.text;
 }
 

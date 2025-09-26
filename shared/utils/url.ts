@@ -3,11 +3,13 @@ export function normalizeUrl(value?: string | null): string | undefined {
     return undefined;
   }
   const trimmed = value.trim();
+
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
 export function isAbsoluteUrl(value: string): boolean {
   const normalized = normalizeUrl(value);
+
   if (!normalized) {
     return false;
   }
@@ -16,12 +18,14 @@ export function isAbsoluteUrl(value: string): boolean {
 
 export function isExternalUrl(value: string): boolean {
   const normalized = normalizeUrl(value);
+
   if (!normalized || !isAbsoluteUrl(normalized)) {
     return false;
   }
 
   try {
     const parsed = new URL(normalized);
+
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
     return false;
@@ -30,6 +34,7 @@ export function isExternalUrl(value: string): boolean {
 
 export function isInternalUrl(value: string): boolean {
   const normalized = normalizeUrl(value);
+
   if (!normalized) {
     return false;
   }
@@ -43,6 +48,7 @@ export function isInternalUrl(value: string): boolean {
 
 export function isLikelyLink(value: string): boolean {
   const normalized = normalizeUrl(value);
+
   if (!normalized) {
     return false;
   }

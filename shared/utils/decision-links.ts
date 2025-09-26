@@ -1,4 +1,5 @@
 import { isLikelyLink, normalizeUrl } from './url';
+import { normalizeSolrDocument } from '../services/solr';
 
 type DecisionType = 'COP' | 'CP' | 'NP';
 
@@ -291,22 +292,10 @@ function forEachLabelCandidate(value: unknown, iteratee: (candidate: string) => 
 
 const PARAGRAPH_FIELD_KEYS: string[] = [
   'copParagraph',
-  'copParagraph_s',
-  'copParagraph_ss',
-  'copParagraphs_s',
-  'copParagraphs_ss',
+  'copParagraphs',
   'copParagraphNo',
-  'copParagraphNo_s',
-  'copParagraphNo_ss',
-  'copParagraph_no',
-  'copParagraph_no_s',
-  'copParagraph_no_ss',
   'paragraph',
-  'paragraph_s',
-  'paragraph_ss',
   'paragraphs',
-  'paragraphs_s',
-  'paragraphs_ss',
 ];
 
 function collectParagraphTokensFromValue(value: unknown): string[] {
@@ -452,6 +441,7 @@ function labelFromUrl(rawUrl: string): string {
 }
 
 export function extractDecisionEntries(record: Record<string, unknown>): DecisionEntry[] {
+  const normalizedRecord = normalizeSolrDocument(record);
   const entries: DecisionEntry[] = [];
   const labelMap = new Map<string, DecisionEntry>();
   const uniqueUrls = new Set<string>();
@@ -481,24 +471,16 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
     });
   };
 
-  pushLabelCandidate(record['copDecision_s'], 'COP');
-  pushLabelCandidate(record['copDecision'], 'COP');
-  pushLabelCandidate(record['copDecision_ss'], 'COP');
-  pushLabelCandidate(record['copDecisions_ss'], 'COP');
-  pushLabelCandidate(record['decision_s']);
-  pushLabelCandidate(record['decision_ss']);
+  pushLabelCandidate(normalizedRecord['copDecision'], 'COP');
+  pushLabelCandidate(normalizedRecord['copDecisions'], 'COP');
+  pushLabelCandidate(normalizedRecord['decision']);
 
-  pushUrlCandidate(record['decisionUrl']);
-  pushUrlCandidate(record['decisionUrl_s']);
-  pushUrlCandidate(record['decisionUrl_ss']);
-  pushUrlCandidate(record['decisionUrls_ss']);
-  pushUrlCandidate(record['decisionLinks_ss']);
-  pushUrlCandidate(record['decision_links_ss']);
-  pushUrlCandidate(record['copDecisionUrl']);
-  pushUrlCandidate(record['copDecisionUrl_s']);
-  pushUrlCandidate(record['copDecisionUrl_ss']);
+  pushUrlCandidate(normalizedRecord['decisionUrl']);
+  pushUrlCandidate(normalizedRecord['decisionUrls']);
+  pushUrlCandidate(normalizedRecord['decisionLinks']);
+  pushUrlCandidate(normalizedRecord['copDecisionUrl']);
 
-  toStringArray(record['links_ss']).forEach(link => {
+  toStringArray(normalizedRecord['links']).forEach(link => {
     const normalized = normalizeUrl(link);
 
     if (normalized && /\/decisions?\//i.test(normalized)) {
@@ -557,7 +539,7 @@ export function extractDecisionEntries(record: Record<string, unknown>): Decisio
     entries.push(entry);
   });
 
-  const recordParagraphTokens = collectRecordParagraphTokens(record);
+  const recordParagraphTokens = collectRecordParagraphTokens(normalizedRecord);
   const expandedEntries: DecisionEntry[] = [];
   const seen = new Set<string>();
 

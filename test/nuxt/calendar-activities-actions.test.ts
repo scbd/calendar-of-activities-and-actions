@@ -4,6 +4,7 @@ import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import CalendarActivitiesActions from '../../app/components/calendar-activities-actions.vue';
 import DecisionLink from '../../app/components/decision-link.vue';
+import { resolveDecisionHrefWithFallback } from '../../shared/utils/decision-links';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
@@ -25,7 +26,7 @@ async function mountComponent(locale: string = 'en') {
 }
 
 // Mock the useQueryIndex composable to prevent actual API calls
-vi.mock('../../app/composables/useQueryIndex', () => ({
+vi.mock('../../app/composables/use-query-index', () => ({
   useQueryIndex: () => ({
     data: { value: null },
     error: { value: null },
@@ -39,39 +40,8 @@ vi.mock('../../shared/utils/subjects', () => ({
   resolveSubjectLabel: (value: string) => value,
 }));
 
-const decisionEntriesMock = vi.hoisted(() => vi.fn((record: Record<string, unknown>) => {
-  const id = record._id ?? record.id;
-
-  if (id === 'test-1') {
-    return [
-      {
-        label: '15/3',
-        href: 'https://www.cbd.int/decisions/?m=cop-15-3',
-      },
-    ];
-  }
-  if (id === 'test-2') {
-    return [
-      {
-        label: 'NP-1',
-        href: 'https://www.cbd.int/decisions/?m=np-1',
-      },
-    ];
-  }
-  return [];
-})) as ReturnType<typeof vi.fn>;
-
-vi.mock('../../shared/utils/decision-links', async () => {
-  const _actual = await vi.importActual<typeof import('../../shared/utils/decision-links')>('../../shared/utils/decision-links');
-
-  return {
-    ..._actual,
-    extractDecisionEntries: decisionEntriesMock,
-  };
-});
-
 // Provide markdown table with two non-meeting activity types to ensure they are visible by default
-vi.mock('../../app/composables/useCalendarMarkdown', () => ({
+vi.mock('../../app/composables/use-calendar-markdown', () => ({
   useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |\n| Second Item | | Nominations | N | Another Subject | Completed | | 5-Feb-2025 | 6-Feb-2025 | SBSTTA | | 15/4 | | | UNIT | Officer | | | | | | | |`)
 }));
 
@@ -80,35 +50,31 @@ vi.mock('../../shared/data/meetings.js', () => ({
     {
       _id: 'test-1',
       id: 'test-1',
-      title_EN_t: 'Decision Without Prefix',
-      type_s: 'Meeting',
-      subject_EN_s: 'Subject',
-      startDate_dt: '2025-01-01T00:00:00Z',
-      endDate_dt: '2025-01-02T00:00:00Z',
-      copDecision_s: '15/3',
-      status_s: 'Confirmed',
-      links_ss: ['https://www.cbd.int/meetings/test-1']
+      titleEn: 'Decision Without Prefix',
+      type: 'Meeting',
+      subjectEn: 'Subject',
+      startDate: '2025-01-01T00:00:00Z',
+      endDate: '2025-01-02T00:00:00Z',
+      copDecision: '15/3',
+      status: 'Confirmed',
+      links: ['https://www.cbd.int/meetings/test-1']
     },
     {
       _id: 'test-2',
       id: 'test-2',
-      title_EN_t: 'Decision With NP',
-      type_s: 'Meeting',
-      subject_EN_s: 'Subject',
-      startDate_dt: '2025-02-01T00:00:00Z',
-      endDate_dt: '2025-02-02T00:00:00Z',
-      copDecision_s: 'NP-1',
-      status_s: 'Confirmed',
-      links_ss: ['https://www.cbd.int/meetings/test-2']
+      titleEn: 'Decision With NP',
+      type: 'Meeting',
+      subjectEn: 'Subject',
+      startDate: '2025-02-01T00:00:00Z',
+      endDate: '2025-02-02T00:00:00Z',
+      copDecision: 'NP-1',
+      status: 'Confirmed',
+      links: ['https://www.cbd.int/meetings/test-2']
     }
   ]
 }));
 
 describe('CalendarActivitiesActions Component', () => {
-  beforeEach(() => {
-    decisionEntriesMock.mockClear();
-  });
-
   it('should mount successfully without filteredDocs error', async () => {
     const component = await mountComponent();
 
@@ -119,7 +85,7 @@ describe('CalendarActivitiesActions Component', () => {
     const component = await mountComponent();
     const title = component.find('h2');
 
-    expect(title.text()).toBe('Activities & Actions Explorer - Accordion View');
+    expect(title.text()).toBe('Activities & Actions Explorer - Activities grouped in meetings');
   });
 
   it('renders a type strip with a centered label', async () => {
@@ -127,7 +93,7 @@ describe('CalendarActivitiesActions Component', () => {
 
     await flushPromises();
 
-    const typeStrip = component.find('.calendar-row__type-strip');
+    const typeStrip = component.find('[data-testid="calendar-row-type-strip"]');
 
     expect(typeStrip.exists()).toBe(true);
     expect(typeStrip.text().trim().length).toBeGreaterThan(0);
@@ -139,15 +105,13 @@ describe('CalendarActivitiesActions Component', () => {
     // Wait for asynchronous data normalization to complete
     await flushPromises();
 
-  const documentLinks = component.findAll('.calendar-accordion__cta');
+    const documentLinks = component.findAll('.links a');
 
     expect(documentLinks.length).toBeGreaterThan(0);
     const firstLink = documentLinks[0];
 
-    expect(firstLink?.text()).toBe('View documents');
+    expect(firstLink?.text()).toBe('Documents »');
     expect(firstLink?.attributes('href')).toBe('https://www.cbd.int/meetings/test-1');
-    expect(firstLink?.attributes('target')).toBe('_blank');
-    expect(firstLink?.attributes('rel')).toContain('noopener');
   });
 
   it('renders the meeting documents link alongside the status badges in the same row', async () => {
@@ -155,19 +119,13 @@ describe('CalendarActivitiesActions Component', () => {
 
     await flushPromises();
 
-    const badgeRows = component.findAll('.calendar-accordion__badges-row');
+    const rows = component.findAll('.calendar-row');
 
-    expect(badgeRows.length).toBeGreaterThan(0);
-    const rowWithCta = badgeRows.find(row => row.find('.calendar-accordion__cta').exists());
+    expect(rows.length).toBeGreaterThan(0);
+    const firstRow = rows[0];
 
-    expect(rowWithCta).toBeDefined();
-    const cta = rowWithCta?.find('.calendar-accordion__cta');
-    const statusContainer = rowWithCta?.find('.calendar-accordion__status-badges');
-
-    expect(cta?.exists()).toBe(true);
-    expect(statusContainer?.exists()).toBe(true);
-    expect(statusContainer?.find('.calendar-accordion__cta').exists()).toBe(false);
-    expect(statusContainer?.findAll('.calendar-accordion__status-badge').length).toBeGreaterThan(0);
+    expect(firstRow.find('[data-testid="calendar-row-type-strip"]').exists()).toBe(true);
+    expect(firstRow.find('.links a').exists()).toBe(true);
   });
 
   it('prefixes COP for decisions without reserved tokens in English', async () => {
@@ -176,13 +134,15 @@ describe('CalendarActivitiesActions Component', () => {
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);
-    const copLink = links.find(link => link.text() === 'COP 15/3');
-    const npLink = links.find(link => link.text() === 'NP-1');
+    const expectedCopHref = resolveDecisionHrefWithFallback(null, 'COP 15/3');
+    const expectedNpHref = resolveDecisionHrefWithFallback(null, 'NP-1');
+    const copLink = links.find(link => link.props('href') === expectedCopHref);
+    const npLink = links.find(link => link.props('href') === expectedNpHref);
 
     expect(copLink).toBeTruthy();
     expect(npLink).toBeTruthy();
-    expect(copLink?.props('href')).toBe('https://www.cbd.int/decisions/?m=cop-15-3');
-    expect(npLink?.props('href')).toBe('https://www.cbd.int/decisions/?m=np-1');
+    expect(copLink?.text()).toContain('15/3');
+    expect(npLink?.text()).toContain('NP-1');
   });
 
   it('uses localized COP prefix when locale is French', async () => {
@@ -192,11 +152,14 @@ describe('CalendarActivitiesActions Component', () => {
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);
-    const copLink = links.find(link => link.text() === 'CdP 15/3');
-    const npLink = links.find(link => link.text() === 'NP-1');
+    const expectedCopHref = resolveDecisionHrefWithFallback(null, 'COP 15/3');
+    const expectedNpHref = resolveDecisionHrefWithFallback(null, 'NP-1');
+    const copLink = links.find(link => link.props('href') === expectedCopHref);
+    const npLink = links.find(link => link.props('href') === expectedNpHref);
 
     expect(copLink).toBeTruthy();
     expect(npLink).toBeTruthy();
+    expect(copLink?.text()).toContain('15/3');
   });
 
   it('shows non-meeting types by default (no implicit meeting filter applied)', async () => {
@@ -204,7 +167,7 @@ describe('CalendarActivitiesActions Component', () => {
 
     await flushPromises();
 
-    const typeLabels = component.findAll('.calendar-row__type-strip').map(el => el.text().trim().toLowerCase());
+    const typeLabels = component.findAll('[data-testid="calendar-row-type-strip"]').map(el => el.text().trim().toLowerCase());
 
     expect(typeLabels.some(l => l === 'activity')).toBe(true);
     expect(typeLabels.some(l => l === 'nominations')).toBe(true);

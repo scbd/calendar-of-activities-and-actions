@@ -21,6 +21,7 @@ export async function getDomainTerms(
 ): Promise<ThesaurusTerm[]> {
   const base = getApiBase();
   const url = `${base}/api/v2013/thesaurus/domains/${encodeURIComponent(termIdentifier)}/terms`;
+
   return await $fetch<ThesaurusTerm[]>(url, { method: 'GET', query: params });
 }
 
@@ -34,5 +35,6 @@ export async function getTerm(
 ): Promise<ThesaurusTerm> {
   const base = getApiBase();
   const url = `${base}/api/v2013/thesaurus/terms/${encodeURIComponent(termIdentifier)}`;
+
   return await $fetch<ThesaurusTerm>(url, { method: 'GET', query: params });
 }
