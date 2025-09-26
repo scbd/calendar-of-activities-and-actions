@@ -5,7 +5,7 @@ export const useQueryIndex = <TDoc = Record<string, unknown>>(
   endpoint?: string,
 ) => {
   const config = useRuntimeConfig();
-  const finalEndpoint = endpoint || config.public.SCBD_INDEX_ENDPOINT;
+  const finalEndpoint = endpoint || config.public.scbdIndexEndpoint;
 
   return useFetch<SolrResponse<TDoc>>(finalEndpoint, {
     method: 'POST',

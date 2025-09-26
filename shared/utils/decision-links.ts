@@ -97,7 +97,7 @@ function formatDecisionLabel(parsed: ParsedDecisionLabel): string {
   return `${base} P. ${paragraphSuffix}`;
 }
 
-const DECISION_URLS: Record<DecisionType, (parts: ParsedDecisionLabel) => string> = {
+const decisionUrls: Record<DecisionType, (parts: ParsedDecisionLabel) => string> = {
   COP: ({ meetingNumber, decisionNumber, paragraphs }) => {
     const meetingSegment = String(meetingNumber);
     const decisionSegment = decisionNumber.toString().padStart(2, '0');
@@ -182,7 +182,7 @@ export function resolveDecisionHref(label: string | null | undefined): string | 
     return undefined;
   }
 
-  return DECISION_URLS[parsed.type](parsed);
+  return decisionUrls[parsed.type](parsed);
 }
 
 function stripTrailingSlash(pathname: string): string {
@@ -290,7 +290,7 @@ function forEachLabelCandidate(value: unknown, iteratee: (candidate: string) => 
   toStringArray(value).forEach(iteratee);
 }
 
-const PARAGRAPH_FIELD_KEYS: string[] = [
+const paragraphFieldKeys: string[] = [
   'copParagraph',
   'copParagraphs',
   'copParagraphNo',
@@ -322,7 +322,7 @@ function collectParagraphTokensFromValue(value: unknown): string[] {
 function collectRecordParagraphTokens(record: Record<string, unknown>): string[] {
   const tokens = new Set<string>();
 
-  PARAGRAPH_FIELD_KEYS.forEach(key => {
+  paragraphFieldKeys.forEach(key => {
     collectParagraphTokensFromValue(record[key]).forEach(token => {
       if (token) {
         tokens.add(token);

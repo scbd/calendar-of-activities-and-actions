@@ -1,5 +1,5 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
-import { THESAURUS } from '../constants/thesaurus';
+import { thesaurusDomains } from '../constants/thesaurus';
 import { getDomainTerms } from '../services/thesaurus';
 
 export interface SubjectOption {
@@ -51,7 +51,7 @@ export async function loadSubjectOptions(): Promise<SubjectOption[]> {
   }
 
   if (!inflightPromise) {
-    inflightPromise = getDomainTerms(THESAURUS.CBD_SUBJECTS)
+  inflightPromise = getDomainTerms(thesaurusDomains.CBD_SUBJECTS)
       .then(terms => terms.map(mapThesaurusTermToSubjectOption)
         .sort((a, b) => a.label.localeCompare(b.label)))
       .catch(() => []);

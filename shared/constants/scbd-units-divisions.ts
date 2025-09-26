@@ -2,7 +2,7 @@
 // Keys are abbreviations; values are the display names.
 // Per request, the word "Unit" is omitted from unit names.
 
-export const SCBD_UNITS_DIVISIONS = {
+export const scbdUnitsDivisions = {
   // Divisions
   SSSFD: 'Science, Society and Sustainable Futures Division',
   ISD: 'Implementation Support Division',
@@ -25,6 +25,6 @@ export const SCBD_UNITS_DIVISIONS = {
   HRA: 'Human Resources and Administration',
 } as const;
 
-export type ScbdUnitDivisionKey = keyof typeof SCBD_UNITS_DIVISIONS;
-export type ScbdUnitDivisionName = typeof SCBD_UNITS_DIVISIONS[ScbdUnitDivisionKey];
+export type ScbdUnitDivisionKey = keyof typeof scbdUnitsDivisions;
+export type ScbdUnitDivisionName = typeof scbdUnitsDivisions[ScbdUnitDivisionKey];
 

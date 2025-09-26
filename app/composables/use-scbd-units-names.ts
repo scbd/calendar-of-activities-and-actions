@@ -1,9 +1,9 @@
 import { useI18n } from '#imports';
-import { SCBD_UNITS_DIVISIONS } from 'shared/constants/scbd-units-divisions';
+import { scbdUnitsDivisions } from 'shared/constants/scbd-units-divisions';
 
-type UnitsDivisionsKey = keyof typeof SCBD_UNITS_DIVISIONS;
+type UnitsDivisionsKey = keyof typeof scbdUnitsDivisions;
 
-const EXTRA_ALIASES: Record<string, UnitsDivisionsKey> = {
+const extraAliases: Record<string, UnitsDivisionsKey> = {
   // Divisions
   'SCIENCE SOCIETY AND SUSTAINABLE FUTURES': 'SSSFD',
   'SCIENCE DIVISION': 'SSSFD',
@@ -59,16 +59,16 @@ const buildAliasIndex = () => {
   const idx = new Map<string, UnitsDivisionsKey>();
   // Abbreviation aliases (normalized)
 
-  for (const abbr of Object.keys(SCBD_UNITS_DIVISIONS) as UnitsDivisionsKey[]) {
+  for (const abbr of Object.keys(scbdUnitsDivisions) as UnitsDivisionsKey[]) {
 
     idx.set(normalize(abbr), abbr);
 
-    const name = SCBD_UNITS_DIVISIONS[abbr];
+    const name = scbdUnitsDivisions[abbr];
 
     idx.set(normalize(name), abbr);
   }
   // Extra aliases
-  for (const [alias, abbr] of Object.entries(EXTRA_ALIASES)) {
+  for (const [alias, abbr] of Object.entries(extraAliases)) {
     idx.set(normalize(alias), abbr);
   }
   return idx;
@@ -104,7 +104,7 @@ export const useScbdUnitsNames = (
   // Fallback to English, then constant name
   const en = msgs?.en?.scbd?.unitsDivisions?.[abbr];
 
-  return (en as string) || SCBD_UNITS_DIVISIONS[abbr] || keyOrAlias;
+  return (en as string) || scbdUnitsDivisions[abbr] || keyOrAlias;
 };
 
 export default useScbdUnitsNames;

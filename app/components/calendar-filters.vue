@@ -196,7 +196,7 @@ import { ref, computed, watch, onMounted, watchEffect, type Ref, type ComputedRe
 import Multiselect from 'vue-multiselect';
 import type { ThesaurusTerm } from 'shared/types/thesaurus';
 import { getDomainTerms } from 'shared/services/thesaurus';
-import { THESAURUS, type ThesaurusDomainIdentifier } from 'shared/constants/thesaurus';
+import { thesaurusDomains, type ThesaurusDomainIdentifier } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
@@ -291,6 +291,10 @@ const subjectOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteSubjectOptions.value, fallbackSubjectOptions.value),
 );
 
+const STATUS_LABEL_OVERRIDES: Record<string, string> = {
+  tentat: 'Tentative',
+};
+
 const providedCountryOptions = computed(() => props.preloadedCountryOptions);
 const providedGlobalTargetOptions = computed(() => props.preloadedGlobalTargetOptions);
 
@@ -323,6 +327,9 @@ function statusKeyToLabel(status: string): string {
 
   if (te(translationKey)) {
     return t(translationKey) as string;
+  }
+  if (normalizedKey in STATUS_LABEL_OVERRIDES) {
+    return STATUS_LABEL_OVERRIDES[normalizedKey];
   }
   if (normalizedKey === 'confirm') {
     return t('calendar.status.confirmed') as string;
@@ -373,10 +380,10 @@ onMounted(async () => {
     loadSubjectOptions().then(options => {
       remoteSubjectOptions.value = options;
     }),
-    loadDomainOptions(THESAURUS.COUNTRIES).then(options => {
+  loadDomainOptions(thesaurusDomains.COUNTRIES).then(options => {
       remoteCountryOptions.value = options;
     }),
-    loadDomainOptions(THESAURUS.GBF_GLOBAL_TARGETS).then(options => {
+  loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS).then(options => {
       remoteGlobalTargetOptions.value = options;
     }),
   ]);

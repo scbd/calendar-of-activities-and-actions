@@ -280,7 +280,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
-import { collectAllFieldNames, getTitleFieldForLocale, normalizeSolrDocument, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
+import { collectAllFieldNames, getTitleFieldForLocale, normalizeSolrDocument, normalizeSolrFieldName, type MeetingDoc, type LocaleCode } from 'shared/services/solr';
 import { useCalendarMarkdown } from '../composables/use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
@@ -575,109 +575,110 @@ async function loadSnapshotData(): Promise<void> {
 
 function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): AnyDoc {
   const record = { ...(meeting as Record<string, unknown>) };
-  const subjectsSource = record['subjects_ss'] ?? record['subjects'] ?? record['subjectIdentifiers_ss'];
-  const subjects = Array.isArray(subjectsSource)
-    ? (subjectsSource as unknown[]).map(String).map(subject => subject.trim()).filter(Boolean)
-    : splitValues(record['subject_EN_s'] ?? record['subjectEn'] ?? record['subjects']);
-  const bodiesSource = record['subsidiaryBodies_ss'] ?? record['subsidiaryBodies'];
-  const bodies = Array.isArray(bodiesSource)
-    ? (bodiesSource as unknown[]).map(String).map(body => body.trim()).filter(Boolean)
-    : splitValues(record['subsidiaryBody_s'] ?? record['subsidiaryBody']);
+  const normalizedRecord = normalizeSolrDocument(record);
+  const normalized = normalizedRecord as Record<string, unknown>;
 
-  const id = String(record['_id'] ?? record['id'] ?? record['identifier_s'] ?? record['identifier'] ?? `meeting-${index}`);
+  const collectStrings = (...candidates: Array<unknown>): string[] => {
+    const seen = new Set<string>();
+    const collected: string[] = [];
 
-  const rawStatus = (record['status_s'] ?? record['status']) as string | undefined;
-  const statusKey = normalizeStatusKey(rawStatus);
-  const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
+    for (const candidate of candidates) {
+      splitValues(candidate).forEach(value => {
+        const trimmed = value.trim();
 
-  const startDateRaw = record['startDate_dt'] ?? record['startDate'] ?? record['startDate_s'];
-  const endDateRaw = record['endDate_dt'] ?? record['endDate'] ?? record['endDate_s'];
-  const startDateIso = typeof startDateRaw === 'string' && startDateRaw.trim() ? startDateRaw : null;
-  const endDateIso = typeof endDateRaw === 'string' && endDateRaw.trim() ? endDateRaw : null;
+        if (trimmed && !seen.has(trimmed)) {
+          seen.add(trimmed);
+          collected.push(trimmed);
+        }
+      });
+    }
 
-  const linkSources: unknown[] = Array.isArray(record['links_ss'])
-    ? (record['links_ss'] as unknown[])
-    : Array.isArray(record['links'])
-      ? (record['links'] as unknown[])
-      : record['meetingLink']
-        ? [record['meetingLink']]
-        : record['meetingUrl']
-          ? [record['meetingUrl']]
-          : [];
-  const links = linkSources
-    .map(entry => (typeof entry === 'string' ? entry : String(entry ?? '')))
-    .map(link => link.trim())
-    .filter(Boolean);
-
-  const countriesSource: unknown[] = Array.isArray(record['countries_ss'])
-    ? (record['countries_ss'] as unknown[])
-    : Array.isArray(record['countries'])
-      ? (record['countries'] as unknown[])
-      : record['country']
-        ? [record['country']]
-        : [];
-  const countries = countriesSource.map(entry => (typeof entry === 'string' ? entry : String(entry ?? ''))).map(country => country.trim()).filter(Boolean);
-
-  const countryLabelsSource: unknown[] = Array.isArray(record['countries_EN_ss'])
-    ? (record['countries_EN_ss'] as unknown[])
-    : Array.isArray(record['countriesEn'])
-      ? (record['countriesEn'] as unknown[])
-      : record['countryEn']
-        ? [record['countryEn']]
-        : [];
-  const countryLabels = countryLabelsSource
-    .map(entry => (typeof entry === 'string' ? entry : String(entry ?? '')))
-    .map(label => label.trim())
-    .filter(Boolean);
-
-  const solrLikeRecord: Record<string, unknown> = {
-    ...record,
-    id,
-    startDate_dt: startDateIso ?? undefined,
-    endDate_dt: endDateIso ?? undefined,
-    subjects_ss: subjects,
-    subject_EN_s: record['subject_EN_s'] ?? record['subjectEn'] ?? (subjects.length > 0 ? subjects.join(', ') : null),
-    subsidiaryBody_s: record['subsidiaryBody_s'] ?? record['subsidiaryBody'] ?? (bodies.length > 0 ? bodies[0] : null),
-    subsidiaryBodies_ss: bodies,
-    type_s: String(record['type_s'] ?? record['type'] ?? 'Meeting'),
-    links_ss: links,
-    statusKey_s: statusKey ?? null,
-    status_s: statusLabel,
-    country_s: record['country_s'] ?? (countries.length > 0 ? countries[0] : undefined),
-    country_EN_s: record['country_EN_s'] ?? record['countryEn'] ?? (countryLabels.length > 0 ? countryLabels[0] : undefined),
-    countries_ss: Array.isArray(record['countries_ss']) ? (record['countries_ss'] as unknown[]).map(String) : countries,
-    countries_EN_ss: Array.isArray(record['countries_EN_ss']) ? (record['countries_EN_ss'] as unknown[]).map(String) : (countryLabels.length > 0 ? countryLabels : (countries.length > 0 ? countries : [])),
+    return collected;
   };
 
-  const normalizedSolr = normalizeSolrDocument(solrLikeRecord);
+  const subjects = collectStrings(
+  normalized['subjects'],
+  normalized['subjectIdentifiers'],
+  normalized['subject'],
+  normalized['subjectEn'],
+  );
+
+  const bodies = collectStrings(
+  normalized['subsidiaryBodies'],
+  normalized['subsidiaryBody'],
+  );
+
+  const links = collectStrings(
+  normalized['links'],
+  normalized['meetingLink'],
+  normalized['meetingLinks'],
+  normalized['meetingUrl'],
+  normalized['meetingUrls'],
+  );
+
+  const countries = collectStrings(
+  normalized['countries'],
+  normalized['country'],
+  );
+
+  const countryLabels = collectStrings(
+  normalized['countriesEn'],
+  normalized['countryEn'],
+  );
+
+  const id = String(
+  normalized['id'] ??
+  normalized['identifier'] ??
+  normalized['_id'] ??
+    `meeting-${index}`,
+  );
+
+  const rawStatus = normalized['status'] as string | undefined;
+  const explicitStatusKey = normalized['statusKey'] as string | undefined;
+  const statusKey = explicitStatusKey ?? normalizeStatusKey(rawStatus);
+  const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
+
+  const startDateValue = normalized['startDate'];
+  const endDateValue = normalized['endDate'];
+
+  const startDate = typeof startDateValue === 'string' && startDateValue.trim() ? startDateValue.trim() : undefined;
+  const endDate = typeof endDateValue === 'string' && endDateValue.trim() ? endDateValue.trim() : undefined;
+
+  const primaryCountry = typeof normalized['country'] === 'string' && normalized['country'].trim()
+    ? normalized['country'].trim()
+    : countries[0] ?? undefined;
+  const primaryCountryEn = typeof normalized['countryEn'] === 'string' && normalized['countryEn'].trim()
+    ? normalized['countryEn'].trim()
+    : countryLabels[0] ?? primaryCountry;
+
   const doc = {
-    ...normalizedSolr,
+  ...normalized,
     id,
     subjects,
+    subjectEn: typeof normalized['subjectEn'] === 'string'
+      ? (normalized['subjectEn'] as string)
+      : subjects.length > 0
+        ? subjects.join(', ')
+        : undefined,
     subsidiaryBodies: bodies,
+    subsidiaryBody: bodies[0] ?? null,
     links,
     status: statusLabel,
     statusKey,
-    startDate: startDateIso ?? undefined,
-    endDate: endDateIso ?? undefined,
+    startDate,
+    endDate,
     countries,
     countriesEn: countryLabels.length > 0 ? countryLabels : countries,
-    country: (normalizedSolr['country'] as string | undefined) ?? (countries[0] ?? undefined),
-    countryEn: (normalizedSolr['countryEn'] as string | undefined) ?? (countryLabels[0] ?? countries[0] ?? undefined),
+    country: primaryCountry,
+    countryEn: primaryCountryEn,
   } as AnyDoc;
-
-  delete (doc as Record<string, unknown>)._id;
-  rawDocMap.set(doc, record);
 
   if (!doc.type) {
     doc.type = 'Meeting';
   }
-  if (!doc.subjectEn && subjects.length > 0) {
-    doc.subjectEn = subjects.join(', ');
-  }
-  if (!doc.subsidiaryBody && bodies.length > 0) {
-    doc.subsidiaryBody = bodies[0] ?? null;
-  }
+
+  delete (doc as Record<string, unknown>)._id;
+  rawDocMap.set(doc, record);
 
   return doc;
 }
@@ -741,49 +742,50 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: string =
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
 
-  const solrLikeRecord: Record<string, unknown> = {
+  const baseRecord: Record<string, unknown> = {
     id,
-    identifier_s: id,
+    identifier: id,
     source: sourceId,
-    title_EN_t: row['Title'],
-    description_t: row['Description'] || null,
-    type_s: String(row['Type'] || 'Activity'),
-    actionRequired_b: row['Action Required by Parties']?.toUpperCase() === 'Y',
-    subjects_ss: subjects,
-    subject_EN_s: subjects.join(', '),
-    status_s: statusLabel,
-    statusKey_s: statusKey ?? null,
-    statusNarrative_t: row['Status_narrative'] || null,
-    startDate_dt: startDate ?? undefined,
-    endDate_dt: endDate ?? undefined,
-    subsidiaryBody_s: bodies[0] ?? undefined,
-    subsidiaryBodies_ss: bodies,
-    copDecision_s: row['COPDecision'] || undefined,
-    copParagraph_s: row['COPParagraph_no'] || undefined,
-    responsibleUnit_s: row['Responsible_Unit'] || undefined,
-    responsibleOfficer_s: row['Responsible_Officer'] || undefined,
-    fundingSource_s: row['Funding_source'] || undefined,
-    fundingAllocated_s: row['Funding_allocated'] || undefined,
-    actors_ss: actors,
-    actorsComments_t: row['Actors_comments'] || undefined,
-    gbfTargets_ss: targets,
-    relatedDocuments_ss: relatedDocs,
-    links_ss: [],
-    country_s: countries[0] ?? undefined,
-    countries_ss: countries,
-    country_EN_s: countries[0] ?? undefined,
-    countries_EN_ss: countries,
-    outcome_s: row['Outcome'] || undefined,
+    title: row['Title'],
+    titleEn: row['Title'],
+    description: row['Description'] || null,
+    type: String(row['Type'] || 'Activity'),
+    actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
+    subjects,
+    subjectEn: subjects.join(', '),
+    status: statusLabel,
+    statusKey: statusKey ?? null,
+    statusNarrative: row['Status_narrative'] || null,
+    startDate: startDate ?? undefined,
+    endDate: endDate ?? undefined,
+    subsidiaryBody: bodies[0] ?? null,
+    subsidiaryBodies: bodies,
+    copDecision: row['COPDecision'] || undefined,
+    copParagraph: row['COPParagraph_no'] || undefined,
+    responsibleUnit: row['Responsible_Unit'] || undefined,
+    responsibleOfficer: row['Responsible_Officer'] || undefined,
+    fundingSource: row['Funding_source'] || undefined,
+    fundingAllocated: row['Funding_allocated'] || undefined,
+    actors,
+    actorsComments: row['Actors_comments'] || undefined,
+    gbfTargets: targets,
+    relatedDocuments: relatedDocs,
+    links: [] as string[],
+    country: countries[0] ?? undefined,
+    countries,
+    countryEn: countries[0] ?? undefined,
+    countriesEn: countries,
+    outcome: row['Outcome'] || undefined,
   };
 
-  const normalizedSolr = normalizeSolrDocument(solrLikeRecord);
+  const normalizedRecord = normalizeSolrDocument(baseRecord);
   const doc = {
-    ...normalizedSolr,
+    ...normalizedRecord,
     id,
     source: sourceId,
     subjects,
     subsidiaryBodies: bodies,
-    links: Array.isArray(normalizedSolr['links']) ? normalizedSolr['links'] as string[] : [],
+    links: Array.isArray(normalizedRecord['links']) ? normalizedRecord['links'] as string[] : [],
     status: statusLabel,
     statusKey,
     statusNarrative: row['Status_narrative'] || null,
@@ -801,7 +803,7 @@ function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: string =
   } as AnyDoc;
 
   delete (doc as Record<string, unknown>)._id;
-  rawDocMap.set(doc, solrLikeRecord);
+  rawDocMap.set(doc, baseRecord);
 
   if (!doc.type) {
     doc.type = String(row['Type'] || 'Activity');
@@ -938,22 +940,37 @@ function getDocRaw(doc: AnyDoc): Record<string, unknown> | null {
 function getDocStringValue(doc: AnyDoc, ...keys: string[]): string | undefined {
   const anyDoc = doc as Record<string, unknown>;
 
-  for (const key of keys) {
-    const value = anyDoc[key];
+  const toTrimmedString = (value: unknown): string | undefined => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
 
-    if (typeof value === 'string' && value.trim()) {
-      return value.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+    return undefined;
+  };
+
+  for (const key of keys) {
+    const normalizedKey = normalizeSolrFieldName(key);
+    const value = toTrimmedString(anyDoc[normalizedKey]);
+
+    if (value) {
+      return value;
     }
   }
 
   const raw = getDocRaw(doc);
 
   if (raw) {
-    for (const key of keys) {
-      const value = raw[key];
+    const normalizedRaw = normalizeSolrDocument(raw);
 
-      if (typeof value === 'string' && value.trim()) {
-        return value.trim();
+    for (const key of keys) {
+      const normalizedKey = normalizeSolrFieldName(key);
+      const value = toTrimmedString(normalizedRaw[normalizedKey] ?? raw[key]);
+
+      if (value) {
+        return value;
       }
     }
   }
@@ -965,7 +982,8 @@ function getDocBooleanValue(doc: AnyDoc, ...keys: string[]): boolean | undefined
   const anyDoc = doc as Record<string, unknown>;
 
   for (const key of keys) {
-    const value = anyDoc[key];
+    const normalizedKey = normalizeSolrFieldName(key);
+    const value = anyDoc[normalizedKey];
 
     if (typeof value === 'boolean') {
       return value;
@@ -985,8 +1003,11 @@ function getDocBooleanValue(doc: AnyDoc, ...keys: string[]): boolean | undefined
   const raw = getDocRaw(doc);
 
   if (raw) {
+    const normalizedRaw = normalizeSolrDocument(raw);
+
     for (const key of keys) {
-      const value = raw[key];
+      const normalizedKey = normalizeSolrFieldName(key);
+      const value = normalizedRaw[normalizedKey] ?? raw[key];
 
       if (typeof value === 'boolean') {
         return value;
@@ -1059,16 +1080,18 @@ function getDocSubjects(doc: AnyDoc): string[] {
   const raw = getDocRaw(doc);
 
   if (raw) {
-    if (Array.isArray(raw['subjects_ss'])) {
-      return (raw['subjects_ss'] as unknown[]).map(String).filter(Boolean);
-    }
-    if (Array.isArray(raw['subjectIdentifiers_ss'])) {
-      return (raw['subjectIdentifiers_ss'] as unknown[]).map(String).filter(Boolean);
-    }
-    const rawField = raw['subject_EN_s'] ?? raw['subject_s'] ?? raw['subject'];
+    const normalizedRaw = normalizeSolrDocument(raw);
+    const rawSubjects = normalizedRaw['subjects']
+      ?? normalizedRaw['subjectIdentifiers']
+      ?? normalizedRaw['subject']
+      ?? normalizedRaw['subjectEn'];
 
-    if (typeof rawField === 'string') {
-      return splitValues(rawField);
+    if (Array.isArray(rawSubjects)) {
+      return (rawSubjects as unknown[]).map(String).filter(Boolean);
+    }
+
+    if (typeof rawSubjects === 'string') {
+      return splitValues(rawSubjects);
     }
   }
 
@@ -1093,13 +1116,15 @@ function getDocSubsidiaryBodies(doc: AnyDoc): string[] {
   const raw = getDocRaw(doc);
 
   if (raw) {
-    if (Array.isArray(raw['subsidiaryBodies_ss'])) {
-      return (raw['subsidiaryBodies_ss'] as unknown[]).map(String).filter(Boolean);
-    }
-    const rawField = raw['subsidiaryBody_s'] ?? raw['subsidiaryBody'];
+    const normalizedRaw = normalizeSolrDocument(raw);
+    const rawBodies = normalizedRaw['subsidiaryBodies'] ?? normalizedRaw['subsidiaryBody'];
 
-    if (typeof rawField === 'string') {
-      return splitValues(rawField);
+    if (Array.isArray(rawBodies)) {
+      return (rawBodies as unknown[]).map(String).filter(Boolean);
+    }
+
+    if (typeof rawBodies === 'string') {
+      return splitValues(rawBodies);
     }
   }
 
@@ -1148,13 +1173,11 @@ function collectGlobalTargetEntries(doc: AnyDoc): ValueLabelPair[] {
   const raw = getDocRaw(doc);
 
   if (raw) {
-    push(raw['gbfTargets_ss'], raw['gbfTargets_EN_ss']);
-    push(raw['globalTargets_ss'], raw['globalTargets_EN_ss']);
-    push(raw['gbfTarget_ss'], raw['gbfTarget_EN_ss']);
-    push(raw['gbfTargets_s'], raw['gbfTargets_EN_s']);
-    push(raw['gbfTarget_s'], raw['gbfTarget_EN_s']);
-    push(raw['gbfTargets'], raw['gbfTargets_EN']);
-    push(raw['GBF_Targets'], raw['GBF_Targets']);
+    const normalizedRaw = normalizeSolrDocument(raw);
+
+    push(normalizedRaw['gbfTargets'], normalizedRaw['gbfTargetsEn']);
+    push(normalizedRaw['globalTargets'], normalizedRaw['globalTargetsEn']);
+    push(normalizedRaw['gbfTarget'], normalizedRaw['gbfTargetEn']);
   }
 
   return entries;
@@ -1178,17 +1201,15 @@ function collectCountryEntries(doc: AnyDoc): ValueLabelPair[] {
   const raw = getDocRaw(doc);
 
   if (raw) {
-    push(raw['country_s'], raw['country_EN_s']);
-    push(raw['countryCode_s'], raw['countryName_s']);
-    push(raw['country_ss'], raw['country_EN_ss']);
-    push(raw['countries_ss'], raw['countries_EN_ss']);
-    push(raw['countryCodes_ss'], raw['countryNames_ss']);
-    push(raw['country_ISO2_ss'], raw['countryNames_ss']);
-    push(raw['countries_s'], raw['countries_EN_ss']);
-    push(raw['hostCountry_s'], raw['hostCountry_EN_s']);
-    push(raw['hostCountries_ss'], raw['hostCountries_EN_ss']);
-    push(raw['country_EN_s'], raw['country_EN_s']);
-    push(raw['countries_EN_ss'], raw['countries_EN_ss']);
+    const normalizedRaw = normalizeSolrDocument(raw);
+
+    push(normalizedRaw['country'], normalizedRaw['countryEn']);
+    push(normalizedRaw['countryCode'], normalizedRaw['countryName']);
+    push(normalizedRaw['countries'], normalizedRaw['countriesEn']);
+    push(normalizedRaw['countryCodes'], normalizedRaw['countryNames']);
+    push(normalizedRaw['countryIso2'], normalizedRaw['countryNames']);
+    push(normalizedRaw['hostCountry'], normalizedRaw['hostCountryEn']);
+    push(normalizedRaw['hostCountries'], normalizedRaw['hostCountriesEn']);
   }
 
   return entries;
@@ -1311,7 +1332,7 @@ function decisionEntries(doc: AnyDoc): DecisionEntry[] {
     .filter((entry): entry is DecisionEntry => entry !== null);
 
   if (normalized.length === 0) {
-    const fallback = normalizeDecisionLabel((doc as Record<string, unknown>)['copDecision_s'] as string | undefined);
+    const fallback = normalizeDecisionLabel(getDocStringValue(doc, 'copDecision'));
 
     if (fallback) {
       normalized.push({ label: fallback });
@@ -1330,78 +1351,23 @@ function meetingLinks(doc: AnyDoc): string[] {
   }
 
   const record = doc as Record<string, unknown>;
-  const candidateFields: Array<keyof typeof record> = [
+  const candidateFields = [
     'links',
     'link',
     'meetingLinks',
     'meetingLink',
     'meetingUrl',
+    'meetingUrls',
     'url',
     'urls',
-    'links_ss',
-    'links',
-    'links_s',
-    'link_s',
-    'link',
-    'meetingLinks_ss',
-    'meetingLinks',
-    'meetingLink_s',
-    'meetingLink',
-    'meeting_url_s',
-    'meeting_url',
-    'meetingUrl_s',
-    'meetingUrl',
-    'url_ss',
-    'url_s',
-    'urls_ss',
-  ];
+    'documents',
+  ] as const;
 
   const collected: string[] = [];
 
-  candidateFields.forEach(field => {
-    const value = record[field];
-
-    if (!value) {
-      return;
-    }
-
-    if (Array.isArray(value)) {
-      value.forEach(entry => {
-        if (typeof entry === 'string') {
-          const trimmed = entry.trim();
-
-          if (trimmed) {
-            collected.push(trimmed);
-          }
-        }
-      });
-    } else if (typeof value === 'string') {
-      const trimmed = value.trim();
-
-      if (trimmed) {
-        collected.push(trimmed);
-      }
-    }
-  });
-
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const rawFields = [
-      'links_ss',
-      'links_s',
-      'link_s',
-      'meetingLinks_ss',
-      'meetingLinks_s',
-      'meetingLink_s',
-      'meeting_url_s',
-      'meetingUrl_s',
-      'url_ss',
-      'urls_ss',
-    ] as const;
-
-    rawFields.forEach(field => {
-      const value = raw[field];
+  const collectFromSource = (source: Record<string, unknown>) => {
+    candidateFields.forEach(field => {
+      const value = source[field];
 
       if (!value) {
         return;
@@ -1409,14 +1375,30 @@ function meetingLinks(doc: AnyDoc): string[] {
 
       if (Array.isArray(value)) {
         value.forEach(entry => {
-          if (typeof entry === 'string' && entry.trim()) {
-            collected.push(entry.trim());
+          if (typeof entry === 'string') {
+            const trimmed = entry.trim();
+
+            if (trimmed) {
+              collected.push(trimmed);
+            }
           }
         });
-      } else if (typeof value === 'string' && value.trim()) {
-        collected.push(value.trim());
+      } else if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (trimmed) {
+          collected.push(trimmed);
+        }
       }
     });
+  };
+
+  collectFromSource(record);
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    collectFromSource(normalizeSolrDocument(raw));
   }
 
   const normalized = Array.from(new Set(
@@ -1455,20 +1437,6 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
     'notificationKeys',
   ];
   const raw = getDocRaw(doc);
-  const rawCandidateProperties = [
-    'relatedNotifications_ss',
-    'relatedNotification_ss',
-    'relatedNotifications_s',
-    'relatedDocuments_ss',
-    'notification_ss',
-    'notifications_ss',
-    'notification_s',
-    'notifications_s',
-    'notificationKey_s',
-    'notificationKey_ss',
-    'notificationKeys_ss',
-  ] as const;
-
   const candidates: string[] = [];
 
   candidateProperties.forEach(property => {
@@ -1490,8 +1458,10 @@ function getNotificationKeys(doc: AnyDoc): NotificationKey[] {
   });
 
   if (raw) {
-    rawCandidateProperties.forEach(property => {
-      const value = raw[property];
+    const normalizedRaw = normalizeSolrDocument(raw);
+
+    candidateProperties.forEach(property => {
+      const value = normalizedRaw[property as string];
 
       if (!value) {
         return;
@@ -1755,7 +1725,7 @@ function resolveNotificationUrl(path: string): string {
 }
 
 function descriptionText(doc: AnyDoc): string | undefined {
-  return getDocStringValue(doc, 'description', 'description_t', 'descriptionTxt', 'descriptionText');
+  return getDocStringValue(doc, 'description', 'descriptionTxt', 'descriptionText');
 }
 
 function deriveNameFromUrl(url: string): string {
@@ -1819,7 +1789,7 @@ const filteredDocs = computed(() => {
 
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
-      const type = getDocStringValue(doc, 'type', 'type_s');
+      const type = getDocStringValue(doc, 'type');
 
       return type && filters.types.includes(String(type));
     });
@@ -1827,7 +1797,7 @@ const filteredDocs = computed(() => {
 
   if (filters.activityTypes.length > 0) {
     filtered = filtered.filter(doc => {
-      const activityType = getDocStringValue(doc, 'activityType', 'activity_type_s', 'activity_type');
+      const activityType = getDocStringValue(doc, 'activityType');
 
       return activityType && filters.activityTypes.includes(activityType);
     });
@@ -1859,8 +1829,8 @@ const filteredDocs = computed(() => {
 
   if (filters.statuses.length > 0) {
     filtered = filtered.filter(doc => {
-      const key = getDocStringValue(doc, 'statusKey', 'statusKey_s')
-        ?? normalizeStatusKey(getDocStringValue(doc, 'status', 'status_s'));
+      const key = getDocStringValue(doc, 'statusKey')
+        ?? normalizeStatusKey(getDocStringValue(doc, 'status'));
 
       return !!key && filters.statuses.includes(key);
     });
@@ -1884,8 +1854,8 @@ const filteredDocs = computed(() => {
 
   if (filters.startDate || filters.endDate) {
     filtered = filtered.filter(doc => {
-      const startDate = safeDate(getDocStringValue(doc, 'startDate', 'startDate_dt', 'startDate_s'));
-      const endDate = safeDate(getDocStringValue(doc, 'endDate', 'endDate_dt', 'endDate_s'));
+      const startDate = safeDate(getDocStringValue(doc, 'startDate'));
+      const endDate = safeDate(getDocStringValue(doc, 'endDate'));
       const docDate = startDate || endDate;
 
       if (!docDate) return false;
@@ -1911,7 +1881,7 @@ const filteredDocs = computed(() => {
 
   if (filters.actionRequired) {
     filtered = filtered.filter(doc => {
-      const actionRequired = getDocBooleanValue(doc, 'actionRequired', 'actionRequired_b');
+      const actionRequired = getDocBooleanValue(doc, 'actionRequired');
 
       return actionRequired === true;
     });
@@ -1924,8 +1894,8 @@ const filteredGrouped = computed<GroupedItem[]>(() => {
   const buckets = new Map<string, { label: string; items: AnyDoc[] }>();
 
   for (const d of filteredDocs.value) {
-    const startDate = getDocStringValue(d, 'startDate', 'startDate_dt', 'startDate_s');
-    const endDate = getDocStringValue(d, 'endDate', 'endDate_dt', 'endDate_s');
+    const startDate = getDocStringValue(d, 'startDate');
+    const endDate = getDocStringValue(d, 'endDate');
     const iso = startDate || endDate;
     const dt = iso ? DateTime.fromISO(String(iso)) : null;
     const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
@@ -1943,7 +1913,7 @@ const availableTypes = computed(() => {
   const types = new Set<string>();
 
   docs.value.forEach(doc => {
-    const type = getDocStringValue(doc, 'type', 'type_s');
+  const type = getDocStringValue(doc, 'type');
 
     if (type) types.add(String(type));
   });
@@ -1963,8 +1933,8 @@ const availableStatuses = computed(() => {
   const statuses = new Set<string>();
 
   docs.value.forEach(doc => {
-    const key = getDocStringValue(doc, 'statusKey', 'statusKey_s')
-      ?? normalizeStatusKey(getDocStringValue(doc, 'status', 'status_s'));
+    const key = getDocStringValue(doc, 'statusKey')
+      ?? normalizeStatusKey(getDocStringValue(doc, 'status'));
 
     if (key) statuses.add(key);
   });
@@ -2039,7 +2009,7 @@ const handleFiltersUpdate = (filters: FilterState) => {
 };
 
 function typeValue(doc: AnyDoc): string {
-  return getDocStringValue(doc, 'type', 'type_s') ?? '';
+  return getDocStringValue(doc, 'type') ?? '';
 }
 
 function resolveTypeKey(doc: AnyDoc): ReturnType<typeof normalizeTypeKey> {
@@ -2074,7 +2044,7 @@ function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string }
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
 
-  const titleValue = getDocStringValue(d, tField, 'title', 'title_EN_t', 'title_t');
+  const titleValue = getDocStringValue(d, tField, 'title', 'titleEn');
 
   if (titleValue) {
     return titleValue;
@@ -2083,8 +2053,8 @@ function title(d: AnyDoc): string {
 }
 
 function status(d: AnyDoc): string {
-  const rawStatus = getDocStringValue(d, 'status', 'status_s');
-  const statusKey = getDocStringValue(d, 'statusKey', 'statusKey_s');
+  const rawStatus = getDocStringValue(d, 'status');
+  const statusKey = getDocStringValue(d, 'statusKey');
 
   if (shouldDisplayCompleted(d, statusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
@@ -2098,8 +2068,8 @@ function status(d: AnyDoc): string {
 }
 
 function statusColor(d: AnyDoc): string {
-  const rawStatus = getDocStringValue(d, 'status', 'status_s');
-  const keyRaw = getDocStringValue(d, 'statusKey', 'statusKey_s');
+  const rawStatus = getDocStringValue(d, 'status');
+  const keyRaw = getDocStringValue(d, 'statusKey');
 
   if (shouldDisplayCompleted(d, keyRaw, rawStatus)) {
     return 'success';
@@ -2134,13 +2104,13 @@ function shouldDisplayCompleted(
   }
 
   const now = DateTime.now().toUTC().startOf('day');
-  const endDate = safeDate(getDocStringValue(doc, 'endDate', 'endDate_dt', 'endDate_s'));
+  const endDate = safeDate(getDocStringValue(doc, 'endDate'));
 
   if (endDate && now > endDate.toUTC().endOf('day')) {
     return true;
   }
 
-  const startDate = safeDate(getDocStringValue(doc, 'startDate', 'startDate_dt', 'startDate_s'));
+  const startDate = safeDate(getDocStringValue(doc, 'startDate'));
 
   if (startDate) {
     const completionThreshold = startDate.toUTC().plus({ days: 1 }).endOf('day');
@@ -2154,12 +2124,12 @@ function shouldDisplayCompleted(
 }
 
 function isActionRequired(d: AnyDoc): boolean {
-  return getDocBooleanValue(d, 'actionRequired', 'actionRequired_b') === true;
+  return getDocBooleanValue(d, 'actionRequired') === true;
 }
 
 function formatDateRange(d: AnyDoc): string {
-  const start = safeDate(getDocStringValue(d, 'startDate', 'startDate_dt', 'startDate_s'));
-  const end = safeDate(getDocStringValue(d, 'endDate', 'endDate_dt', 'endDate_s'));
+  const start = safeDate(getDocStringValue(d, 'startDate'));
+  const end = safeDate(getDocStringValue(d, 'endDate'));
 
   if (start && end) {
     if (start.hasSame(end, 'day')) return start.toFormat('d LLLL yyyy');

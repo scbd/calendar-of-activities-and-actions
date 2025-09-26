@@ -7,14 +7,14 @@ import { useQueryIndex } from '../../app/composables/use-query-index';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
 
-const SOLR_SUFFIXES = ['_ss', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l'];
+const solrSuffixes = ['_ss', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l'];
 
 const isAllUpperCase = (segment: string): boolean => segment.toUpperCase() === segment && segment.toLowerCase() !== segment;
 
 const stripSolrSuffix = (field: string): string => {
   const lowerField = field.toLowerCase();
 
-  for (const suffix of SOLR_SUFFIXES) {
+  for (const suffix of solrSuffixes) {
     if (lowerField.endsWith(suffix)) {
       return field.slice(0, -suffix.length);
     }
