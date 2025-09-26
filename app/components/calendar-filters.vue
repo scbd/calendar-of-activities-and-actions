@@ -300,29 +300,18 @@ const globalTargetOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
 );
 
-// Dynamic schema/type options derived from provided available types.
-// Previous implementation hard-coded a single 'meeting' schema which
-// caused all non-meeting items to be filtered out by default since the
-// selectedTypes list was auto-synchronized to include only 'meeting'.
-// Restoring dynamic behaviour so that, by default (no selection), all
-// activities & actions are shown. Selecting one or more types will then
-// narrow results. This aligns with expected UX and allows markdown-
-// sourced activity types (e.g. Nominations, Workshop, Peer-Review) to
-// display without user intervention.
-const schemaOptions = computed<FilterOption[]>(() => {
-  if (!props.availableTypes || props.availableTypes.length === 0) return [];
-  const unique = Array.from(new Set(props.availableTypes));
+// Schemas are constrained to the canonical keys provided by the activity index service.
+const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
 
-  return unique
-    .map(type => {
-      const key = String(type).trim();
-      const translationKey = `calendar.types.${key.toLowerCase().replace(/\s+/g, '-')}`;
-      const label = te(translationKey) ? (t(translationKey) as string) : key;
+const schemaOptions = computed<FilterOption[]>(() =>
+  SCHEMA_FILTER_KEYS.map((key) => {
+    const normalizedKey = key.toLowerCase();
+    const translationKey = `calendar.types.${normalizedKey}`;
+    const label = te(translationKey) ? (t(translationKey) as string) : formatSchemaLabel(normalizedKey);
 
-      return { value: key, label };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label));
-});
+    return { value: normalizedKey, label };
+  }),
+);
 
 function statusKeyToLabel(status: string): string {
   if (!status) return '';
@@ -495,6 +484,14 @@ function mergeOptions(primary: FilterOption[], fallback: FilterOption[]): Filter
   }
 
   return Array.from(merged.values()).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function formatSchemaLabel(key: string): string {
+  return key
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function syncSelectionWithOptions(

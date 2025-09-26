@@ -46,10 +46,7 @@ describe('CalendarFilters Component', () => {
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
 
-    // Simulate selecting the first available option object (matches availableTypes prop)
-  const optionObj = { value: 'Meeting', label: 'Meeting' };
-
-  typeSelect.vm.$emit('update:modelValue', [optionObj]);
+    typeSelect.vm.$emit('update:modelValue', ['meeting']);
     await nextTick();
     await nextTick(); // allow watchEffect + updateFilters cycle
 
@@ -58,7 +55,7 @@ describe('CalendarFilters Component', () => {
     expect(emissions).toBeTruthy();
     const latest = emissions?.[emissions.length - 1]?.[0];
 
-    expect(latest?.types).toEqual(['Meeting']);
+    expect(latest?.types).toEqual(['meeting']);
   });
 
   it('clears all filters when the clear button is clicked', async () => {
@@ -66,7 +63,7 @@ describe('CalendarFilters Component', () => {
     const selects = wrapper.findAllComponents(Multiselect);
     const typeSelect = selects[0];
 
-    typeSelect.vm.$emit('update:modelValue', ['Meeting']);
+    typeSelect.vm.$emit('update:modelValue', ['meeting']);
     await nextTick();
 
     const actionRequiredToggle = wrapper.find('#action-required-filter');
@@ -95,5 +92,14 @@ describe('CalendarFilters Component', () => {
     expect(latest?.startDate).toBe('');
     expect(latest?.endDate).toBe('');
     expect(latest?.actionRequired).toBe(false);
+  });
+
+  it('provides the canonical schema options', async () => {
+    const wrapper = await mountFilters();
+    const typeSelect = wrapper.findComponent(Multiselect);
+    const options = typeSelect.props('options') as Array<{ value: string; label: string }>;
+
+    expect(options.map(option => option.value)).toEqual(['meeting', 'notification', 'activity']);
+    expect(options.map(option => option.label)).toEqual(['Meeting', 'Notification', 'Activity']);
   });
 });
