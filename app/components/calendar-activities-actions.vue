@@ -13,6 +13,7 @@
             :available-cop-decisions="availableCopDecisions"
             :preloaded-country-options="availableCountryOptions"
             :preloaded-global-target-options="availableGlobalTargetOptions"
+            :initial-start-date="defaultStartDateIso"
             @update:filters="handleFiltersUpdate"
           />
         </div>
@@ -381,6 +382,7 @@ const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
 const { t, te } = useI18n();
+const defaultStartDateIso = DateTime.utc().startOf('day').toISODate() ?? '';
 
 const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
 const notificationErrors = ref<Record<NotificationKey, string>>({});
@@ -430,7 +432,7 @@ const currentFilters = ref<FilterState>({
   activityTypes: [],
   globalTargets: [],
   countries: [],
-  startDate: '',
+  startDate: defaultStartDateIso,
   endDate: '',
   actionRequired: false,
 });
@@ -1887,17 +1889,20 @@ const filteredDocs = computed(() => {
       const docDate = startDate || endDate;
 
       if (!docDate) return false;
+      const docDateIso = docDate.toISODate();
+
+      if (!docDateIso) return false;
 
       if (filters.startDate) {
-        const startFilter = DateTime.fromISO(filters.startDate);
+        const startFilter = DateTime.fromISO(filters.startDate, { zone: 'utc' }).toISODate();
 
-        if (docDate < startFilter) return false;
+        if (startFilter && docDateIso < startFilter) return false;
       }
 
       if (filters.endDate) {
-        const endFilter = DateTime.fromISO(filters.endDate);
+        const endFilter = DateTime.fromISO(filters.endDate, { zone: 'utc' }).toISODate();
 
-        if (docDate > endFilter) return false;
+        if (endFilter && docDateIso > endFilter) return false;
       }
 
       return true;

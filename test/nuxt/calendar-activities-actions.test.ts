@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
@@ -73,6 +73,20 @@ vi.mock('../../shared/data/meetings.js', () => ({
     }
   ]
 }));
+
+const DEFAULT_SYSTEM_TIME = new Date('2024-12-31T12:00:00Z');
+
+beforeAll(() => {
+  vi.useFakeTimers();
+});
+
+beforeEach(() => {
+  vi.setSystemTime(DEFAULT_SYSTEM_TIME);
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 describe('CalendarActivitiesActions Component', () => {
   it('should mount successfully without filteredDocs error', async () => {
@@ -192,5 +206,33 @@ describe('CalendarActivitiesActions Component', () => {
 
     expect(groupHeadings).toEqual(expect.arrayContaining(['January 2025', 'February 2025']));
     expect(accordionTitles).toEqual(expect.arrayContaining(['Decision Without Prefix', 'Decision With NP']));
+  });
+
+  it('pre-selects the current day as the start date filter', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const dateInputs = component.findAll('input[type="date"]');
+    const startDateInput = dateInputs.at(0);
+
+    expect(startDateInput?.element.value).toBe('2024-12-31');
+  });
+
+  it('excludes entries scheduled before the default start date', async () => {
+    vi.setSystemTime(new Date('2025-01-10T00:00:00Z'));
+
+    try {
+      const component = await mountComponent('en');
+
+      await flushPromises();
+
+      const accordionTitles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+
+      expect(accordionTitles).not.toContain('Decision Without Prefix');
+      expect(accordionTitles).toEqual(expect.arrayContaining(['Decision With NP', 'Second Item']));
+    } finally {
+      vi.setSystemTime(DEFAULT_SYSTEM_TIME);
+    }
   });
 });

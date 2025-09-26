@@ -217,6 +217,7 @@ interface Props {
   availableCopDecisions?: string[];
   preloadedCountryOptions?: FilterOption[];
   preloadedGlobalTargetOptions?: FilterOption[];
+  initialStartDate?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -227,6 +228,7 @@ const props = withDefaults(defineProps<Props>(), {
   availableCopDecisions: () => [],
   preloadedCountryOptions: () => [],
   preloadedGlobalTargetOptions: () => [],
+  initialStartDate: '',
 });
 
 // Define emits
@@ -262,7 +264,7 @@ const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
 const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
 const selectedGlobalTargets = ref<FilterSelectionValue[]>([]);
 const selectedCountries = ref<FilterSelectionValue[]>([]);
-const startDate = ref<string>('');
+const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
 
