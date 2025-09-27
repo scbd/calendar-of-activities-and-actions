@@ -243,7 +243,7 @@ describe('CalendarActivitiesActions Component', () => {
     expect(accordionTitles).toEqual(expect.arrayContaining(['Decision Without Prefix', 'Decision With NP']));
   });
 
-  it('pre-selects the current day as the start date filter', async () => {
+  it('does not pre-select a start date filter by default', async () => {
     const component = await mountComponent('en');
 
     await flushPromises();
@@ -251,24 +251,26 @@ describe('CalendarActivitiesActions Component', () => {
     const dateInputs = component.findAll('input[type="date"]');
     const startDateInput = dateInputs.at(0);
 
-    expect(startDateInput?.element.value).toBe('2024-12-31');
+    expect(startDateInput?.element.value).toBe('');
   });
 
-  it('excludes entries scheduled before the default start date', async () => {
-    vi.setSystemTime(new Date('2025-01-10T00:00:00Z'));
+  it('excludes entries scheduled before the selected start date', async () => {
+    const component = await mountComponent('en');
 
-    try {
-      const component = await mountComponent('en');
+    await flushPromises();
 
-      await flushPromises();
+    const dateInputs = component.findAll('input[type="date"]');
+    const startDateInput = dateInputs.at(0);
 
-      const accordionTitles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+    expect(startDateInput).toBeTruthy();
 
-      expect(accordionTitles).not.toContain('Decision Without Prefix');
-      expect(accordionTitles).toEqual(expect.arrayContaining(['Decision With NP', 'Second Item']));
-    } finally {
-      vi.setSystemTime(DEFAULT_SYSTEM_TIME);
-    }
+    await startDateInput!.setValue('2025-01-10');
+    await flushPromises();
+
+    const accordionTitles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+
+    expect(accordionTitles).not.toContain('Decision Without Prefix');
+    expect(accordionTitles).toEqual(expect.arrayContaining(['Decision With NP', 'Second Item']));
   });
 
   it('renders notifications alongside meetings and activities', async () => {

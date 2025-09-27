@@ -400,7 +400,7 @@ const docs = ref<AnyDoc[]>([]);
 const allFieldNames = ref<string[]>([]);
 const locale = ref<LocaleCode>('en');
 const { t, te } = useI18n();
-const defaultStartDateIso = DateTime.utc().startOf('day').toISODate() ?? '';
+const defaultStartDateIso = '';
 
 const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
 const notificationErrors = ref<Record<NotificationKey, string>>({});
