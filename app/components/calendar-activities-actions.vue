@@ -284,6 +284,7 @@ import { collectAllFieldNames, getTitleFieldForLocale, normalizeSolrDocument, no
 import { useCalendarMarkdown } from '../composables/use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
+import notificationsSnapshot from 'shared/data/notifications.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel, type SubjectOption } from 'shared/utils/subjects';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
@@ -311,6 +312,14 @@ interface CalendarDoc extends MeetingDoc {
   countryEn?: string;
   outcome?: string;
   actionRequired?: boolean;
+  schema?: string | null;
+  notificationKey?: string;
+  notificationKeys?: string[];
+  notificationSymbol?: string;
+  publishedDate?: string;
+  actionDate?: string;
+  deadline?: string;
+  recipients?: string[];
 }
 
 const rawDocMap = new WeakMap<AnyDoc, Record<string, unknown>>();
@@ -541,6 +550,7 @@ interface GroupedItem {
 
 type SnapshotMeeting = (typeof meetingSnapshot)[number];
 type SnapshotActivity = (typeof activitiesSnapshot)[number];
+type SnapshotNotification = (typeof notificationsSnapshot)[number];
 
 const RegionDisplayNames = (Intl as typeof Intl & { DisplayNames?: typeof Intl.DisplayNames }).DisplayNames;
 const regionDisplayNames = typeof RegionDisplayNames === 'function'
@@ -550,6 +560,22 @@ const regionDisplayNames = typeof RegionDisplayNames === 'function'
 async function loadSnapshotData(): Promise<void> {
   loading.value = true;
   const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
+  const notificationSource = Array.isArray(notificationsSnapshot)
+    ? notificationsSnapshot as SnapshotNotification[]
+    : [];
+  const { docs: notificationDocs, details: notificationDetails } = buildDocsFromNotifications(notificationSource);
+
+  if (Object.keys(notificationDetails).length > 0) {
+    const seededDetails = { ...notificationDetailsMap.value };
+
+    for (const [key, detail] of Object.entries(notificationDetails)) {
+      if (!seededDetails[key]) {
+        seededDetails[key] = detail;
+      }
+    }
+
+    notificationDetailsMap.value = seededDetails;
+  }
 
   try {
     const markdownRaw = await useCalendarMarkdown();
@@ -560,14 +586,14 @@ async function loadSnapshotData(): Promise<void> {
       markdownDocs = buildDocsFromActivities(activitiesSnapshot);
     }
 
-    docs.value = [...normalizedMeetings, ...markdownDocs];
+    docs.value = [...normalizedMeetings, ...markdownDocs, ...notificationDocs];
   } catch (error) {
     console.error('Failed to load snapshot data', error);
     const fallbackActivities = activitiesSnapshot.length > 0
       ? buildDocsFromActivities(activitiesSnapshot)
       : [];
 
-    docs.value = [...normalizedMeetings, ...fallbackActivities];
+    docs.value = [...normalizedMeetings, ...fallbackActivities, ...notificationDocs];
   } finally {
     loading.value = false;
   }
@@ -847,6 +873,179 @@ function buildDocsFromActivities(records: SnapshotActivity[]): AnyDoc[] {
 
     return mapMarkdownRowToDoc(row, index, 'activities-json:25-26');
   });
+}
+
+function buildDocsFromNotifications(records: SnapshotNotification[]): { docs: AnyDoc[]; details: Record<NotificationKey, NotificationDetails> } {
+  const docs: AnyDoc[] = [];
+  const details: Record<NotificationKey, NotificationDetails> = {};
+
+  records.forEach((record, index) => {
+    const doc = mapNotificationRecordToDoc(record, index);
+
+    docs.push(doc);
+
+    const key = doc.notificationKey;
+
+    if (key) {
+      const detail = buildNotificationDetailsFromSnapshot(record, key);
+
+      if (detail) {
+        details[key] = detail;
+      }
+    }
+  });
+
+  return { docs, details };
+}
+
+function mapNotificationRecordToDoc(record: SnapshotNotification, index: number): AnyDoc {
+  const normalized = normalizeSolrDocument(record as Record<string, unknown>);
+  const idCandidate = normalized['id'] ?? normalized['identifier'] ?? `notification-${index}`;
+  const id = String(idCandidate);
+  const symbolRaw = normalized['symbol'];
+  const symbol = typeof symbolRaw === 'string' ? symbolRaw.trim() : '';
+  const publishedOn = coerceIsoDate(normalized['date'] ?? normalized['createdDate'] ?? normalized['updatedDate']);
+  const actionDate = coerceIsoDate(normalized['actionDate']);
+  const deadline = coerceIsoDate(normalized['deadline']);
+  const milestone = actionDate ?? deadline ?? publishedOn;
+
+  const recipients = Array.isArray(normalized['recipients'])
+    ? (normalized['recipients'] as unknown[])
+      .map(entry => String(entry).trim())
+      .filter(Boolean)
+    : [];
+
+  const themes = Array.isArray(normalized['themes'])
+    ? (normalized['themes'] as unknown[])
+      .map(entry => String(entry).trim())
+      .filter(Boolean)
+    : [];
+
+  const urls = Array.isArray(normalized['urls'])
+    ? Array.from(new Set(
+      (normalized['urls'] as unknown[])
+        .map(entry => String(entry).trim())
+        .filter(Boolean)
+        .map(entry => resolveNotificationUrl(entry)),
+    ))
+    : [];
+
+  const doc: AnyDoc = {
+    ...normalized,
+    id,
+    identifier: normalized['identifier'] ?? id,
+    type: 'Notification',
+    schema: 'notification',
+    title: normalized['titleEn'] ?? normalized['title'] ?? (symbol || id),
+    titleEn: normalized['titleEn'] ?? normalized['title'] ?? (symbol || id),
+    status: normalized['status'] ?? 'Published',
+    statusKey: normalized['statusKey'] ?? 'PUBLISHED',
+    startDate: milestone ?? undefined,
+    endDate: milestone ?? undefined,
+    publishedDate: publishedOn ?? undefined,
+    actionDate: actionDate ?? undefined,
+    deadline: deadline ?? undefined,
+    actionRequired: Boolean(actionDate ?? deadline),
+    subjects: themes,
+    recipients,
+    responsibleOfficer: typeof normalized['sender'] === 'string'
+      ? normalized['sender']
+      : undefined,
+    notificationKey: symbol || undefined,
+    notificationKeys: symbol ? [symbol] : [],
+    notificationSymbol: symbol || undefined,
+    links: urls.length > 0
+      ? urls
+      : symbol
+        ? [buildNotificationLink(symbol)]
+        : [],
+  } as AnyDoc;
+
+  if (!doc.statusNarrative && typeof normalized['reference'] === 'string') {
+    const reference = normalized['reference'].trim();
+
+    if (reference) {
+      doc.statusNarrative = reference;
+    }
+  }
+
+  rawDocMap.set(doc, record as Record<string, unknown>);
+  return doc;
+}
+
+function buildNotificationDetailsFromSnapshot(record: SnapshotNotification, key: NotificationKey): NotificationDetails | null {
+  const symbol = key.trim();
+
+  if (!symbol) {
+    return null;
+  }
+
+  const publishedOn = coerceIsoDate((record as Record<string, unknown>)['date'] ?? record.date ?? record.createdDate ?? record.updatedDate);
+  const actionDeadline = coerceIsoDate((record as Record<string, unknown>)['actionDate'] ?? record.actionDate ?? record.deadline);
+  const recipients = Array.isArray(record.recipients)
+    ? record.recipients.map(entry => String(entry).trim()).filter(Boolean)
+    : [];
+  const thematicAreas = Array.isArray(record.themes)
+    ? record.themes.map(entry => String(entry).trim()).filter(Boolean)
+    : [];
+  const attachments = Array.isArray(record.files)
+    ? record.files
+      .map(file => {
+        const resolvedUrl = resolveNotificationUrl(file.url ?? '');
+
+        if (!resolvedUrl) {
+          return null;
+        }
+
+        return {
+          name: file.name ?? deriveNameFromUrl(resolvedUrl),
+          url: resolvedUrl,
+          type: file.type,
+          language: file.language,
+        } satisfies NotificationAttachment;
+      })
+      .filter((attachment): attachment is NotificationAttachment => Boolean(attachment?.url))
+    : [];
+
+  const link = Array.isArray(record.urls) && record.urls[0]
+    ? resolveNotificationUrl(record.urls[0]!)
+    : buildNotificationLink(symbol);
+
+  return {
+    key: symbol,
+    title: record.titleEn ?? record.title ?? symbol,
+    excerpt: undefined,
+    fullText: undefined,
+    from: record.sender,
+    publishedOn,
+    actionDeadline,
+    actionRequired: Boolean(record.actionDate ?? record.deadline),
+    recipients,
+    thematicAreas,
+    attachments,
+    link,
+    article: null,
+  } satisfies NotificationDetails;
+}
+
+function coerceIsoDate(value: unknown): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const raw = String(value).trim();
+
+  if (!raw) {
+    return undefined;
+  }
+
+  const dt = DateTime.fromISO(raw);
+
+  if (!dt.isValid) {
+    return undefined;
+  }
+
+  return dt.toUTC().toISO() ?? undefined;
 }
 
 // Status normalization helpers
@@ -1789,9 +1988,23 @@ const filteredDocs = computed(() => {
 
   if (filters.types.length > 0) {
     filtered = filtered.filter(doc => {
-      const type = getDocStringValue(doc, 'type');
+      const candidates = new Set<string>();
+      const schema = getDocStringValue(doc, 'schema');
+      const rawType = getDocStringValue(doc, 'type');
 
-      return type && filters.types.includes(String(type));
+      if (schema) {
+        candidates.add(schema.trim().toLowerCase());
+      }
+
+      if (rawType) {
+        candidates.add(normalizeTypeKey(rawType));
+      }
+
+      if (candidates.size === 0) {
+        return false;
+      }
+
+      return Array.from(candidates).some(candidate => filters.types.includes(candidate));
     });
   }
 

@@ -5,6 +5,7 @@ export type CalendarTypeKey =
   | 'sbstta'
   | 'sbi'
   | 'meeting'
+  | 'notification'
   | 'nominations'
   | 'submission'
   | 'peerReview'
@@ -28,6 +29,7 @@ const TYPE_COLOR_MAP: Record<CalendarTypeKey, CalendarTypeColor> = {
   sbstta: { background: CBD_GREEN, text: '#ffffff' },
   sbi: { background: CBD_GREEN, text: '#ffffff' },
   meeting: { background: '#00558C', text: '#ffffff' },
+  notification: { background: '#0F7ABD', text: '#ffffff' },
   nominations: { background: '#6F1A6B', text: '#ffffff' },
   submission: { background: '#1F5C3A', text: '#ffffff' },
   peerReview: { background: '#8C3A13', text: '#ffffff' },
@@ -57,7 +59,8 @@ const TYPE_PATTERNS: Array<{ key: CalendarTypeKey; patterns: RegExp[] }> = [
   { key: 'consultation', patterns: [/\bconsultation\b/i, /\bdialogue\b/i, /\bforum\b/i] },
   { key: 'campaign', patterns: [/\bcampaign\b/i, /\bawareness\b/i, /\boutreach\b/i] },
   { key: 'activity', patterns: [/\bactivity\b/i, /\baction\b/i, /\binitiative\b/i, /\bprogramme\b/i] },
-  { key: 'meeting', patterns: [/\bmeeting\b/i, /\bsession\b/i, /\bconference\b/i, /\bplenary\b/i] }
+  { key: 'meeting', patterns: [/\bmeeting\b/i, /\bsession\b/i, /\bconference\b/i, /\bplenary\b/i] },
+  { key: 'notification', patterns: [/\bnotification\b/i] },
 ];
 
 export function normalizeTypeKey(value: string | null | undefined): CalendarTypeKey {

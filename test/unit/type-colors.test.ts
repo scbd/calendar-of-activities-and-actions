@@ -28,7 +28,8 @@ describe('calendar type color helpers', () => {
       'Activity',
       'Webinar',
       'Workshop',
-      'Campaign'
+      'Campaign',
+      'Notification'
     ];
 
     otherTypes.forEach(type => {
@@ -45,6 +46,7 @@ describe('calendar type color helpers', () => {
     expect(normalizeTypeKey('Submission of Information')).toBe('submission');
     expect(normalizeTypeKey('Nomination of experts')).toBe('nominations');
     expect(normalizeTypeKey('Peer review process')).toBe('peerReview');
+    expect(normalizeTypeKey('Notification for Parties')).toBe('notification');
     expect(normalizeTypeKey('Unmapped category')).toBe('other');
   });
 

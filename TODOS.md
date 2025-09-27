@@ -11,9 +11,9 @@ Notes:
 
 - [ ] update suggestion 1 and 2
 
-- [ ] consolidate types
+- [x] consolidate types
 
-- [ ] clean status
+- [x] clean status
 
 - [x] view docs
 
@@ -23,9 +23,9 @@ Notes:
 
 - [ ] refactor code
 
-- [ ] default date to show (all future dates)
+- [x] default date to show (all future dates)
 
-- [ ] programatically change status that is confirmed to complete if date exceeds the end date if exists else 1 day after start date.
+- [x] programatically change status that is confirmed to complete if date exceeds the end date if exists else 1 day after start date.
 
 - [x] fix schemas
 

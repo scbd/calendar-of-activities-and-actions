@@ -3,6 +3,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import CalendarActivitiesActions from '../../app/components/calendar-activities-actions.vue';
+import CalendarFilters from '../../app/components/calendar-filters.vue';
 import DecisionLink from '../../app/components/decision-link.vue';
 import { resolveDecisionHrefWithFallback } from '../../shared/utils/decision-links';
 import en from '../../i18n/locales/en.json';
@@ -40,6 +41,32 @@ vi.mock('../../shared/utils/subjects', () => ({
   resolveSubjectLabel: (value: string) => value,
 }));
 
+vi.mock('../../shared/data/notifications.js', () => ({
+  default: [
+    {
+      id: 'notification-1',
+      identifier: 'notification-1',
+      symbol: '2025-001',
+      titleEn: 'Test Notification Item',
+      date: '2025-01-15T00:00:00Z',
+      actionDate: '2025-01-20T00:00:00Z',
+      sender: 'Executive Secretary',
+      recipients: ['CBD national focal points'],
+      themes: ['CBD-SUBJECT-TEST'],
+      urls: ['https://www.cbd.int/notifications/2025-001'],
+      files: [
+        {
+          type: 'application/pdf',
+          language: 'en',
+          url: '/doc/notifications/2025/test-notification-en.pdf',
+          name: 'test-notification-en.pdf',
+        },
+      ],
+      source: 'index:notification',
+    },
+  ],
+}));
+
 // Provide markdown table with two non-meeting activity types to ensure they are visible by default
 vi.mock('../../app/composables/use-calendar-markdown', () => ({
   useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |\n| Second Item | | Nominations | N | Another Subject | Completed | | 5-Feb-2025 | 6-Feb-2025 | SBSTTA | | 15/4 | | | UNIT | Officer | | | | | | | |`)
@@ -75,17 +102,25 @@ vi.mock('../../shared/data/meetings.js', () => ({
 }));
 
 const DEFAULT_SYSTEM_TIME = new Date('2024-12-31T12:00:00Z');
+const fetchMock = vi.fn();
 
 beforeAll(() => {
   vi.useFakeTimers();
+  vi.stubGlobal('fetch', fetchMock);
 });
 
 beforeEach(() => {
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue({
+    ok: true,
+    json: async () => ({ response: { docs: [] } }),
+  });
   vi.setSystemTime(DEFAULT_SYSTEM_TIME);
 });
 
 afterAll(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe('CalendarActivitiesActions Component', () => {
@@ -234,5 +269,45 @@ describe('CalendarActivitiesActions Component', () => {
     } finally {
       vi.setSystemTime(DEFAULT_SYSTEM_TIME);
     }
+  });
+
+  it('renders notifications alongside meetings and activities', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const titles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+    const typeLabels = component.findAll('.calendar-row__type-text').map(el => el.text().trim().toLowerCase());
+
+    expect(titles).toContain('Test Notification Item');
+    expect(typeLabels).toContain('notification');
+  });
+
+  it('filters notifications when the notification schema is selected', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const filtersComponent = component.findComponent(CalendarFilters);
+
+    filtersComponent.vm.$emit('update:filters', {
+      types: ['notification'],
+      subjects: [],
+      statuses: [],
+      subsidiaryBodies: [],
+      copDecisions: [],
+      activityTypes: [],
+      globalTargets: [],
+      countries: [],
+      startDate: '',
+      endDate: '',
+      actionRequired: false,
+    });
+
+    await flushPromises();
+
+    const titles = component.findAll('.calendar-accordion__title').map(el => el.text().trim());
+
+    expect(titles).toEqual(['Test Notification Item']);
   });
 });
