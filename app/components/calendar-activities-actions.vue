@@ -151,16 +151,25 @@
                             </template>
                           </span>
                         </p>
-                        <div v-if="item.responsibleUnit || item.responsibleOfficer" class="card">
-                            <div class="card-header">
-                              <strong>{{ t('calendar.labels.responsible') }}</strong>
-                            </div>
-                            <ul class="list-group list-group-flush">
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ item.responsibleUnit }}</li>
-                              <li class="list-group-item "><span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ item.responsibleOfficer }}</li>
+                        <div v-if="showResponsibleSection(item)" class="card">
+                          <div class="card-header">
+                            <strong>{{ t('calendar.labels.responsible') }}</strong>
+                          </div>
+                          <ul class="list-group list-group-flush">
+                            <li
+                              v-if="responsibleUnitLabel(item)"
+                              class="list-group-item"
+                            >
+                              <span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ responsibleUnitLabel(item) }}
+                            </li>
+                            <li
+                              v-if="responsibleOfficerLabel(item)"
+                              class="list-group-item"
+                            >
+                              <span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ responsibleOfficerLabel(item) }}
+                            </li>
                           </ul>
-
-                      </div>
+                        </div>
                     </div>
                   </div>
                   <div v-if="notificationDisplayEntries(item).length" class="calendar-notifications mt-4">
@@ -907,7 +916,9 @@ function mapNotificationRecordToDoc(record: SnapshotNotification, index: number)
   const publishedOn = coerceIsoDate(normalized['date'] ?? normalized['createdDate'] ?? normalized['updatedDate']);
   const actionDate = coerceIsoDate(normalized['actionDate']);
   const deadline = coerceIsoDate(normalized['deadline']);
-  const milestone = actionDate ?? deadline ?? publishedOn;
+  const startDateIso = publishedOn ?? actionDate ?? deadline ?? undefined;
+  const completionIso = actionDate ?? deadline ?? undefined;
+  const endDateIso = completionIso && completionIso !== startDateIso ? completionIso : undefined;
 
   const recipients = Array.isArray(normalized['recipients'])
     ? (normalized['recipients'] as unknown[])
@@ -940,8 +951,8 @@ function mapNotificationRecordToDoc(record: SnapshotNotification, index: number)
     titleEn: normalized['titleEn'] ?? normalized['title'] ?? (symbol || id),
     status: normalized['status'] ?? 'Published',
     statusKey: normalized['statusKey'] ?? 'PUBLISHED',
-    startDate: milestone ?? undefined,
-    endDate: milestone ?? undefined,
+  startDate: startDateIso,
+  endDate: endDateIso,
     publishedDate: publishedOn ?? undefined,
     actionDate: actionDate ?? undefined,
     deadline: deadline ?? undefined,
@@ -2254,6 +2265,28 @@ function typeStripStyle(doc: AnyDoc): { backgroundColor: string; color: string }
   };
 }
 
+function isNotification(doc: AnyDoc): boolean {
+  const schema = getDocStringValue(doc, 'schema');
+
+  if (schema && schema.trim().toLowerCase() === 'notification') {
+    return true;
+  }
+
+  return resolveTypeKey(doc) === 'notification';
+}
+
+function responsibleUnitLabel(doc: AnyDoc): string | undefined {
+  return getDocStringValue(doc, 'responsibleUnit');
+}
+
+function responsibleOfficerLabel(doc: AnyDoc): string | undefined {
+  return getDocStringValue(doc, 'responsibleOfficer');
+}
+
+function showResponsibleSection(doc: AnyDoc): boolean {
+  return Boolean(responsibleUnitLabel(doc) || responsibleOfficerLabel(doc));
+}
+
 function title(d: AnyDoc): string {
   const tField = getTitleFieldForLocale(locale.value);
 
@@ -2341,6 +2374,16 @@ function isActionRequired(d: AnyDoc): boolean {
 }
 
 function formatDateRange(d: AnyDoc): string {
+  if (isNotification(d)) {
+    const published = safeDate(
+      getDocStringValue(d, 'publishedDate', 'date', 'createdDate'),
+    );
+
+    if (published) {
+      return published.toFormat('d LLLL yyyy');
+    }
+  }
+
   const start = safeDate(getDocStringValue(d, 'startDate'));
   const end = safeDate(getDocStringValue(d, 'endDate'));
 
@@ -2361,7 +2404,7 @@ function formatDateRange(d: AnyDoc): string {
 
 function safeDate(v: unknown): DateTime | null {
   if (!v) return null;
-  const dt = DateTime.fromISO(String(v));
+  const dt = DateTime.fromISO(String(v), { zone: 'utc' });
 
   return dt.isValid ? dt : null;
 }

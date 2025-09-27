@@ -283,6 +283,46 @@ describe('CalendarActivitiesActions Component', () => {
     expect(typeLabels).toContain('notification');
   });
 
+  it('displays the notification published date in the summary meta', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const items = component.findAll('.accordion-item');
+    const notificationItem = items.find(item => item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item');
+
+    expect(notificationItem).toBeTruthy();
+
+    const metaText = notificationItem!.find('.calendar-accordion__meta').text().trim();
+
+    expect(metaText).toContain('15 January 2025');
+  });
+
+  it('hides the empty responsible unit line for notifications', async () => {
+    const component = await mountComponent('en');
+
+    await flushPromises();
+
+    const items = component.findAll('.accordion-item');
+    const notificationItem = items.find(item => item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item');
+
+    expect(notificationItem).toBeTruthy();
+
+    const toggle = notificationItem!.find('.accordion-button');
+
+    await toggle.trigger('click');
+    await flushPromises();
+
+    const cards = notificationItem!.findAll('.accordion-body .card');
+    const responsibleCard = cards.find(card => card.text().includes('Responsible'));
+
+    expect(responsibleCard).toBeTruthy();
+    const cardText = responsibleCard!.text();
+
+    expect(cardText).toContain('Officer');
+    expect(cardText).not.toContain('Unit:');
+  });
+
   it('filters notifications when the notification schema is selected', async () => {
     const component = await mountComponent('en');
 
