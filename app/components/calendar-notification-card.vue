@@ -117,3 +117,103 @@ const notificationLink = computed(() => buildNotificationLink(props.entry.key));
 const formattedDeadline = computed(() => formatNotificationDate(props.entry.details?.actionDeadline) || '');
 const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.details?.publishedOn) || '');
 </script>
+
+<style scoped>
+.calendar-notification-card {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.calendar-notification-card__pill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.calendar-notification-card__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #0f7abd; /* CBD blue */
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.calendar-notification-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #fef3c7; /* warm light yellow */
+  color: #92400e;
+  font-weight: 600;
+}
+
+.calendar-notification-card__badge-deadline { font-weight: 400; }
+
+.calendar-notification-card__meta {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.calendar-notification-card__status { margin-top: 0.75rem; font-weight: 600; }
+.calendar-notification-card__status--error { color: #b91c1c; }
+
+.calendar-notification-card__title {
+  display: inline-block;
+  margin-top: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.calendar-notification-card__section {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar-pill-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.calendar-pill { /* reuse chip style */
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #f1f3f5;
+  color: #1f1f1f;
+  font-size: 0.875rem;
+}
+
+.calendar-pill--muted { background-color: #eef2f6; color: #4b5563; }
+
+.calendar-notification-card__attachments { gap: 0.25rem; }
+
+.calendar-notification-card__actions { margin-top: 1rem; }
+.calendar-notification-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #0f7abd;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+</style>

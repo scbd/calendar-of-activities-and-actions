@@ -333,3 +333,99 @@ const headingId = computed(() => props.headingId);
 const collapseId = computed(() => props.collapseId);
 
 </script>
+
+<style scoped>
+/* Ensure the accordion header stacks the type banner above the summary */
+.accordion-button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Top banner that spans full header width with type color */
+.calendar-row__type-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  /* Bleed to the button edges using Bootstrap vars with fallbacks */
+  margin: calc(-1 * var(--bs-accordion-btn-padding-y, 1rem)) calc(-1 * var(--bs-accordion-btn-padding-x, 1.25rem)) 0.75rem;
+  border-top-left-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
+  border-top-right-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.calendar-row__type-text {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.calendar-accordion__summary {
+  width: 100%;
+  text-align: left;
+}
+
+.calendar-accordion__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.calendar-accordion__meta {
+  margin-top: 0.25rem;
+}
+
+.calendar-accordion__meta-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.calendar-accordion__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.calendar-accordion__status-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.calendar-accordion__cta {
+  font-weight: 600;
+}
+
+.calendar-accordion__cta--documents {
+  background-color: var(--bs-primary);
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.calendar-accordion__status-badge {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Subjects chips */
+.calendar-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #f1f3f5;
+  color: #1f1f1f;
+  font-size: 0.875rem;
+  margin: 0 0.25rem 0.25rem 0;
+}
+
+@media (max-width: 768px) {
+  .calendar-accordion__title { font-size: 1.125rem; }
+}
+</style>
