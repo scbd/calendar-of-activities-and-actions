@@ -7,9 +7,9 @@ Notes:
 
 - [x] docker image
 
-- [ ] deploy to dev server
-
-- [ ] update suggestion 1 and 2
+<!-- - [ ] deploy to dev server -->
+<!--  -->
+<!-- - [ ] update suggestion 1 and 2 -->
 
 - [x] consolidate types
 
@@ -30,3 +30,9 @@ Notes:
 - [x] fix schemas
 
 - [x] fix dir structure
+
+- [x] show notifications
+  - if responsible unit empty hide line
+  - if responsible officer empty hide line
+  - if responsible unit and officer empty hide section
+  - notification shows sept 27 and under notification notification sept 28, use published date for notification in always visible section
