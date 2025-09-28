@@ -12,14 +12,8 @@ import {
   normalizeMeetingDoc,
   type SnapshotMeeting,
 } from 'shared/utils/calendar-document-normalizer';
-import {
-  buildDocsFromNotifications,
-  getNotificationKeys,
-  NotificationDetails,
-  NotificationKey,
-  notificationDisplayEntries,
-  setNotificationStores,
-} from 'shared/utils/notifications';
+import { buildDocsFromNotifications, getNotificationKeys, notificationDisplayEntries, setNotificationStores } from 'shared/utils/notifications';
+import type { NotificationDetails, NotificationKey } from 'shared/utils/notifications';
 import {
   collectCountryEntries,
   collectGlobalTargetEntries,

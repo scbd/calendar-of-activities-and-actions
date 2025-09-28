@@ -2,13 +2,15 @@ import { normalizeWhitespace } from '../utils/text';
 import {
   buildNotificationExcerpt,
   buildNotificationLink,
+  parseNotificationAttachments,
+  selectNotificationTitle,
+  normalizeNotificationList,
+} from '../utils/notifications';
+import type {
   NotificationArticleRecord,
   NotificationDetails,
   NotificationKey,
   NotificationSolrDoc,
-  parseNotificationAttachments,
-  selectNotificationTitle,
-  normalizeNotificationList,
 } from '../utils/notifications';
 
 const DEFAULT_SOLR_INDEX_URL = 'https://api.cbd.int/api/v2013/index';
