@@ -9,12 +9,11 @@
         :aria-controls="collapseId"
         @click="$emit('toggle')"
       >
-        <div
-          class="calendar-row__type-strip d-flex align-items-center justify-content-center"
-          :style="typeStyle"
-        >
+        <!-- Top banner showing type (Meeting, Workshop, Nominations, etc.) -->
+        <div class="calendar-row__type-banner" :style="typeStyle">
           <span class="calendar-row__type-text">{{ typeLabel }}</span>
         </div>
+
         <div class="calendar-accordion__summary">
           <div class="calendar-accordion__title">{{ title }}</div>
           <div class="calendar-accordion__meta small text-muted">{{ dateRange }}</div>
@@ -110,6 +109,7 @@
 import { computed } from 'vue';
 import { useI18n } from '#imports';
 import { getTitleFieldForLocale, normalizeSolrDocument } from 'shared/services/solr';
+import type { LocaleCode } from 'shared/services/solr';
 import type { CalendarDoc } from 'shared/types/calendar';
 import CalendarDocumentDetails from './calendar-document-details.vue';
 import CalendarNotificationCard from './calendar-notification-card.vue';
@@ -141,9 +141,13 @@ const props = defineProps<{
   collapseId: string;
 }>();
 
+const _emit = defineEmits<{
+  (e: 'toggle'): void;
+}>();
+
 const { t, te, locale } = useI18n();
 
-const titleField = computed(() => getTitleFieldForLocale(locale.value as any));
+const titleField = computed(() => getTitleFieldForLocale(locale.value as LocaleCode));
 
 const title = computed(() => {
   const value = getDocStringValue(props.doc, titleField.value, 'title', 'titleEn');

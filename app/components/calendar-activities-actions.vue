@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from '#imports';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarAccordionItem from './calendar-accordion-item.vue';
@@ -107,6 +107,7 @@ const itemKey = (doc: CalendarDoc): string => String(doc.id ?? '');
 const isItemOpen = (doc: CalendarDoc): boolean => Boolean(openItems.value[itemKey(doc)]);
 const toggleAccordion = (doc: CalendarDoc) => {
   const key = itemKey(doc);
+
   openItems.value[key] = !openItems.value[key];
 };
 const headingId = (doc: CalendarDoc): string => `heading-${itemKey(doc)}`;
@@ -172,17 +173,23 @@ h3 {
   text-align: left;
 }
 
-.calendar-row__type-strip {
-  width: 150px;
-  min-width: 150px;
-  height: 100%;
-  color: #fff;
-  text-transform: uppercase;
-}
-
 .calendar-row__type-text {
   font-weight: 700;
   letter-spacing: 0.05em;
+}
+
+/* New top banner style replacing the old left strip */
+.calendar-row__type-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  margin: -0.5rem -0.75rem 0.75rem; /* bleed to edges of button */
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  text-transform: uppercase;
+  color: #fff;
 }
 
 .calendar-accordion__meta-block {
@@ -362,11 +369,6 @@ h3 {
 }
 
 @media (max-width: 768px) {
-  .calendar-row__type-strip {
-    width: 100px;
-    min-width: 100px;
-  }
-
   .calendar-accordion__summary {
     padding-left: 0.75rem;
   }
