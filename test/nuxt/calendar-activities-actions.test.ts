@@ -285,7 +285,7 @@ describe('CalendarActivitiesActions Component', () => {
     expect(typeLabels).toContain('notification');
   });
 
-  it('displays the notification published date in the summary meta', async () => {
+  it('displays the notification published date in the type banner', async () => {
     const component = await mountComponent('en');
 
     await flushPromises();
@@ -295,9 +295,9 @@ describe('CalendarActivitiesActions Component', () => {
 
     expect(notificationItem).toBeTruthy();
 
-    const metaText = notificationItem!.find('.calendar-accordion__meta').text().trim();
+    const bannerDate = notificationItem!.find('.calendar-row__type-date').text().trim();
 
-    expect(metaText).toContain('15 January 2025');
+    expect(bannerDate).toContain('15 January 2025');
   });
 
   it('hides the empty responsible unit line for notifications', async () => {

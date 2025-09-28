@@ -11,12 +11,12 @@
       >
         <!-- Top banner showing type (Meeting, Workshop, Nominations, etc.) -->
         <div class="calendar-row__type-banner" :style="typeStyle">
+          <span class="calendar-row__type-date">{{ dateRange }}</span>
           <span class="calendar-row__type-text">{{ typeLabel }}</span>
         </div>
 
         <div class="calendar-accordion__summary">
           <div class="calendar-accordion__title">{{ title }}</div>
-          <div class="calendar-accordion__meta small text-muted">{{ dateRange }}</div>
           <div
             v-if="subjectLabels.length || statusLabel || isActionRequired || primaryLink"
             class="calendar-accordion__meta-block mt-2"
@@ -358,6 +358,7 @@ const collapseId = computed(() => props.collapseId);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   padding: 0.35rem 0.5rem;
   position: relative;
   padding-right: calc(0.5rem + var(--bs-accordion-btn-icon-width, 1.25rem));
@@ -391,6 +392,16 @@ const collapseId = computed(() => props.collapseId);
 .calendar-row__type-text {
   font-weight: 700;
   letter-spacing: 0.05em;
+  flex: 1;
+  text-align: center;
+}
+
+.calendar-row__type-date {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: inherit;
+  margin-right: auto;
 }
 
 .calendar-accordion__summary {
