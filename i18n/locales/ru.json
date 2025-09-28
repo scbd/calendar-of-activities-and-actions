@@ -98,6 +98,7 @@
     "status": {
       "confirm": "Подтверждено",
       "confirmed": "Подтверждено",
+      "not_set": "Not Set",
       "completed": "Завершено",
       "ongoing": "В процессе",
       "to_be_confirmed": "Подлежит подтверждению"

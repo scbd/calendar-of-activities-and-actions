@@ -126,6 +126,7 @@
     "status": {
       "confirm": "Confirmed",
       "confirmed": "Confirmed",
+      "not_set": "Not Set",
       "completed": "Completed",
       "ongoing": "Ongoing",
       "to_be_confirmed": "To be confirmed"

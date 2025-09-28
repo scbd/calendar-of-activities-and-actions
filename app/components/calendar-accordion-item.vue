@@ -126,7 +126,7 @@ import {
   responsibleOfficerLabel,
   responsibleUnitLabel,
 } from 'shared/utils/labels';
-import { normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
+import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import { notificationDisplayEntries, resolveNotificationUrl } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
@@ -192,6 +192,11 @@ const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionReq
 const statusLabel = computed(() => {
   const rawStatus = getDocStringValue(props.doc, 'status');
   const statusKey = getDocStringValue(props.doc, 'statusKey');
+  const normalizedStatusKey = statusKey?.toUpperCase() ?? normalizeStatusKey(rawStatus);
+
+  if (normalizedStatusKey === 'NOT_SET') {
+    return '';
+  }
 
   if (shouldDisplayCompleted(props.doc, statusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
@@ -340,6 +345,11 @@ const collapseId = computed(() => props.collapseId);
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  position: relative;
+}
+
+.accordion-button::after {
+  display: none;
 }
 
 /* Top banner that spans full header width with type color */
@@ -349,12 +359,33 @@ const collapseId = computed(() => props.collapseId);
   align-items: center;
   justify-content: center;
   padding: 0.35rem 0.5rem;
+  position: relative;
+  padding-right: calc(0.5rem + var(--bs-accordion-btn-icon-width, 1.25rem));
   /* Bleed to the button edges using Bootstrap vars with fallbacks */
   margin: calc(-1 * var(--bs-accordion-btn-padding-y, 1rem)) calc(-1 * var(--bs-accordion-btn-padding-x, 1.25rem)) 0.75rem;
   border-top-left-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
   border-top-right-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
   text-transform: uppercase;
   color: #fff;
+}
+
+.calendar-row__type-banner::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: var(--bs-accordion-btn-padding-x, 1.25rem);
+  width: var(--bs-accordion-btn-icon-width, 1.25rem);
+  height: var(--bs-accordion-btn-icon-width, 1.25rem);
+  background-image: var(--bs-accordion-btn-icon);
+  background-repeat: no-repeat;
+  background-size: var(--bs-accordion-btn-icon-width, 1.25rem);
+  transform: translateY(-50%);
+  transition: transform var(--bs-accordion-btn-icon-transition);
+  pointer-events: none;
+}
+
+.accordion-button:not(.collapsed) .calendar-row__type-banner::after {
+  transform: translateY(-50%) rotate(-180deg);
 }
 
 .calendar-row__type-text {
@@ -365,6 +396,7 @@ const collapseId = computed(() => props.collapseId);
 .calendar-accordion__summary {
   width: 100%;
   text-align: left;
+  padding-right: 0;
 }
 
 .calendar-accordion__title {

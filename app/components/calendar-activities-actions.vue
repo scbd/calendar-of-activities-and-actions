@@ -207,8 +207,12 @@ h3 {
 }
 
 .calendar-accordion__status-badges {
-  display: flex;
+  display: inline-flex;
   gap: 0.5rem;
+  margin-left: auto;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .calendar-accordion__cta {
@@ -216,10 +220,14 @@ h3 {
 }
 
 .calendar-accordion__cta--documents {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--bs-primary);
   color: #fff;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
+  font-weight: 600;
   text-decoration: none;
 }
 

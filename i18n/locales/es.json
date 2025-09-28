@@ -102,6 +102,7 @@
     "status": {
       "confirm": "Confirmado",
       "confirmed": "Confirmado",
+      "not_set": "Not Set",
       "completed": "Completado",
       "ongoing": "En curso",
       "to_be_confirmed": "Por confirmar"

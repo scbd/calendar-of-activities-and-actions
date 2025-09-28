@@ -98,6 +98,7 @@
     "status": {
       "confirm": "مؤكد",
       "confirmed": "مؤكد",
+      "not_set": "Not Set",
       "completed": "مكتمل",
       "ongoing": "قيد التنفيذ",
       "to_be_confirmed": "في انتظار التأكيد"
