@@ -376,7 +376,7 @@ const collapseId = computed(() => props.collapseId);
   right: var(--bs-accordion-btn-padding-x, 1.25rem);
   width: var(--bs-accordion-btn-icon-width, 1.25rem);
   height: var(--bs-accordion-btn-icon-width, 1.25rem);
-  background-image: var(--bs-accordion-btn-icon);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-size: var(--bs-accordion-btn-icon-width, 1.25rem);
   transform: translateY(-50%);
