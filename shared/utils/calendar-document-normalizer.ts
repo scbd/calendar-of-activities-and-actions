@@ -94,6 +94,7 @@ export function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): Ca
   const doc = {
     ...normalizedRecord,
     id,
+    schema: 'meeting',
     subjects,
     subsidiaryBodies: bodies,
     links,
@@ -211,6 +212,7 @@ export function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: s
   const doc = {
     ...normalizedRecord,
     id,
+    schema: 'activity',
     source: sourceId,
     subjects,
     subsidiaryBodies: bodies,

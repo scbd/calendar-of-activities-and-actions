@@ -45,6 +45,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarAccordionItem from './calendar-accordion-item.vue';
@@ -71,7 +72,7 @@ const createRegionDisplayNames = (code: string) => {
   }
 };
 
-const defaultStartDateIso = '';
+const defaultStartDateIso = DateTime.now().startOf('day').toISO();
 
 const {
   loading,
