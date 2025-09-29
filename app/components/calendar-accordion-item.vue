@@ -34,6 +34,7 @@
             <div
               v-if="primaryLink || statusLabel || isActionRequired"
               class="calendar-accordion__footer"
+              :class="{ 'calendar-accordion__footer--has-link': primaryLink }"
             >
               <a
                 v-if="primaryLink"
@@ -476,9 +477,13 @@ const collapseId = computed(() => props.collapseId);
 .calendar-accordion__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.calendar-accordion__footer--has-link {
+  justify-content: space-between;
 }
 
 .calendar-accordion__status-badges {

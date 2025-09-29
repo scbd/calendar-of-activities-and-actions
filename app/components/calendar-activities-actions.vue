@@ -205,17 +205,18 @@ h3 {
 .calendar-accordion__footer {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+.calendar-accordion__footer--has-link {
+  justify-content: space-between;
+}
+
 .calendar-accordion__status-badges {
-  display: inline-flex;
+  display: flex;
   gap: 0.5rem;
-  margin-left: auto;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .calendar-accordion__cta {
