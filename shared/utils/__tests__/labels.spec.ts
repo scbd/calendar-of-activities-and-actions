@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { CalendarDoc } from '../../types/calendar';
+import { displaySubjectLabels, setSubjectLabelMap } from '../subjects';
 import {
   configureLabelLocalization,
-  displaySubjectLabels,
   getCopLabel,
   normalizeDecisionLabel,
   resolveCountryLabel,
   responsibleOfficerLabel,
   responsibleUnitLabel,
   setRegionDisplayNames,
-  setSubjectLabelMap,
 } from '../labels';
 
 const regionNames = typeof Intl.DisplayNames === 'function'

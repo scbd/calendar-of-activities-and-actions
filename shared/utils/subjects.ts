@@ -1,6 +1,9 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
 import { thesaurusDomains } from '../constants/thesaurus';
 import { loadDomainOptions } from '../services/thesaurus';
+import type { CalendarDoc } from '../types/calendar';
+import { getDocSubjects } from './document-processing';
+import { ref } from 'vue';
 
 export interface SubjectOption {
   value: string;
@@ -9,6 +12,16 @@ export interface SubjectOption {
 
 const cachedSubjectOptions: Map<string, SubjectOption[]> = new Map();
 const inflightPromises: Map<string, Promise<SubjectOption[]>> = new Map();
+
+export const subjectLabelMap = ref<Record<string, string>>({});
+
+/**
+ * Configure the localized display names for known subject identifiers.
+ * @param map - Subject code to label map.
+ */
+export function setSubjectLabelMap(map: Record<string, string>): void {
+  subjectLabelMap.value = map;
+}
 
 export function mapThesaurusTermToSubjectOption(term: ThesaurusTerm, locale: string = 'en'): SubjectOption {
   const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title)[0]];
@@ -75,5 +88,11 @@ export function resolveSubjectLabel(identifier: string, labels: Record<string, s
   if (!identifier) {
     return '';
   }
-  return labels[identifier] ?? fallbackSubjectLabel(identifier);
+  return labels[identifier] || '';
+}
+
+export function displaySubjectLabels(doc: CalendarDoc): string[] {
+  return getDocSubjects(doc)
+    .map(subject => resolveSubjectLabel(subject, subjectLabelMap.value))
+    .filter(label => Boolean(label && label.trim())) as string[];
 }

@@ -1,20 +1,10 @@
 import type { CalendarDoc } from '../types/calendar';
-import { resolveSubjectLabel } from './subjects';
-import { getDocStringValue, getDocSubjects } from './document-processing';
+import { getDocStringValue } from './document-processing';
 import { humanizeIdentifier } from './text';
 
-let subjectLabelMap: Record<string, string> = {};
 let translationExists: ((key: string) => boolean) | null = null;
 let translate: ((key: string) => unknown) | null = null;
 let regionDisplayNames: Intl.DisplayNames | null = null;
-
-/**
- * Configure the localized display names for known subject identifiers.
- * @param map - Subject code to label map.
- */
-export function setSubjectLabelMap(map: Record<string, string>): void {
-  subjectLabelMap = map;
-}
 
 /**
  * Configure translation helpers for label utilities.
@@ -70,17 +60,6 @@ export function resolveCountryLabel(value: string, provided?: string | null): st
   }
 
   return humanizeIdentifier(trimmed);
-}
-
-/**
- * Map subject identifiers on a document to localized labels.
- * @param doc - Calendar document.
- * @returns Array of subject labels.
- */
-export function displaySubjectLabels(doc: CalendarDoc): string[] {
-  return getDocSubjects(doc)
-    .map(subject => resolveSubjectLabel(subject, subjectLabelMap))
-    .filter(label => Boolean(label && label.trim())) as string[];
 }
 
 /**

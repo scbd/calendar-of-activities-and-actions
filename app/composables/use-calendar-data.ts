@@ -5,7 +5,7 @@ import { useCalendarMarkdown } from './use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
 import notificationsSnapshot from 'shared/data/notifications.js';
-import { loadSubjectOptions, buildSubjectLabelMap, type SubjectOption } from 'shared/utils/subjects';
+import { loadSubjectOptions, buildSubjectLabelMap, type SubjectOption, setSubjectLabelMap as setSubjectLabelMapSubjects } from 'shared/utils/subjects';
 import {
   buildDocsFromActivities,
   buildDocsFromMarkdown,
@@ -27,7 +27,7 @@ import {
 } from 'shared/utils/document-processing';
 import { normalizeStatusKey } from 'shared/utils/status';
 import { normalizeTypeKey } from 'shared/utils/type-colors';
-import { resolveCountryLabel, setSubjectLabelMap } from 'shared/utils/labels';
+import { resolveCountryLabel } from 'shared/utils/labels';
 import { safeDate } from 'shared/utils/date';
 import { fetchNotificationDetails } from 'shared/services/solr-index';
 import type { CalendarDoc, FilterState, GroupedItem } from 'shared/types/calendar';
@@ -82,7 +82,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptions.value));
 
   watch(subjectLabelMap, (map) => {
-    setSubjectLabelMap(map);
+    setSubjectLabelMapSubjects(map);
   }, { immediate: true });
 
   watchEffect(() => {

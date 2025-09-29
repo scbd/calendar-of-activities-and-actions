@@ -120,10 +120,11 @@ import {
   getDocBooleanValue,
   getDocRaw,
   getDocStringValue,
+  getDocSubjects,
   getDocSubsidiaryBodies,
 } from 'shared/utils/document-processing';
+import { subjectLabelMap, resolveSubjectLabel } from 'shared/utils/subjects';
 import {
-  displaySubjectLabels,
   normalizeDecisionLabel,
   responsibleOfficerLabel,
   responsibleUnitLabel,
@@ -230,7 +231,13 @@ const statusLabel = computed(() => {
 
 const statusColorValue = computed(() => statusColor(props.doc));
 
-const subjectLabels = computed(() => displaySubjectLabels(props.doc));
+const subjectLabels = computed(() => {
+  const labels = subjectLabelMap.value;
+
+  return getDocSubjects(props.doc)
+    .map(subject => resolveSubjectLabel(subject, labels))
+    .filter(label => Boolean(label && label.trim())) as string[];
+});
 
 const subsidiaryBodies = computed(() => getDocSubsidiaryBodies(props.doc));
 
