@@ -112,3 +112,5 @@ test/
 - **Playwright**: Browser automation for E2E tests
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+

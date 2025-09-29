@@ -1,5 +1,5 @@
 <template>
-  <div ref="accordionRef" class="accordion-item mb-3" :class="{ 'accordion-item--faded': fadeOthers && !isOpen }">
+  <div ref="accordionRef" class="accordion-item mb-4" :class="{ 'accordion-item--faded': fadeOthers && !isOpen }">
     <h2 :id="headingId" class="accordion-header">
       <button
         class="accordion-button p-0"
@@ -17,19 +17,13 @@
         </div>
 
         <div class="calendar-accordion__summary p-4">
-          <div class="calendar-accordion__title">{{ title }}</div>
+          <div class="calendar-accordion__title mb-4">{{ title }}</div>
           <div
             v-if="subjectLabels.length || statusLabel || isActionRequired || primaryLink"
             class="calendar-accordion__meta-block mt-2"
           >
             <div v-if="subjectLabels.length" class="calendar-accordion__subjects">
-              <span
-                v-for="subject in subjectLabels"
-                :key="subject"
-                class="calendar-pill"
-              >
-                {{ subject }}
-              </span>
+              <ExpandablePillList :items="subjectLabels" />
             </div>
             <div
               v-if="primaryLink || statusLabel || isActionRequired"
@@ -82,6 +76,9 @@
           :status-label="statusLabel"
           :status-color="statusColorValue"
           :status-narrative="statusNarrative"
+          :symbol="meetingSymbol"
+          :date="dateRange"
+          :location="meetingLocation"
           :is-action-required="isActionRequired"
           :description="description"
           :subject-labels="subjectLabels"
@@ -128,11 +125,13 @@ import {
   normalizeDecisionLabel,
   responsibleOfficerLabel,
   responsibleUnitLabel,
+  resolveCountryLabel,
 } from 'shared/utils/labels';
 import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import { notificationDisplayEntries, resolveNotificationUrl } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
+import ExpandablePillList from './expandable-pill-list.vue';
 
 const meetingLinksCache = new WeakMap<CalendarDoc, string[]>();
 const decisionEntriesCache = new WeakMap<CalendarDoc, DecisionEntry[]>();
@@ -208,6 +207,46 @@ const typeStyle = computed(() => {
 const statusNarrative = computed(() => getDocStringValue(props.doc, 'statusNarrative'));
 
 const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired') === true);
+
+const schemaValue = computed(() => {
+  const direct = props.doc.schema ? String(props.doc.schema) : undefined;
+  const fallback = getDocStringValue(props.doc, 'schema');
+  return (direct ?? fallback ?? '').toLowerCase();
+});
+
+const isMeetingDoc = computed(() => {
+  if (schemaValue.value === 'meeting') {
+    return true;
+  }
+  const typeValue = getDocStringValue(props.doc, 'type');
+  return Boolean(typeValue && typeValue.toLowerCase() === 'meeting');
+});
+
+const meetingLocation = computed(() => {
+  if (!isMeetingDoc.value) {
+    return '';
+  }
+  const city = getDocStringValue(props.doc, 'city', 'cityEn');
+  const rawCountry = getDocStringValue(props.doc, 'hostCountry', 'hostGovernment', 'country', 'countryCode');
+  const providedCountry = getDocStringValue(props.doc, 'hostCountryEn', 'hostGovernmentEn', 'countryEn', 'countryName');
+  const hostGovernment = rawCountry
+    ? resolveCountryLabel(rawCountry, providedCountry)
+    : (providedCountry ?? '');
+  const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+  return parts.join(', ');
+});
+
+const meetingSymbol = computed(() => {
+  if (!isMeetingDoc.value) {
+    return '';
+  }
+  const code = getDocStringValue(props.doc, 'meetingCode');
+  if (code) {
+    return code;
+  }
+  const symbol = getDocStringValue(props.doc, 'symbol');
+  return symbol ?? '';
+});
 
 const statusLabel = computed(() => {
   const rawStatus = getDocStringValue(props.doc, 'status');
@@ -516,7 +555,7 @@ const collapseId = computed(() => props.collapseId);
 }
 
 /* Subjects chips */
-.calendar-pill {
+.calendar-accordion__subjects :deep(.calendar-pill) {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;

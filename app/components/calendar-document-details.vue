@@ -14,6 +14,12 @@
         <span v-if="statusNarrative">{{ statusNarrative }}</span>
       </p>
 
+      <p v-if="symbol"><strong>{{ t('calendar.labels.symbol') }}:</strong> {{ symbol }}</p>
+
+      <p v-if="date"><strong>{{ t('calendar.labels.date') }}:</strong> {{ date }}</p>
+
+      <p v-if="location"><strong>{{ t('calendar.labels.location') }}:</strong> {{ location }}</p>
+
       <p v-if="isActionRequired">
         <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
         {{ t('calendar.common.yes') }}
@@ -24,15 +30,10 @@
     <div class="col-md-6">
       <div v-if="subjectLabels.length" class="mb-3 calendar-subjects">
         <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
-        <div class="calendar-pill-row">
-          <span
-            v-for="subject in subjectLabels"
-            :key="subject"
-            class="calendar-pill"
-          >
-            {{ subject }}
-          </span>
-        </div>
+        <ExpandablePillList
+          class="calendar-pill-row"
+          :items="subjectLabels"
+        />
       </div>
       <p v-if="subsidiaryBodies.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ subsidiaryBodies.join(', ') }}</p>
       <p v-if="decisionEntries.length">
@@ -66,6 +67,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '#imports';
+import ExpandablePillList from './expandable-pill-list.vue';
 import DecisionLink from './decision-link.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
 
@@ -73,6 +75,9 @@ const props = defineProps<{
   statusLabel?: string;
   statusColor: string;
   statusNarrative?: string | null;
+  symbol?: string;
+  date?: string;
+  location?: string;
   isActionRequired: boolean;
   description?: string;
   subjectLabels: string[];
@@ -85,3 +90,35 @@ const props = defineProps<{
 
 const { t } = useI18n();
 </script>
+
+<style scoped>
+.calendar-subjects {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar-pill-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.calendar-subjects :deep(.calendar-pill-row) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.calendar-subjects :deep(.calendar-pill) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #f1f3f5;
+  color: #1f1f1f;
+  font-size: 0.875rem;
+}
+</style>

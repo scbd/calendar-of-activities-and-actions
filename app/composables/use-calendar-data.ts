@@ -46,7 +46,7 @@ const defaultFilters: FilterState = {
   activityTypes: [],
   globalTargets: [],
   countries: [],
-  startDate: DateTime.now().startOf('day').toISO(),
+  startDate: '',
   endDate: '',
   actionRequired: false,
 };
