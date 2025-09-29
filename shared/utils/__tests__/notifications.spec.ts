@@ -77,6 +77,17 @@ describe('notification utilities', () => {
     expect(entries[0]?.key).toBe('2024-001');
   });
 
+  it('normalizes notification keys with prefixes without duplication', () => {
+    const doc = mapNotificationRecordToDoc({
+      ...snapshotRecord,
+      symbol: '2024-050',
+      relatedDocuments: ['NTF 2024-050, NTF 2024-055', '2024-050'],
+    }, 1);
+    const keys = getNotificationKeys(doc as CalendarDoc);
+
+    expect(keys).toEqual(['2024-050', '2024-055']);
+  });
+
   it('builds docs from snapshot array', () => {
     const { docs } = buildDocsFromNotifications([snapshotRecord]);
 

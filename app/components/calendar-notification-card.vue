@@ -50,24 +50,15 @@
 
       <div v-if="entry.details.recipients.length" class="calendar-notification-card__section">
         <span class="calendar-pill-label">{{ t('calendar.notifications.recipients') }}</span>
-        <span
-          v-for="recipient in entry.details.recipients"
-          :key="recipient"
-          class="calendar-pill"
-        >
-          {{ recipient }}
-        </span>
+        <ExpandablePillList :items="entry.details.recipients" />
       </div>
 
-      <div v-if="entry.details.thematicAreas.length" class="calendar-notification-card__section">
+      <div v-if="thematicLabels.length" class="calendar-notification-card__section">
         <span class="calendar-pill-label">{{ t('calendar.notifications.themes') }}</span>
-        <span
-          v-for="theme in entry.details.thematicAreas"
-          :key="theme"
-          class="calendar-pill calendar-pill--muted"
-        >
-          {{ theme }}
-        </span>
+        <ExpandablePillList
+          :items="thematicLabels"
+          pill-class="calendar-pill calendar-pill--muted"
+        />
       </div>
 
       <div
@@ -103,9 +94,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from '#imports';
+import ExpandablePillList from './expandable-pill-list.vue';
 import { buildNotificationLink } from 'shared/utils/notifications';
 import { formatNotificationDate } from 'shared/utils/date';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';
+import { subjectLabelMap, resolveSubjectLabel, fallbackSubjectLabel } from 'shared/utils/subjects';
 
 const props = defineProps<{
   entry: NotificationDisplayEntry;
@@ -116,6 +109,31 @@ const { t } = useI18n();
 const notificationLink = computed(() => buildNotificationLink(props.entry.key));
 const formattedDeadline = computed(() => formatNotificationDate(props.entry.details?.actionDeadline) || '');
 const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.details?.publishedOn) || '');
+const thematicLabels = computed(() => {
+  if (!props.entry.details) {
+    return [] as string[];
+  }
+
+  const labels = subjectLabelMap.value;
+  const seen = new Set<string>();
+
+  return props.entry.details.thematicAreas
+    .map(theme => resolveSubjectLabel(theme, labels) || fallbackSubjectLabel(theme))
+    .filter(label => {
+      if (!label || !label.trim()) {
+        return false;
+      }
+
+      const normalized = label.trim();
+
+      if (seen.has(normalized)) {
+        return false;
+      }
+
+      seen.add(normalized);
+      return true;
+    });
+});
 </script>
 
 <style scoped>
@@ -190,7 +208,7 @@ const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.d
   color: #6c757d;
 }
 
-.calendar-pill { /* reuse chip style */
+.calendar-notification-card :deep(.calendar-pill) { /* reuse chip style */
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
@@ -200,7 +218,7 @@ const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.d
   font-size: 0.875rem;
 }
 
-.calendar-pill--muted { background-color: #eef2f6; color: #4b5563; }
+.calendar-notification-card :deep(.calendar-pill--muted) { background-color: #eef2f6; color: #4b5563; }
 
 .calendar-notification-card__attachments { gap: 0.25rem; }
 

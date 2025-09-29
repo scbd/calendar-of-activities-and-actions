@@ -82,6 +82,55 @@ export interface NotificationSnapshotRecord extends Record<string, unknown> {
 
 const notificationKeyCache = new WeakMap<CalendarDoc, NotificationKey[]>();
 
+function appendNotificationKey(
+  key: string,
+  keys: NotificationKey[],
+  seen: Set<NotificationKey>,
+): void {
+  const trimmed = key.trim();
+
+  if (!trimmed) {
+    return;
+  }
+
+  const match = trimmed.match(/^\d{4}-\d{3}$/u);
+
+  if (!match) {
+    return;
+  }
+
+  const normalized = match[0];
+
+  if (seen.has(normalized)) {
+    return;
+  }
+
+  seen.add(normalized);
+  keys.push(normalized);
+}
+
+function collectNotificationKeys(
+  value: unknown,
+  keys: NotificationKey[],
+  seen: Set<NotificationKey>,
+): void {
+  if (typeof value === 'string') {
+    const matches = value.match(/\d{4}-\d{3}/gu);
+
+    if (matches) {
+      matches.forEach(match => appendNotificationKey(match, keys, seen));
+      return;
+    }
+
+    appendNotificationKey(value, keys, seen);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach(entry => collectNotificationKeys(entry, keys, seen));
+  }
+}
+
 let getDetailsStore: () => Record<NotificationKey, NotificationDetails> = () => ({});
 let getLoadingStore: () => Record<NotificationKey, boolean> = () => ({});
 let getErrorStore: () => Record<NotificationKey, string> = () => ({});
@@ -456,31 +505,19 @@ export function getNotificationKeys(doc: CalendarDoc): NotificationKey[] {
   const keys: NotificationKey[] = [];
   const seen = new Set<NotificationKey>();
 
-  const collect = (value: unknown) => {
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-
-      if (trimmed && !seen.has(trimmed)) {
-        seen.add(trimmed);
-        keys.push(trimmed);
-      }
-    }
-    if (Array.isArray(value)) {
-      value.forEach(entry => collect(entry));
-    }
-  };
-
-  collect(doc.notificationKey);
-  collect(doc.notificationSymbol);
-  collect(doc.notificationKeys);
+  collectNotificationKeys(doc.notificationKey, keys, seen);
+  collectNotificationKeys(doc.notificationSymbol, keys, seen);
+  collectNotificationKeys(doc.notificationKeys, keys, seen);
+  collectNotificationKeys(doc.relatedDocuments, keys, seen);
 
   const raw = rawDocMap.get(doc);
 
   if (raw) {
-    collect((raw as Record<string, unknown>)['notificationKey']);
-    collect((raw as Record<string, unknown>)['notificationKeys']);
-    collect((raw as Record<string, unknown>)['notificationSymbol']);
-    collect((raw as Record<string, unknown>)['symbol']);
+    collectNotificationKeys((raw as Record<string, unknown>)['notificationKey'], keys, seen);
+    collectNotificationKeys((raw as Record<string, unknown>)['notificationKeys'], keys, seen);
+    collectNotificationKeys((raw as Record<string, unknown>)['notificationSymbol'], keys, seen);
+    collectNotificationKeys((raw as Record<string, unknown>)['symbol'], keys, seen);
+    collectNotificationKeys((raw as Record<string, unknown>)['relatedDocuments'], keys, seen);
   }
 
   notificationKeyCache.set(doc, keys);
@@ -497,6 +534,7 @@ export function notificationDisplayEntries(doc: CalendarDoc): NotificationDispla
   if (doc.schema === 'notification') {
     return [];
   }
+
   const keys = getNotificationKeys(doc);
 
   if (keys.length === 0) {
