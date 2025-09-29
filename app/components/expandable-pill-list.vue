@@ -61,6 +61,7 @@ const handleClickOutside = (event: MouseEvent) => {
     return;
   }
   const element = root.value;
+
   if (!element) {
     return;
   }

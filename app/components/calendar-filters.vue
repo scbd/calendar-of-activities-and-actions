@@ -200,7 +200,7 @@ import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel } from 'shared/utils/subjects';
+import { loadSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
 
 // Nuxt router for URL query string management
 const route = useRoute();
@@ -292,28 +292,9 @@ const hasActiveFilters = computed<boolean>(() => {
   );
 });
 
-const remoteSubjectOptions = ref<FilterOption[]>([]);
+const subjectOptions = ref<FilterOption[]>([]);
 const remoteCountryOptions = ref<FilterOption[]>([]);
 const remoteGlobalTargetOptions = ref<FilterOption[]>([]);
-
-const remoteSubjectLabelMap = computed(() => buildSubjectLabelMap(remoteSubjectOptions.value));
-
-const fallbackSubjectOptions = computed<FilterOption[]>(() => {
-  if (props.availableSubjects.length === 0) {
-    return [];
-  }
-
-  const uniqueSubjects = Array.from(new Set(props.availableSubjects));
-
-  return uniqueSubjects.map(subject => ({
-    value: subject,
-    label: resolveSubjectLabel(subject, remoteSubjectLabelMap.value),
-  }));
-});
-
-const subjectOptions = computed<FilterOption[]>(() =>
-  mergeOptions(remoteSubjectOptions.value, fallbackSubjectOptions.value),
-);
 
 const STATUS_LABEL_OVERRIDES: Record<string, string> = {
   tentat: 'Tentative',
@@ -457,7 +438,7 @@ function updateUrlQuery(): void {
 }
 
 // Function to load filters from URL query string
-function loadFiltersFromUrl(): void {
+function _loadFiltersFromUrl(): void {
   const query = route.query;
 
   // Load filter selections from URL
@@ -524,12 +505,16 @@ function loadFiltersFromUrl(): void {
 onMounted(async () => {
   await Promise.all([
     loadSubjectOptions(locale.value).then(options => {
-      remoteSubjectOptions.value = options;
+      subjectOptions.value = options;
+      // Update the shared label map used by accordion rows
+      const labelMap = buildSubjectLabelMap(options);
+
+      setSubjectLabelMap(labelMap);
     }),
-  loadDomainOptions(thesaurusDomains.COUNTRIES, locale.value).then(options => {
+    loadDomainOptions(thesaurusDomains.COUNTRIES, locale.value).then(options => {
       remoteCountryOptions.value = options;
     }),
-  loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
+    loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
       remoteGlobalTargetOptions.value = options;
     }),
   ]);
@@ -538,12 +523,19 @@ onMounted(async () => {
 // Watch for locale changes and reload subject options
 watch(() => locale.value, async (newLocale) => {
   try {
-    remoteSubjectOptions.value = await loadSubjectOptions(newLocale);
+    const options = await loadSubjectOptions(newLocale);
+
+    subjectOptions.value = options;
+    // Update the shared label map for the new locale
+    const labelMap = buildSubjectLabelMap(options);
+
+    setSubjectLabelMap(labelMap);
+    
     remoteCountryOptions.value = await loadDomainOptions(thesaurusDomains.COUNTRIES, newLocale);
     remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, newLocale);
   } catch (error) {
     console.error('Failed to reload options for locale', newLocale, error);
-    remoteSubjectOptions.value = [];
+    subjectOptions.value = [];
     remoteCountryOptions.value = [];
     remoteGlobalTargetOptions.value = [];
   }

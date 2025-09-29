@@ -211,6 +211,7 @@ const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionReq
 const schemaValue = computed(() => {
   const direct = props.doc.schema ? String(props.doc.schema) : undefined;
   const fallback = getDocStringValue(props.doc, 'schema');
+
   return (direct ?? fallback ?? '').toLowerCase();
 });
 
@@ -219,6 +220,7 @@ const isMeetingDoc = computed(() => {
     return true;
   }
   const typeValue = getDocStringValue(props.doc, 'type');
+
   return Boolean(typeValue && typeValue.toLowerCase() === 'meeting');
 });
 
@@ -233,6 +235,7 @@ const meetingLocation = computed(() => {
     ? resolveCountryLabel(rawCountry, providedCountry)
     : (providedCountry ?? '');
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+
   return parts.join(', ');
 });
 
@@ -241,10 +244,12 @@ const meetingSymbol = computed(() => {
     return '';
   }
   const code = getDocStringValue(props.doc, 'meetingCode');
+
   if (code) {
     return code;
   }
   const symbol = getDocStringValue(props.doc, 'symbol');
+
   return symbol ?? '';
 });
 
