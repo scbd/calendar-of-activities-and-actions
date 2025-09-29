@@ -1,6 +1,6 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
 import { thesaurusDomains } from '../constants/thesaurus';
-import { getDomainTerms } from '../services/thesaurus';
+import { loadDomainOptions } from '../services/thesaurus';
 
 export interface SubjectOption {
   value: string;
@@ -38,22 +38,30 @@ export function fallbackSubjectLabel(identifier: string): string {
 }
 
 export async function loadSubjectOptions(locale: string = 'en'): Promise<SubjectOption[]> {
-  if (cachedSubjectOptions.has(locale)) {
-    return cachedSubjectOptions.get(locale)!;
+  const cached = cachedSubjectOptions.get(locale);
+
+  if (cached) {
+    return cached;
   }
 
-  if (!inflightPromises.has(locale)) {
-    inflightPromises.set(locale, getDomainTerms(thesaurusDomains.CBD_SUBJECTS)
-      .then(terms => terms.map(term => mapThesaurusTermToSubjectOption(term, locale))
-        .sort((a, b) => a.label.localeCompare(b.label)))
-      .catch(() => []));
+  const inflight = inflightPromises.get(locale);
+
+  if (inflight) {
+    return inflight;
   }
 
-  const options = await inflightPromises.get(locale)!;
+  const promise = loadDomainOptions(thesaurusDomains.CBD_SUBJECTS, locale);
 
-  inflightPromises.delete(locale);
-  cachedSubjectOptions.set(locale, options);
-  return options;
+  inflightPromises.set(locale, promise);
+
+  try {
+    const options = await promise;
+
+    cachedSubjectOptions.set(locale, options);
+    return options;
+  } finally {
+    inflightPromises.delete(locale);
+  }
 }
 
 export function buildSubjectLabelMap(options: Array<{ value: string; label: string }>): Record<string, string> {

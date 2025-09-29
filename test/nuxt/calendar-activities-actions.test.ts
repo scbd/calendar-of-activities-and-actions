@@ -41,6 +41,10 @@ vi.mock('../../shared/utils/subjects', () => ({
   resolveSubjectLabel: (value: string) => value,
 }));
 
+vi.mock('../../shared/services/thesaurus', () => ({
+  loadDomainOptions: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock('../../shared/data/notifications.js', () => ({
   default: [
     {

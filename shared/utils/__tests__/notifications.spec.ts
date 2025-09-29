@@ -47,6 +47,7 @@ describe('notification utilities', () => {
 
   it('parses notification attachments', () => {
     const attachments = parseNotificationAttachments(['{"url":"/file.pdf"}']);
+
     expect(attachments[0]?.url).toContain('https://');
   });
 
@@ -58,22 +59,27 @@ describe('notification utilities', () => {
 
   it('maps snapshot records to documents and details', () => {
     const doc = mapNotificationRecordToDoc(snapshotRecord, 0);
+
     expect(doc.schema).toBe('notification');
 
     const details = buildNotificationDetailsFromSnapshot(snapshotRecord, '2024-001');
+
     expect(details?.key).toBe('2024-001');
   });
 
   it('collects notification keys and display entries', () => {
     const doc = mapNotificationRecordToDoc(snapshotRecord, 0);
     const keys = getNotificationKeys(doc as CalendarDoc);
+
     expect(keys).toEqual(['2024-001']);
     const entries = notificationDisplayEntries(doc as CalendarDoc);
+
     expect(entries[0]?.key).toBe('2024-001');
   });
 
   it('builds docs from snapshot array', () => {
     const { docs } = buildDocsFromNotifications([snapshotRecord]);
+
     expect(docs.length).toBe(1);
   });
 });

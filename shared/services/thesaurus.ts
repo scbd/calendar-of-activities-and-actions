@@ -38,4 +38,30 @@ export async function getTerm(
 
   return await $fetch<ThesaurusTerm>(url, { method: 'GET', query: { termCode, ...params } });
 }
+
+/**
+ * Load all terms from a thesaurus domain and return as filter options with localized labels.
+ */
+export async function loadDomainOptions(
+  domain: string,
+  locale: string = 'en',
+): Promise<Array<{ value: string; label: string }>> {
+  try {
+    const terms = await getDomainTerms(domain);
+
+    return terms
+      .map(term => {
+        const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title || {})[0]];
+
+        return {
+          value: term.identifier,
+          label: localizedTitle || term.name || term.identifier,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } catch (error) {
+    console.error(`Failed to load thesaurus terms for ${domain}`, error);
+    return [];
+  }
+}
 //https://api.cbd.int/api/v2013/thesaurus/terms?termCode=de

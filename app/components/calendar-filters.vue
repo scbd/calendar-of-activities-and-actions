@@ -194,9 +194,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, watchEffect, type Ref, type ComputedRef } from 'vue';
 import Multiselect from 'vue-multiselect';
-import type { ThesaurusTerm } from 'shared/types/thesaurus';
-import { getDomainTerms } from 'shared/services/thesaurus';
-import { thesaurusDomains, type ThesaurusDomainIdentifier } from 'shared/constants/thesaurus';
+import { loadDomainOptions } from 'shared/services/thesaurus';
+import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
@@ -380,10 +379,10 @@ onMounted(async () => {
     loadSubjectOptions(locale.value).then(options => {
       remoteSubjectOptions.value = options;
     }),
-  loadDomainOptions(thesaurusDomains.COUNTRIES).then(options => {
+  loadDomainOptions(thesaurusDomains.COUNTRIES, locale.value).then(options => {
       remoteCountryOptions.value = options;
     }),
-  loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS).then(options => {
+  loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
       remoteGlobalTargetOptions.value = options;
     }),
   ]);
@@ -393,9 +392,13 @@ onMounted(async () => {
 watch(() => locale.value, async (newLocale) => {
   try {
     remoteSubjectOptions.value = await loadSubjectOptions(newLocale);
+    remoteCountryOptions.value = await loadDomainOptions(thesaurusDomains.COUNTRIES, newLocale);
+    remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, newLocale);
   } catch (error) {
-    console.error('Failed to reload subject options for locale', newLocale, error);
+    console.error('Failed to reload options for locale', newLocale, error);
     remoteSubjectOptions.value = [];
+    remoteCountryOptions.value = [];
+    remoteGlobalTargetOptions.value = [];
   }
 });
 
@@ -444,42 +447,6 @@ function clearFilters(): void {
   actionRequired.value = false;
 
   updateFilters();
-}
-
-function mapThesaurusTermToOption(term: ThesaurusTerm): FilterOption {
-  if (term.title) {
-    const english = term.title['en'];
-
-    if (english) {
-      return { value: term.identifier, label: english };
-    }
-    for (const value of Object.values(term.title)) {
-      if (value) {
-        return { value: term.identifier, label: value };
-      }
-    }
-  }
-
-  return { value: term.identifier, label: term.name || term.identifier };
-}
-
-async function loadDomainOptions(domain: ThesaurusDomainIdentifier): Promise<FilterOption[]> {
-  try {
-    const terms = await getDomainTerms(domain);
-
-    return terms
-      .map(mapThesaurusTermToOption)
-      .sort((a, b) => a.label.localeCompare(b.label));
-  } catch (error) {
-    console.error(`Failed to load thesaurus terms for ${domain}`, error);
-    return [];
-  }
-}
-
-interface LocalCalendarTerm {
-  identifier: string;
-  name?: string;
-  title?: Record<string, string>;
 }
 
 function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {

@@ -15,6 +15,7 @@ describe('text utilities', () => {
 
   it('converts html to text', () => {
     const html = '<p>Hello</p><br><li>World</li>';
+
     expect(htmlToText(html)).toBe('Hello; World');
   });
 

@@ -19,6 +19,7 @@ describe('document processing utilities', () => {
   it('retrieves raw docs from the weak map', () => {
     const doc = { id: 'doc' } as CalendarDoc;
     const raw = { original: true };
+
     rawDocMap.set(doc, raw);
 
     expect(getDocRaw(doc)).toBe(raw);
@@ -30,11 +31,13 @@ describe('document processing utilities', () => {
     expect(getDocStringValue(doc, 'status')).toBe('Active');
 
     const booleanDoc = { id: 'doc', actionRequired: 'yes' } as CalendarDoc;
+
     expect(getDocBooleanValue(booleanDoc, 'actionRequired')).toBe(true);
   });
 
   it('collects subjects and bodies from docs and raw data', () => {
     const doc = { id: 'doc', subjectEn: 'A, B', subsidiaryBodies: ['Body A'] } as CalendarDoc;
+
     expect(getDocSubjects(doc)).toEqual(['A', 'B']);
     expect(getDocSubsidiaryBodies(doc)).toEqual(['Body A']);
   });
@@ -42,6 +45,7 @@ describe('document processing utilities', () => {
   it('collects decision labels using decision entries helper', () => {
     const doc = { id: 'doc', decision: 'CBD/COP/15/1' } as unknown as CalendarDoc;
     const labels = getDocDecisionLabels(doc);
+
     expect(Array.isArray(labels)).toBe(true);
   });
 

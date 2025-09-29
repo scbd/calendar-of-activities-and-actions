@@ -28,11 +28,13 @@ describe('label utilities', () => {
 
   it('resolves country labels using display names', () => {
     const label = resolveCountryLabel('ca');
+
     expect(label === 'CA' || label === 'Canada').toBe(true);
   });
 
   it('maps subject labels from configured map', () => {
     const doc = { id: 'doc', subjects: ['A'] } as CalendarDoc;
+
     expect(displaySubjectLabels(doc)).toEqual(['Subject A']);
   });
 
