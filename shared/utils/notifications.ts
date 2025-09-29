@@ -493,6 +493,10 @@ export function getNotificationKeys(doc: CalendarDoc): NotificationKey[] {
  * @returns Display entries with loading/error metadata.
  */
 export function notificationDisplayEntries(doc: CalendarDoc): NotificationDisplayEntry[] {
+  // Notifications cannot have sub-notifications
+  if (doc.schema === 'notification') {
+    return [];
+  }
   const keys = getNotificationKeys(doc);
 
   if (keys.length === 0) {
