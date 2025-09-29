@@ -236,7 +236,7 @@ const emit = defineEmits<{
   'update:filters': [filters: FilterState];
 }>();
 
-const { t, te } = useI18n();
+const { t, te, locale } = useI18n();
 
 // Filter state
 interface FilterState {
@@ -377,7 +377,7 @@ const activityTypeOptions = computed<FilterOption[]>(() =>
 
 onMounted(async () => {
   await Promise.all([
-    loadSubjectOptions().then(options => {
+    loadSubjectOptions(locale.value).then(options => {
       remoteSubjectOptions.value = options;
     }),
   loadDomainOptions(thesaurusDomains.COUNTRIES).then(options => {
@@ -387,6 +387,16 @@ onMounted(async () => {
       remoteGlobalTargetOptions.value = options;
     }),
   ]);
+});
+
+// Watch for locale changes and reload subject options
+watch(() => locale.value, async (newLocale) => {
+  try {
+    remoteSubjectOptions.value = await loadSubjectOptions(newLocale);
+  } catch (error) {
+    console.error('Failed to reload subject options for locale', newLocale, error);
+    remoteSubjectOptions.value = [];
+  }
 });
 
 function extractSelectedValues(selection: FilterSelectionValue[]): string[] {

@@ -7,8 +7,8 @@ export interface SubjectOption {
   label: string;
 }
 
-let cachedSubjectOptions: SubjectOption[] | null = null;
-let inflightPromise: Promise<SubjectOption[]> | null = null;
+const cachedSubjectOptions: Map<string, SubjectOption[]> = new Map();
+const inflightPromises: Map<string, Promise<SubjectOption[]>> = new Map();
 
 export function mapThesaurusTermToSubjectOption(term: ThesaurusTerm, locale: string = 'en'): SubjectOption {
   const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title)[0]];
@@ -38,21 +38,21 @@ export function fallbackSubjectLabel(identifier: string): string {
 }
 
 export async function loadSubjectOptions(locale: string = 'en'): Promise<SubjectOption[]> {
-  if (cachedSubjectOptions) {
-    return cachedSubjectOptions;
+  if (cachedSubjectOptions.has(locale)) {
+    return cachedSubjectOptions.get(locale)!;
   }
 
-  if (!inflightPromise) {
-  inflightPromise = getDomainTerms(thesaurusDomains.CBD_SUBJECTS)
+  if (!inflightPromises.has(locale)) {
+    inflightPromises.set(locale, getDomainTerms(thesaurusDomains.CBD_SUBJECTS)
       .then(terms => terms.map(term => mapThesaurusTermToSubjectOption(term, locale))
         .sort((a, b) => a.label.localeCompare(b.label)))
-      .catch(() => []);
+      .catch(() => []));
   }
 
-  const options = await inflightPromise;
+  const options = await inflightPromises.get(locale)!;
 
-  inflightPromise = null;
-  cachedSubjectOptions = options;
+  inflightPromises.delete(locale);
+  cachedSubjectOptions.set(locale, options);
   return options;
 }
 
