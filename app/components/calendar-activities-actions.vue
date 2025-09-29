@@ -1,8 +1,6 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <h2>{{ t('calendar.headings.activitiesExplorerAccordion') }}</h2>
-
       <div class="card mb-3">
         <div class="card-body">
           <CalendarFilters
@@ -16,14 +14,16 @@
             :initial-start-date="defaultStartDateIso"
             @update:filters="handleFiltersUpdate"
           />
+      </div>
+    </div>
+
+      <div v-if="loading" class="d-flex justify-content-center align-items-center py-5">
+        <div class="spinner-border text-dark" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-
-      <div v-if="loading" class="alert">{{ t('calendar.messages.loadingMeetings') }}</div>
       <div v-else>
-        <div v-if="groupedItems.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
-
-        <div v-for="group in groupedItems" :key="group.key" class="mb-4">
+        <div v-if="groupedItems.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>        <div v-for="group in groupedItems" :key="group.key" class="mb-4">
           <div class="dg-sep"><h3 class="m-0">{{ groupLabel(group) }}</h3></div>
 
           <div :id="`accordion-${group.key}`" class="accordion">

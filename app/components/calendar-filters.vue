@@ -202,6 +202,10 @@ import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
 import { loadSubjectOptions, buildSubjectLabelMap, resolveSubjectLabel } from 'shared/utils/subjects';
 
+// Nuxt router for URL query string management
+const route = useRoute();
+const router = useRouter();
+
 // Define filter option types
 interface FilterOption {
   value: string;
@@ -395,6 +399,128 @@ const activityTypeOptions = computed<FilterOption[]>(() =>
     .sort((a, b) => a.label.localeCompare(b.label))
 );
 
+// Function to parse query string array parameter
+function parseQueryArray(param: string | string[] | undefined): string[] {
+  if (!param) return [];
+  if (Array.isArray(param)) return param.filter(Boolean);
+  return param.split(',').filter(Boolean);
+}
+
+// Function to update URL query string
+function updateUrlQuery(): void {
+  const query: Record<string, string | undefined> = {};
+
+  // Only add non-empty filters to query string
+  const types = extractSelectedValues(selectedTypes.value);
+
+  if (types.length > 0) query.types = types.join(',');
+
+  const subjects = extractSelectedValues(selectedSubjects.value);
+
+  if (subjects.length > 0) query.subjects = subjects.join(',');
+
+  const statuses = extractSelectedValues(selectedStatuses.value);
+
+  if (statuses.length > 0) query.statuses = statuses.join(',');
+
+  const subsidiaryBodies = extractSelectedValues(selectedSubsidiaryBodies.value);
+
+  if (subsidiaryBodies.length > 0) query.subsidiaryBodies = subsidiaryBodies.join(',');
+
+  const copDecisions = extractSelectedValues(selectedCopDecisions.value);
+
+  if (copDecisions.length > 0) query.copDecisions = copDecisions.join(',');
+
+  const activityTypes = extractSelectedValues(selectedActivityTypes.value);
+
+  if (activityTypes.length > 0) query.activityTypes = activityTypes.join(',');
+
+  const globalTargets = extractSelectedValues(selectedGlobalTargets.value);
+
+  if (globalTargets.length > 0) query.globalTargets = globalTargets.join(',');
+
+  const countries = extractSelectedValues(selectedCountries.value);
+
+  if (countries.length > 0) query.countries = countries.join(',');
+
+  // Only add date filters if they differ from initial default
+  if (startDate.value && startDate.value !== props.initialStartDate) {
+    query.startDate = startDate.value;
+  }
+
+  if (endDate.value) query.endDate = endDate.value;
+
+  if (actionRequired.value) query.actionRequired = 'true';
+
+  // Update URL without reloading page
+  router.replace({ query });
+}
+
+// Function to load filters from URL query string
+function loadFiltersFromUrl(): void {
+  const query = route.query;
+
+  // Load filter selections from URL
+  const types = parseQueryArray(query.types as string | string[] | undefined);
+  const subjects = parseQueryArray(query.subjects as string | string[] | undefined);
+  const statuses = parseQueryArray(query.statuses as string | string[] | undefined);
+  const subsidiaryBodies = parseQueryArray(query.subsidiaryBodies as string | string[] | undefined);
+  const copDecisions = parseQueryArray(query.copDecisions as string | string[] | undefined);
+  const activityTypes = parseQueryArray(query.activityTypes as string | string[] | undefined);
+  const globalTargets = parseQueryArray(query.globalTargets as string | string[] | undefined);
+  const countries = parseQueryArray(query.countries as string | string[] | undefined);
+
+  // Set selections (these will be normalized by syncSelectionWithOptions)
+  if (types.length > 0) {
+    selectedTypes.value = types;
+    hasUserInteracted.value = true;
+  }
+  if (subjects.length > 0) {
+    selectedSubjects.value = subjects;
+    hasUserInteracted.value = true;
+  }
+  if (statuses.length > 0) {
+    selectedStatuses.value = statuses;
+    hasUserInteracted.value = true;
+  }
+  if (subsidiaryBodies.length > 0) {
+    selectedSubsidiaryBodies.value = subsidiaryBodies;
+    hasUserInteracted.value = true;
+  }
+  if (copDecisions.length > 0) {
+    selectedCopDecisions.value = copDecisions;
+    hasUserInteracted.value = true;
+  }
+  if (activityTypes.length > 0) {
+    selectedActivityTypes.value = activityTypes;
+    hasUserInteracted.value = true;
+  }
+  if (globalTargets.length > 0) {
+    selectedGlobalTargets.value = globalTargets;
+    hasUserInteracted.value = true;
+  }
+  if (countries.length > 0) {
+    selectedCountries.value = countries;
+    hasUserInteracted.value = true;
+  }
+
+  // Load date filters
+  if (query.startDate && typeof query.startDate === 'string') {
+    startDate.value = query.startDate;
+    hasUserInteracted.value = true;
+  }
+  if (query.endDate && typeof query.endDate === 'string') {
+    endDate.value = query.endDate;
+    hasUserInteracted.value = true;
+  }
+
+  // Load action required filter
+  if (query.actionRequired === 'true') {
+    actionRequired.value = true;
+    hasUserInteracted.value = true;
+  }
+}
+
 onMounted(async () => {
   await Promise.all([
     loadSubjectOptions(locale.value).then(options => {
@@ -452,6 +578,7 @@ function updateFilters(): void {
   };
 
   emit('update:filters', filters);
+  updateUrlQuery();
 }
 
 function clearFilters(): void {
