@@ -182,6 +182,7 @@
         <button
           type="button"
           class="btn btn-outline-secondary btn-sm"
+          :disabled="!hasActiveFilters"
           @click="clearFilters"
         >
           {{ t('calendar.filters.actions.clearAll') }}
@@ -266,6 +267,26 @@ const selectedCountries = ref<FilterSelectionValue[]>([]);
 const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
+
+// Track if any filter has been manually selected
+const hasUserInteracted = ref<boolean>(false);
+
+// Computed property to check if any filters are active
+const hasActiveFilters = computed<boolean>(() => {
+  return (
+    selectedTypes.value.length > 0 ||
+    selectedSubjects.value.length > 0 ||
+    selectedStatuses.value.length > 0 ||
+    selectedSubsidiaryBodies.value.length > 0 ||
+    selectedCopDecisions.value.length > 0 ||
+    selectedActivityTypes.value.length > 0 ||
+    selectedGlobalTargets.value.length > 0 ||
+    selectedCountries.value.length > 0 ||
+    startDate.value !== '' ||
+    endDate.value !== '' ||
+    actionRequired.value
+  );
+});
 
 const remoteSubjectOptions = ref<FilterOption[]>([]);
 const remoteCountryOptions = ref<FilterOption[]>([]);
@@ -445,6 +466,7 @@ function clearFilters(): void {
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;
+  hasUserInteracted.value = false;
 
   updateFilters();
 }
@@ -522,6 +544,44 @@ syncSelectionWithOptions(selectedCopDecisions, copDecisionOptions);
 syncSelectionWithOptions(selectedActivityTypes, activityTypeOptions);
 syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
 syncSelectionWithOptions(selectedCountries, countryOptions);
+
+// Watch for first user interaction with any filter
+watch(
+  [
+    selectedTypes,
+    selectedSubjects,
+    selectedStatuses,
+    selectedSubsidiaryBodies,
+    selectedCopDecisions,
+    selectedActivityTypes,
+    selectedGlobalTargets,
+    selectedCountries,
+    actionRequired,
+  ],
+  () => {
+    if (!hasUserInteracted.value) {
+      const hasAnySelection =
+        selectedTypes.value.length > 0 ||
+        selectedSubjects.value.length > 0 ||
+        selectedStatuses.value.length > 0 ||
+        selectedSubsidiaryBodies.value.length > 0 ||
+        selectedCopDecisions.value.length > 0 ||
+        selectedActivityTypes.value.length > 0 ||
+        selectedGlobalTargets.value.length > 0 ||
+        selectedCountries.value.length > 0 ||
+        actionRequired.value;
+
+      if (hasAnySelection) {
+        hasUserInteracted.value = true;
+        // Clear the default start date on first interaction
+        if (startDate.value === props.initialStartDate) {
+          startDate.value = '';
+        }
+      }
+    }
+  },
+  { deep: true },
+);
 
 // Emit updates whenever relevant filter state changes
 watchEffect(() => {

@@ -172,6 +172,8 @@ export function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: s
   const statusKey = normalizeStatusKey(rawStatus);
   const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
 
+  const activityType = String(row['Type'] || '').trim() || undefined;
+
   const baseRecord: Record<string, unknown> = {
     id,
     identifier: id,
@@ -180,6 +182,7 @@ export function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: s
     titleEn: row['Title'],
     description: row['Description'] || null,
     type: String(row['Type'] || 'Activity'),
+    activityType,
     actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
     subjects,
     subjectEn: subjects.join(', '),
@@ -231,6 +234,7 @@ export function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: s
     countryEn: countries[0] ?? undefined,
     outcome: row['Outcome'] || undefined,
     actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
+    activityType,
   } as CalendarDoc;
 
   delete (doc as Record<string, unknown>)._id;
