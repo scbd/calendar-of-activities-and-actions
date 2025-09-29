@@ -11,6 +11,7 @@ import { getDocStringValue } from './document-processing';
 export function parseFlexibleDate(value: string | undefined): string | null {
   if (!value) return null;
   const trimmed = value.trim();
+
   if (!trimmed) return null;
 
   const normalized = trimmed.replace(/\s+/g, ' ');
@@ -18,6 +19,7 @@ export function parseFlexibleDate(value: string | undefined): string | null {
 
   for (const pattern of patterns) {
     const dt = DateTime.fromFormat(normalized, pattern, { zone: 'utc', locale: 'en' });
+
     if (dt.isValid) return dt.toUTC().toISO();
   }
 
@@ -25,6 +27,7 @@ export function parseFlexibleDate(value: string | undefined): string | null {
 
   for (const pattern of monthPatterns) {
     const dt = DateTime.fromFormat(normalized, pattern, { zone: 'utc', locale: 'en' });
+
     if (dt.isValid) return dt.startOf('month').toUTC().toISO();
   }
 
@@ -32,6 +35,7 @@ export function parseFlexibleDate(value: string | undefined): string | null {
 
   if (quarterMatch) {
     const quarter = Number.parseInt(quarterMatch[1] ?? '1', 10);
+
     let year = Number.parseInt(quarterMatch[2] ?? '0', 10);
     if (year < 100) year += year >= 70 ? 1900 : 2000;
     const month = (quarter - 1) * 3 + 1;

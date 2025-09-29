@@ -12,6 +12,7 @@ import {
 describe('date utilities', () => {
   it('parses flexible dates with short years', () => {
     const iso = parseFlexibleDate('1-Jan-24');
+
     expect(iso).toBe('2024-01-01T00:00:00.000Z');
   });
 
@@ -27,6 +28,7 @@ describe('date utilities', () => {
 
   it('parses safe dates', () => {
     const dt = safeDate('2024-05-01');
+
     expect(dt).toBeInstanceOf(DateTime);
     expect(dt?.toISODate()).toBe('2024-05-01');
   });

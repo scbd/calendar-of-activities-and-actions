@@ -1,8 +1,8 @@
 <template>
-  <div class="accordion-item mb-3">
+  <div ref="accordionRef" class="accordion-item mb-3" :class="{ 'accordion-item--faded': fadeOthers && !isOpen }">
     <h2 :id="headingId" class="accordion-header">
       <button
-        class="accordion-button"
+        class="accordion-button p-0"
         :class="{ collapsed: !isOpen }"
         type="button"
         :aria-expanded="isOpen ? 'true' : 'false'"
@@ -10,12 +10,13 @@
         @click="$emit('toggle')"
       >
         <!-- Top banner showing type (Meeting, Workshop, Nominations, etc.) -->
-        <div class="calendar-row__type-banner" :style="typeStyle">
+        <div class="calendar-row__type-banner p-2" :style="typeStyle">
           <span class="calendar-row__type-date">{{ dateRange }}</span>
           <span class="calendar-row__type-text">{{ typeLabel }}</span>
+          <span class="calendar-row__caret-spacer" />
         </div>
 
-        <div class="calendar-accordion__summary">
+        <div class="calendar-accordion__summary p-4">
           <div class="calendar-accordion__title">{{ title }}</div>
           <div
             v-if="subjectLabels.length || statusLabel || isActionRequired || primaryLink"
@@ -106,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from '#imports';
 import { getTitleFieldForLocale, normalizeSolrDocument } from 'shared/services/solr';
 import type { LocaleCode } from 'shared/services/solr';
@@ -139,11 +140,28 @@ const props = defineProps<{
   isOpen: boolean;
   headingId: string;
   collapseId: string;
+  fadeOthers?: boolean;
 }>();
 
 const _emit = defineEmits<{
   (e: 'toggle'): void;
 }>();
+
+const accordionRef = ref<HTMLElement>();
+
+const handleClickOutside = (event: Event) => {
+  if (accordionRef.value && !accordionRef.value.contains(event.target as Node) && props.isOpen) {
+    _emit('toggle');
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 
 const { t, te, locale } = useI18n();
 
@@ -352,29 +370,55 @@ const collapseId = computed(() => props.collapseId);
   display: none;
 }
 
+/* Add subtle shadow to accordion items for enhanced visual separation */
+.accordion-item {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fade out other accordion items when one is expanded */
+.accordion-item--faded {
+  opacity: 0.2;
+}
+
+/* Smooth accordion transitions */
+.accordion-collapse {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.accordion-collapse:not(.show) {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.98);
+}
+
+.accordion-collapse.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
 /* Top banner that spans full header width with type color */
 .calendar-row__type-banner {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 180px 1fr 40px;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
   position: relative;
-  padding-right: calc(0.5rem + var(--bs-accordion-btn-icon-width, 1.25rem));
-  /* Bleed to the button edges using Bootstrap vars with fallbacks */
-  margin: calc(-1 * var(--bs-accordion-btn-padding-y, 1rem)) calc(-1 * var(--bs-accordion-btn-padding-x, 1.25rem)) 0.75rem;
-  border-top-left-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
-  border-top-right-radius: var(--bs-accordion-inner-border-radius, 0.25rem);
   text-transform: uppercase;
   color: #fff;
+  border-radius: 0.375rem 0.375rem 0 0;
 }
 
-.calendar-row__type-banner::after {
+.calendar-row__caret-spacer {
+  width: 40px;
+  height: var(--bs-accordion-btn-icon-width, 1.25rem);
+  position: relative;
+}
+
+.calendar-row__caret-spacer::after {
   content: '';
   position: absolute;
   top: 50%;
-  right: var(--bs-accordion-btn-padding-x, 1.25rem);
+  right: 0.5rem;
   width: var(--bs-accordion-btn-icon-width, 1.25rem);
   height: var(--bs-accordion-btn-icon-width, 1.25rem);
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
@@ -385,23 +429,26 @@ const collapseId = computed(() => props.collapseId);
   pointer-events: none;
 }
 
-.accordion-button:not(.collapsed) .calendar-row__type-banner::after {
+.accordion-button:not(.collapsed) .calendar-row__caret-spacer::after {
   transform: translateY(-50%) rotate(-180deg);
 }
 
 .calendar-row__type-text {
   font-weight: 700;
+  margin-left: -5rem;
   letter-spacing: 0.05em;
-  flex: 1;
   text-align: center;
 }
 
 .calendar-row__type-date {
-  font-weight: 600;
+  font-weight: normal;
+  font-size: 0.9em;
   text-transform: none;
   letter-spacing: normal;
   color: inherit;
-  margin-right: auto;
+  text-align: left;
+  padding-right: 1rem;
+  white-space: nowrap;
 }
 
 .calendar-accordion__summary {

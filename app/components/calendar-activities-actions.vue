@@ -34,6 +34,7 @@
               :is-open="isItemOpen(doc)"
               :heading-id="headingId(doc)"
               :collapse-id="collapseId(doc)"
+              :fade-others="anyItemOpen"
               @toggle="toggleAccordion(doc)"
             />
           </div>
@@ -44,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import CalendarFilters from './calendar-filters.vue';
@@ -103,6 +104,8 @@ watch(() => locale.value, (nextLocale) => {
 });
 
 const openItems = ref<Record<string, boolean>>({});
+
+const anyItemOpen = computed(() => Object.values(openItems.value).some(isOpen => isOpen));
 
 const itemKey = (doc: CalendarDoc): string => String(doc.id ?? '');
 const isItemOpen = (doc: CalendarDoc): boolean => Boolean(openItems.value[itemKey(doc)]);
