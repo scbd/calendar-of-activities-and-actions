@@ -166,7 +166,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     }
 
     try {
-      subjectOptions.value = await loadSubjectOptions();
+      subjectOptions.value = await loadSubjectOptions(locale.value);
     } catch (error) {
       console.error('Failed to load subject options', error);
       subjectOptions.value = [];

@@ -10,20 +10,12 @@ export interface SubjectOption {
 let cachedSubjectOptions: SubjectOption[] | null = null;
 let inflightPromise: Promise<SubjectOption[]> | null = null;
 
-export function mapThesaurusTermToSubjectOption(term: ThesaurusTerm): SubjectOption {
-  const candidates = [
-    term.title?.en,
-    ...Object.values(term.title ?? {}),
-    term.shortTitle?.en,
-    ...Object.values(term.shortTitle ?? {}),
-    term.name,
-  ].filter((candidate): candidate is string => Boolean(candidate && candidate.trim()));
-
-  const label = candidates.length > 0 ? candidates[0] as string : fallbackSubjectLabel(term.identifier);
+export function mapThesaurusTermToSubjectOption(term: ThesaurusTerm, locale: string = 'en'): SubjectOption {
+  const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title)[0]];
 
   return {
     value: term.identifier,
-    label,
+    label: localizedTitle || fallbackSubjectLabel(term.identifier),
   };
 }
 
@@ -45,14 +37,14 @@ export function fallbackSubjectLabel(identifier: string): string {
     .join(' ');
 }
 
-export async function loadSubjectOptions(): Promise<SubjectOption[]> {
+export async function loadSubjectOptions(locale: string = 'en'): Promise<SubjectOption[]> {
   if (cachedSubjectOptions) {
     return cachedSubjectOptions;
   }
 
   if (!inflightPromise) {
   inflightPromise = getDomainTerms(thesaurusDomains.CBD_SUBJECTS)
-      .then(terms => terms.map(mapThesaurusTermToSubjectOption)
+      .then(terms => terms.map(term => mapThesaurusTermToSubjectOption(term, locale))
         .sort((a, b) => a.label.localeCompare(b.label)))
       .catch(() => []);
   }

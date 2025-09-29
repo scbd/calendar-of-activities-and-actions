@@ -26,15 +26,16 @@ export async function getDomainTerms(
 }
 
 /**
- * Fetch a single thesaurus term by identifier.
- * Mirrors the API used in the ORT project.
+ * Fetch a single thesaurus term by term code.
+ * Uses the API endpoint with termCode query parameter.
  */
 export async function getTerm(
-  termIdentifier: string,
+  termCode: string,
   params: Record<string, unknown> = {},
 ): Promise<ThesaurusTerm> {
   const base = getApiBase();
-  const url = `${base}/api/v2013/thesaurus/terms/${encodeURIComponent(termIdentifier)}`;
+  const url = `${base}/api/v2013/thesaurus/terms`;
 
-  return await $fetch<ThesaurusTerm>(url, { method: 'GET', query: params });
+  return await $fetch<ThesaurusTerm>(url, { method: 'GET', query: { termCode, ...params } });
 }
+//https://api.cbd.int/api/v2013/thesaurus/terms?termCode=de
