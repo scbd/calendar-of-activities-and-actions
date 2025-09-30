@@ -266,7 +266,7 @@ export const meetings = [
       "2024-050"
     ],
     "activities": [
-      75
+      "ACT-2026-15"
     ]
   },
   {
@@ -773,8 +773,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [],
     "activities": [
-      19,
-      20
+      "ACT-2025-11",
+      "ACT-2025-27"
     ]
   },
   {
@@ -1658,8 +1658,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [],
     "activities": [
-      40,
-      41
+      "ACT-2025-52",
+      "ACT-2025-64"
     ]
   },
   {
@@ -1907,7 +1907,7 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [],
     "activities": [
-      44
+      "ACT-2025-73"
     ]
   },
   {
@@ -2432,7 +2432,7 @@ export const meetings = [
       "2025-118"
     ],
     "activities": [
-      69
+      "ACT-2025-39"
     ]
   },
   {

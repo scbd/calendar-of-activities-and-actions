@@ -126,7 +126,9 @@ export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDo
 
     const title = record.title ? String(record.title) : '';
     const slug = slugify(title || `calendar-item-${index}`);
-    const id = `activity-${slug}-${index}`;
+    // Use the identifier from the record if available, otherwise generate one
+    const identifier = record.identifier ? String(record.identifier) : `activity-${slug}-${index}`;
+    const id = identifier;
 
     const rawStatus = record.status ? String(record.status) : '';
     const statusKey = normalizeStatusKey(rawStatus);
@@ -136,7 +138,7 @@ export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDo
 
     const baseRecord: Record<string, unknown> = {
       id,
-      identifier: id,
+      identifier,
       source: 'activities-json:25-26',
       title,
       titleEn: title,
