@@ -22,7 +22,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-024, NTF 2025-042, NTF 2025-053",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer Review by Parties of the Annotated Outline of the Global Report",
@@ -47,7 +48,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-093",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nomination of Experts and Fellows for Second Global Assessment (IPBES)",
@@ -72,7 +74,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-027",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "First External Review of the Monitoring Assessment (Draft Chapters and Summary)",
@@ -97,7 +100,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Workshop on the assessments adopted by IPBES in 2024",
@@ -122,7 +126,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Registration to consult on a supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -147,7 +152,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-025",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Consultations on a supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -172,7 +178,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-025",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Hybrid Workshop on the supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -197,7 +204,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-025",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of  views and information for enhanced policy coherence across the Rio conventions",
@@ -222,7 +230,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-005",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for technical information exchange to support the implementation of the Rio Conventions",
@@ -247,7 +256,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-060",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Technical Information Exchange to support the implementation of the Rio Conventions",
@@ -272,7 +282,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-060",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-review comments on the draft strategic review and analysis",
@@ -297,7 +308,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-078",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Draft Report of the Strategic Review and Analysis",
@@ -322,7 +334,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and information on the strategic review and analysis of the forest biodiversity PoW",
@@ -347,7 +360,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-031, NTF 2025-048",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nomination of experts to participate in the Global Workshop on Forest Ecosystem Restoration Initiative",
@@ -372,7 +386,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-035",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Global Workshop on Forest Ecosystem Restoration Initiative",
@@ -397,7 +412,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-035",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-review of the draft analysis of PoW on forest biodiversity",
@@ -422,7 +438,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-079",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and relevant experiences on new work areas to support the implementation of the GBF",
@@ -447,7 +464,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-058",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of information on Parties’ needs and priorities related to risk assessment of LMOs",
@@ -472,7 +490,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-017",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for the Open-ended Online Forum on Risk Assessment and Risk Management",
@@ -497,7 +516,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-029",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "CP-RA-OM-2025-2"
+    ]
   },
   {
     "title": "Open-ended Online Forum on Risk Assessment and Risk Management",
@@ -522,7 +544,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-029",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "CP-RA-OM-2025-2"
+    ]
   },
   {
     "title": "Nominations for the AHTEG on Risk Assessment",
@@ -547,7 +572,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-051",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Informational Webinar on IAS Tools to support Target 6 of the GBF",
@@ -572,7 +598,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-011",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Invitation to participate in the Online Forum on Invasive Alien Species",
@@ -597,7 +624,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-021",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Online Forum on IAS",
@@ -622,7 +650,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-021",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Questionnaire on implementation of the Plan of Action (2020-2030) for the Conservation and Sustainable Use of Soil Biodiversity",
@@ -647,7 +676,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-067",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of Information on Biodiversity and Health Indicators",
@@ -672,7 +702,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-012",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Information webinar on the Global Action Plan to Mainstream Biodiversity and Health Interlinkages",
@@ -697,7 +728,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-023",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-Review of Work on Biodiveristy and Health Indicators for the Global Action Plan",
@@ -722,7 +754,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission by Parties of their 7th National reports",
@@ -747,7 +780,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-074",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-Review of the report on collective progress in implementing the GBF",
@@ -772,7 +806,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of information on additional headline, component and complementary indicators for the monitoring framework",
@@ -797,7 +832,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-044",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Request for inputs and relevant information to develop a methodology for additional component indicators for headline indicators 18.1 and 18.2 of the monitoring framework",
@@ -822,7 +858,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-045",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Request for inputs and relevant information to develop a methodology for headline indicator 22.1 of the monitoring framework",
@@ -847,7 +884,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-046",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for Regional and Subregional dialogues relating to monitoring and other issues",
@@ -872,7 +910,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-038",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Regional dialogue for the Southern African Development Community and the East African Community on the update or revision of national and regional biodiversity strategies and action plans",
@@ -897,7 +936,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for Sub-regional workshop and dialogue for the Pacific small island developing States",
@@ -922,7 +962,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-040",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Subregional workshop for the Pacific SIDS on strengthening national contributions to global environmental commitments through the synergistic implementation of multilateral environmental agreements",
@@ -947,7 +988,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-040",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Subregional dialogue for the Pacific SIDS on biodiversity monitoring and reporting",
@@ -972,7 +1014,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-040",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Subregional dialogue on biodiversity monitoring and reporting with a focus on ecosystem restoration (Target 2)",
@@ -997,7 +1040,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for Regional dialogue on biodiversity monitoring and reporting for francophone African countries",
@@ -1022,7 +1066,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-092",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "NBSAP-OM-2025-03"
+    ]
   },
   {
     "title": "Regional dialogue on biodiversity monitoring and reporting for francophone African countries",
@@ -1047,7 +1094,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-092",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "NBSAP-OM-2025-03"
+    ]
   },
   {
     "title": "Nominations for Regional meetings related to the implementation of the KMGBF for Asia and the Pacific",
@@ -1072,7 +1122,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "The regional workshop for Asia and the Pacific on implementing KMGBF through an integrated and synergistic approach",
@@ -1097,7 +1148,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "The regional dialogue for East and South Asia on biodiversity monitoring and reporting",
@@ -1122,7 +1174,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "NBSAP-OM-2025-04"
+    ]
   },
   {
     "title": "The Pacific sub-regional consultation on the implementation of the KMGBF",
@@ -1147,7 +1202,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-Review for the Monitoring Assessment Summary for Policymakers",
@@ -1172,7 +1228,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-Review of the Final Draft of the Biodiversity and Business Assessment Summary for Policymakers",
@@ -1197,7 +1254,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "First Peer-Review of the spatial planning assessment (draft chapters and summary for policymakers)",
@@ -1222,7 +1280,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Workshop on the outputs of IPBES",
@@ -1247,7 +1306,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submissions of information on synthetic biology to support the preparation of the thematic action plan",
@@ -1272,7 +1332,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-065",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for the Open-ended Online Forum on Synthetic Biology",
@@ -1297,7 +1358,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for the Ad Hoc Technical Expert Group on Synthetic Biology",
@@ -1322,7 +1384,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-review of the thematic action plan to support capacity-building and development, access to and transfer of technology and knowledge-sharing in the context of synthetic biology",
@@ -1347,7 +1410,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of information on best practices for sustainable wildlife management",
@@ -1372,7 +1436,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-015",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and inputs on the draft synthesis for sustainable wildlife management",
@@ -1397,7 +1462,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and inputs on elements of global guidance on SWM",
@@ -1422,7 +1488,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-014",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and inputs on draft guidance for sustainable wildlife management",
@@ -1447,7 +1514,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views on the strategic review and analysis of the PoW on Protected Areas",
@@ -1472,7 +1540,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and inputs on the draft strategic review and analysis on the PoW on Protected Areas",
@@ -1497,7 +1566,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Information webinar on modalities for the modification of existing descriptions of EBSAs and the description of new areas",
@@ -1522,7 +1592,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-034, NTF 2025-041",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submissions of EBSA descriptions and modifications and peer-review of the submissions",
@@ -1547,7 +1618,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations to participate in the CBD regional EBSA workshop to review submissions of EBSA descriptions and modifications",
@@ -1572,7 +1644,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Peer-review of draft voluntary guidelines on peer-review processes for the description of areas meeting the criteria for EBSAs and other scientific criteria",
@@ -1597,7 +1670,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Expert workshop on opportunities for scientific and technical work to contribute to the conservation and sustainable use of marine biodiversity in ABNJ",
@@ -1622,7 +1696,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for the IAG on Ecologically or Biologically Significant Marine Areas",
@@ -1647,7 +1722,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-064",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and information on the modus operandi for SB8J",
@@ -1672,7 +1748,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-061",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views and information on the implementation of the PoW on Article 8(j) and other provisions of the CBD related to indigenous peoples and local communities",
@@ -1697,7 +1774,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-061",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nomination for the expert workshop to support implementation of Tasks 1.1 and 1.2 of the PoW on Article 8(j) and other provisions of the CBD related to indigenous peoples and local communities to 2030",
@@ -1722,7 +1800,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-069",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Nominations for the sixth meeting of the Informal Advisory Committee on Capacity-building for the Implementation of the Nagoya Protocol",
@@ -1747,7 +1826,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-071, NTF 2025-089",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "NP-CB-IAC-2026-01"
+    ]
   },
   {
     "title": "Parties to submit their first national<br>reports on the implementation of<br>the Nagoya Protocol",
@@ -1772,7 +1854,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of national legislation, regulations and guidelines on new developments in modern biotechnology that are relevant to the Cartagena Protocol and not published in the BCH",
@@ -1797,7 +1880,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submit fifth national reports on the implementation of the Cartagena Protocol on Biosafety",
@@ -1822,7 +1906,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2024-073",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of national funding priorities, including funding needs that could be eligible for funding under the financial mechanism from July 2026 to June 2030",
@@ -1847,7 +1932,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-066",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Invitation for Parties to communicate interest in receiving support to build a national website",
@@ -1872,7 +1958,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Biosafety Clearing-House Training Workshop on the margins of COPMOP12",
@@ -1897,7 +1984,10 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": [
+      "CP-BCH-WS-2024-01"
+    ]
   },
   {
     "title": "Workshop on the detection and identification of LMOs and the role of customs in enforcing the Cartagena Protocol",
@@ -1922,7 +2012,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-085",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Inviting submissions for updates to the Training Manual (Biosafety Technical Series 05)",
@@ -1947,7 +2038,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of experiences with new detection techniques on the BCH, and with developing, using and maintaining reference materials",
@@ -1972,7 +2064,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Online discussions of the Network of Laboratories for the Detection and Identification of LMOs",
@@ -1997,7 +2090,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Consultations on reviewing of the effectiveness of structures and processes under the Convention and its Protocols",
@@ -2022,7 +2116,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Survey of Bureau Members on the effectiveness of structures and processes under the Convention and its Protocols",
@@ -2047,7 +2142,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Online forum for the Informal Advisory Group on Technical and Scientific Cooperation",
@@ -2072,7 +2168,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views on specialised international access and benefit sharing instruments (Nagoya Protocol)",
@@ -2097,7 +2194,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-033",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views for the Mid-term review of the implementation of the Gender Plan of Action 2023-2030",
@@ -2122,7 +2220,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Synthesis and analysis of views<br>and peer review of the report on<br>the midterm review of the Gender Plan of Action",
@@ -2147,7 +2246,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of information on best practices and lessons learned on the implementation of the Framework, in particular for Goal D, Targets 14, 15, 18 and 19 and the strategy for resource mobilization",
@@ -2172,7 +2272,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of views to inform a preliminary review of the procedures and mechanisms on compliance under the Nagoya Protocol",
@@ -2197,7 +2298,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-080",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Survey of ABS Focal Points: Views on challenges related to the implementation of the Protocol and operation of the clearing house",
@@ -2222,7 +2324,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of contributions from subnational governments, cities and other local authorities to the implementation of the GBF",
@@ -2247,7 +2350,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Submission of information to support biodiversity mainstreaming",
@@ -2272,7 +2376,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Draft report on activities in cooperation with other conventions and international organizations: Part 1 (September 2024 to November 2025)",
@@ -2297,7 +2402,8 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   },
   {
     "title": "Draft report on activities in cooperation with other conventions and international organizations: Part 2 (December 2025 to July 2026)",
@@ -2322,6 +2428,7 @@ export default [
     "actorsComments": "",
     "gbfTargets": "",
     "relatedDocuments": "",
-    "outcome": ""
+    "outcome": "",
+    "meetings": []
   }
 ];

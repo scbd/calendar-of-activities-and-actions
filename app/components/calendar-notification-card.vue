@@ -103,8 +103,11 @@ import { formatNotificationDate } from 'shared/utils/date';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';
 import { subjectLabelMap, resolveSubjectLabel, fallbackSubjectLabel } from 'shared/utils/subjects';
 
+// NOTE: allDocs prop is intentionally not used in this component
+// It is passed for potential future use (e.g., showing related meetings)
 const props = defineProps<{
   entry: NotificationDisplayEntry;
+  allDocs?: unknown[];
 }>();
 
 const { t } = useI18n();

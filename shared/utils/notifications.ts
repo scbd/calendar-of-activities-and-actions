@@ -576,3 +576,93 @@ export function getRelatedActivities(notificationKey: string, allDocs: CalendarD
     return keys.includes(notificationKey);
   });
 }
+
+/**
+ * Get meetings that reference this notification.
+ * @param notificationKey - Notification key (e.g., "2025-001").
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of meeting documents that reference this notification.
+ */
+export function getRelatedMeetings(notificationKey: string, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!notificationKey || !allDocs) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    // Only look at meeting documents
+    const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
+    const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
+    
+    if (schemaValue !== 'meeting' && typeValue !== 'meeting') {
+      return false;
+    }
+
+    // Check if the meeting's notifications array contains this notification key
+    const notifications = doc.notifications;
+    
+    if (!notifications || !Array.isArray(notifications)) {
+      return false;
+    }
+
+    return notifications.includes(notificationKey);
+  });
+}
+
+/**
+ * Get notifications that are referenced by this meeting.
+ * @param meetingDoc - Meeting document.
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of notification documents referenced by this meeting.
+ */
+export function getRelatedNotificationsForMeeting(meetingDoc: CalendarDoc, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!meetingDoc || !allDocs) {
+    return [];
+  }
+
+  const notifications = meetingDoc.notifications;
+  
+  if (!notifications || !Array.isArray(notifications) || notifications.length === 0) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+
+    const symbol = doc.symbol || doc.notificationKey;
+    
+    return symbol && notifications.includes(symbol);
+  });
+}
+
+/**
+ * Get activities that are referenced by this meeting.
+ * @param meetingDoc - Meeting document.
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of activity documents referenced by this meeting.
+ */
+export function getRelatedActivitiesForMeeting(meetingDoc: CalendarDoc, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!meetingDoc || !allDocs) {
+    return [];
+  }
+
+  const activities = meetingDoc.activities;
+  
+  if (!activities || !Array.isArray(activities) || activities.length === 0) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    // Only look at non-meeting, non-notification documents (activities)
+    const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
+    
+    if (schemaValue === 'meeting' || schemaValue === 'notification') {
+      return false;
+    }
+
+    const docId = doc.id || doc.identifier;
+    
+    return docId && activities.includes(docId);
+  });
+}

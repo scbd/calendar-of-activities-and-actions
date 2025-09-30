@@ -34,6 +34,8 @@
       "officer": "Funcionario",
       "notifications": "Notificaciones",
       "relatedActivities": "Actividades relacionadas",
+      "relatedMeetings": "Reuniones relacionadas",
+      "relatedNotifications": "Notificaciones relacionadas",
       "untitled": "Sin título",
       "unknownDate": "Fecha desconocida"
     },

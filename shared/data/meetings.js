@@ -33,7 +33,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-10-21T15:11:39Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000196f",
@@ -68,7 +69,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-10-10T16:19:18Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000196e",
@@ -103,7 +105,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-10-04T16:34:21Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000018e9",
@@ -156,7 +159,8 @@ export const meetings = [
       "2025-061",
       "2025-068",
       "2025-075"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000018ea",
@@ -190,7 +194,8 @@ export const meetings = [
     "notifications": [
       "2024-050",
       "2024-093"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000018eb",
@@ -221,7 +226,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-11T11:26:01Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000195e",
@@ -258,6 +264,9 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2024-050"
+    ],
+    "activities": [
+      75
     ]
   },
   {
@@ -293,7 +302,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-09-18T11:58:55Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000196c",
@@ -324,7 +334,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-11-27T14:06:29Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001972",
@@ -358,7 +369,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-12-02T16:03:47Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001973",
@@ -390,7 +402,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-12-02T16:03:29Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001974",
@@ -423,7 +436,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2024-12-02T16:03:16Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001970",
@@ -454,7 +468,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-01-21T12:08:39Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001979",
@@ -487,7 +502,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-01-24T12:23:50Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001971",
@@ -518,7 +534,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-01-22T14:24:10Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001975",
@@ -554,7 +571,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2025-002"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001976",
@@ -586,7 +604,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-02-10T19:32:10Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001977",
@@ -619,7 +638,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-02-10T19:32:19Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001978",
@@ -651,7 +671,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-30T19:55:48Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ee",
@@ -684,7 +705,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-28T10:23:58Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019bd",
@@ -717,7 +739,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-03-25T13:02:02Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000199d",
@@ -748,7 +771,11 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-22T10:32:13Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": [
+      19,
+      20
+    ]
   },
   {
     "id": "52000000cbd005000000197c",
@@ -781,7 +808,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-04T08:27:32Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c5",
@@ -815,7 +843,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-24T10:08:35Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019df",
@@ -846,7 +875,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-28T10:23:30Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ca",
@@ -880,7 +910,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-09T10:47:11Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c1",
@@ -918,7 +949,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-13T12:47:39Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019cc",
@@ -948,7 +980,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-16T10:55:23Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000197b",
@@ -979,7 +1012,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-01-29T16:38:08Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019bf",
@@ -1015,7 +1049,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-30T16:59:53Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000199a",
@@ -1046,7 +1081,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-16T16:18:03Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c0",
@@ -1084,7 +1120,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-17T12:32:36Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000199b",
@@ -1115,7 +1152,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-04-29T15:19:50Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ce",
@@ -1146,7 +1184,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-09T14:08:52Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c2",
@@ -1178,7 +1217,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-30T14:23:25Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c6",
@@ -1209,7 +1249,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-28T18:25:47Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d6",
@@ -1244,7 +1285,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-28T10:44:08Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c8",
@@ -1275,7 +1317,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-12T10:49:29Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d7",
@@ -1309,7 +1352,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2025-084"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd005000000197d",
@@ -1342,7 +1386,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-14T16:41:15Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c7",
@@ -1373,7 +1418,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-10T09:47:51Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019cb",
@@ -1404,7 +1450,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-15T17:37:37Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019de",
@@ -1438,7 +1485,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-23T12:18:42Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d9",
@@ -1468,7 +1516,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-27T12:34:42Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019be",
@@ -1502,7 +1551,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-04T12:38:27Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019db",
@@ -1538,7 +1588,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-11T10:06:37Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c3",
@@ -1572,7 +1623,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2025-091"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e0",
@@ -1604,7 +1656,11 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-12T10:01:55Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": [
+      40,
+      41
+    ]
   },
   {
     "id": "52000000cbd00500000019e8",
@@ -1639,7 +1695,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-25T16:01:11Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019dc",
@@ -1670,7 +1727,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-27T09:13:44Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019f1",
@@ -1705,7 +1763,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-22T15:43:33Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019da",
@@ -1735,7 +1794,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-04T13:38:26Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ef",
@@ -1770,7 +1830,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-22T15:16:48Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e5",
@@ -1806,7 +1867,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-10T16:47:57Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e6",
@@ -1843,7 +1905,10 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-10T16:49:16Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": [
+      44
+    ]
   },
   {
     "id": "52000000cbd00500000019e7",
@@ -1877,7 +1942,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-10T16:50:17Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c9",
@@ -1921,7 +1987,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-05-07T09:11:55Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001998",
@@ -1960,7 +2027,8 @@ export const meetings = [
       "2025-105",
       "2025-120",
       "2025-121"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd0050000001999",
@@ -1996,7 +2064,8 @@ export const meetings = [
     "notifications": [
       "2025-057",
       "2025-059"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e9",
@@ -2026,7 +2095,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-12T15:37:23Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019f0",
@@ -2063,7 +2133,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-19T13:34:51Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ed",
@@ -2100,7 +2171,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-28T11:28:08Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ea",
@@ -2131,7 +2203,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-22T15:15:30Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019c4",
@@ -2162,7 +2235,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-08T13:26:09Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019eb",
@@ -2194,7 +2268,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-22T16:55:37Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d1",
@@ -2225,7 +2300,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-23T13:12:55Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019ec",
@@ -2257,7 +2333,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-22T16:58:33Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d4",
@@ -2287,7 +2364,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-08-21T16:57:52Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d5",
@@ -2318,7 +2396,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-12T12:28:13Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019cd",
@@ -2351,6 +2430,9 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2025-118"
+    ],
+    "activities": [
+      69
     ]
   },
   {
@@ -2382,7 +2464,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-04T16:30:45Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d0",
@@ -2413,7 +2496,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-06-04T16:34:48Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e1",
@@ -2447,7 +2531,8 @@ export const meetings = [
     "notifications": [
       "2025-075",
       "2025-111"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019d2",
@@ -2478,7 +2563,8 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-23T13:03:00Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e2",
@@ -2516,7 +2602,8 @@ export const meetings = [
       "2024-113",
       "2025-075",
       "2025-111"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e3",
@@ -2551,7 +2638,8 @@ export const meetings = [
     "source": "index:meeting",
     "notifications": [
       "2024-098"
-    ]
+    ],
+    "activities": []
   },
   {
     "id": "52000000cbd00500000019e4",
@@ -2585,6 +2673,7 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-07-23T13:02:13Z",
     "source": "index:meeting",
-    "notifications": []
+    "notifications": [],
+    "activities": []
   }
 ];

@@ -93,6 +93,7 @@
             v-for="entry in notificationEntries"
             :key="entry.key"
             :entry="entry"
+            :all-docs="allDocs"
             class="mb-2"
           />
         </div>
@@ -107,6 +108,34 @@
             v-for="activity in relatedActivities"
             :key="activity.id"
             :doc="activity"
+            class="mb-2"
+          />
+        </div>
+
+        <hr v-if="relatedMeetings.length" class="calendar-meetings__separator">
+
+        <div v-if="relatedMeetings.length" class="calendar-meetings mt-3">
+          <div class="calendar-meetings__header">
+            <strong>{{ t('calendar.labels.relatedMeetings') }}</strong>
+          </div>
+          <CalendarActivityCard
+            v-for="meeting in relatedMeetings"
+            :key="meeting.id"
+            :doc="meeting"
+            class="mb-2"
+          />
+        </div>
+
+        <hr v-if="relatedNotifications.length" class="calendar-related-notifications__separator">
+
+        <div v-if="relatedNotifications.length" class="calendar-related-notifications mt-3">
+          <div class="calendar-related-notifications__header">
+            <strong>{{ t('calendar.labels.relatedNotifications') }}</strong>
+          </div>
+          <CalendarActivityCard
+            v-for="notification in relatedNotifications"
+            :key="notification.id"
+            :doc="notification"
             class="mb-2"
           />
         </div>
@@ -139,7 +168,14 @@ import {
 } from 'shared/utils/labels';
 import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
-import { notificationDisplayEntries, resolveNotificationUrl, getRelatedActivities } from 'shared/utils/notifications';
+import {
+  notificationDisplayEntries,
+  resolveNotificationUrl,
+  getRelatedActivities,
+  getRelatedMeetings,
+  getRelatedNotificationsForMeeting,
+  getRelatedActivitiesForMeeting,
+} from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels } from 'shared/utils/subjects';
 
@@ -372,11 +408,37 @@ const notificationKey = computed(() => {
 });
 
 const relatedActivities = computed(() => {
+  if (!props.allDocs) {
+    return [];
+  }
+
+  // For notifications, show activities that reference this notification
+  if (isNotification.value && notificationKey.value) {
+    return getRelatedActivities(notificationKey.value, props.allDocs);
+  }
+
+  // For meetings, show activities referenced in the meeting's activities array
+  if (isMeetingDoc.value) {
+    return getRelatedActivitiesForMeeting(props.doc, props.allDocs);
+  }
+
+  return [];
+});
+
+const relatedMeetings = computed(() => {
   if (!isNotification.value || !notificationKey.value || !props.allDocs) {
     return [];
   }
 
-  return getRelatedActivities(notificationKey.value, props.allDocs);
+  return getRelatedMeetings(notificationKey.value, props.allDocs);
+});
+
+const relatedNotifications = computed(() => {
+  if (!isMeetingDoc.value || !props.allDocs) {
+    return [];
+  }
+
+  return getRelatedNotificationsForMeeting(props.doc, props.allDocs);
 });
 
 const primaryLink = computed(() => {
@@ -642,6 +704,26 @@ const collapseId = computed(() => props.collapseId);
 }
 
 .calendar-activities__header {
+  font-size: 1.125rem;
+}
+
+.calendar-meetings__separator {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+.calendar-meetings__header {
+  font-size: 1.125rem;
+}
+
+.calendar-related-notifications__separator {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+.calendar-related-notifications__header {
   font-size: 1.125rem;
 }
 
