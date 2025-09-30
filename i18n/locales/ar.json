@@ -62,7 +62,8 @@
         "startDate": "تاريخ البدء",
         "endDate": "تاريخ الانتهاء",
         "actionRequired": "الإجراء المطلوب",
-        "schemas": "المخطط/المخططات"
+        "schemas": "المخطط/المخططات",
+        "sort": "ترتيب النتائج"
       },
       "placeholders": {
         "typeActivity": "اختر الأنواع",
@@ -72,13 +73,24 @@
         "subjects": "اختر الموضوعات",
         "statuses": "اختر الحالات",
         "subsidiaryBodies": "اختر الأجهزة الفرعية",
-        "decisions": "اختر القرارات"
+        "decisions": "اختر القرارات",
+        "schemas": "اختر المخططات",
+        "sort": "اختر ترتيب الفرز"
       },
       "toggles": {
         "actionRequiredOnly": "عرض العناصر التي تتطلب إجراء فقط"
       },
       "actions": {
         "clearAll": "مسح جميع عوامل التصفية"
+      },
+      "sortOptions": {
+        "startDateAsc": "تاريخ البدء (الأقدم أولاً)",
+        "startDateDesc": "تاريخ البدء (الأحدث أولاً)",
+        "endDateAsc": "تاريخ الانتهاء (الأقدم أولاً)",
+        "endDateDesc": "تاريخ الانتهاء (الأحدث أولاً)",
+        "statusAsc": "الحالة (أ-ي)",
+        "schemaAsc": "المخطط (أ-ي)",
+        "actionRequired": "العناصر التي تتطلب إجراء أولاً"
       }
     },
     "types": {

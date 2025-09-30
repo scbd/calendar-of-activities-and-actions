@@ -10,18 +10,13 @@
     </div>
 
     <div class="calendar-activity-card__content">
-      <a
-        v-if="primaryLink"
-        :href="primaryLink"
+      <NuxtLink
+        :to="activityLink"
         target="_blank"
-        rel="noopener"
         class="calendar-activity-card__title"
       >
         {{ title }}
-      </a>
-      <div v-else class="calendar-activity-card__title-text">
-        {{ title }}
-      </div>
+      </NuxtLink>
 
       <div v-if="meetingLocation" class="calendar-activity-card__location">
         {{ meetingLocation }}
@@ -53,18 +48,16 @@
 import { computed } from 'vue';
 import { useI18n } from '#imports';
 import type { CalendarDoc } from 'shared/types/calendar';
-import { getTitleFieldForLocale, normalizeSolrDocument } from 'shared/services/solr';
+import { getTitleFieldForLocale } from 'shared/services/solr';
 import type { LocaleCode } from 'shared/services/solr';
 import { formatDateRange } from 'shared/utils/date';
 import {
   getDocBooleanValue,
-  getDocRaw,
   getDocStringValue,
 } from 'shared/utils/document-processing';
 import { resolveCountryLabel } from 'shared/utils/labels';
 import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
-import { resolveNotificationUrl } from 'shared/utils/notifications';
 
 const props = defineProps<{
   doc: CalendarDoc;
@@ -171,75 +164,26 @@ const statusLabel = computed(() => {
 
 const statusColorValue = computed(() => statusColor(props.doc));
 
-const primaryLink = computed(() => {
-  const links = meetingLinks(props.doc);
-
-  if (links.length === 0) {
-    return undefined;
-  }
-
-  return links[0];
-});
-
-function meetingLinks(doc: CalendarDoc): string[] {
-  const record = doc as Record<string, unknown>;
-  const candidateFields = [
-    'links',
-    'link',
-    'meetingLinks',
-    'meetingLink',
-    'meetingUrl',
-    'meetingUrls',
-    'url',
-    'urls',
-    'documents',
-  ] as const;
-
-  const collected: string[] = [];
-
-  const collectFromSource = (source: Record<string, unknown>) => {
-    candidateFields.forEach(field => {
-      const value = source[field];
-
-      if (!value) {
-        return;
-      }
-
-      if (Array.isArray(value)) {
-        value.forEach(entry => {
-          if (typeof entry === 'string') {
-            const trimmed = entry.trim();
-
-            if (trimmed) {
-              collected.push(trimmed);
-            }
-          }
-        });
-      } else if (typeof value === 'string') {
-        const trimmed = value.trim();
-
-        if (trimmed) {
-          collected.push(trimmed);
-        }
-      }
-    });
+const activityLink = computed(() => {
+  const startDate = props.doc.startDate;
+  const docId = props.doc.id || '';
+  const query: Record<string, string> = {
+    autoExpand: docId,
   };
-
-  collectFromSource(record);
-
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    collectFromSource(normalizeSolrDocument(raw));
+  
+  if (startDate) {
+    query.startDate = startDate;
   }
-
-  const normalized = Array.from(new Set(
-    collected.map(link => resolveNotificationUrl(link)),
-  ))
-    .filter(link => /^https?:/i.test(link));
-
-  return normalized;
-}
+  
+  const link = {
+    path: '/',
+    query,
+  };
+  
+  console.log('[ActivityCard] Generated link for:', props.doc.title || props.doc.titleEn, 'ID:', docId, 'Link:', link);
+  
+  return link;
+});
 </script>
 
 <style scoped>
@@ -291,12 +235,6 @@ function meetingLinks(doc: CalendarDoc): string[] {
 .calendar-activity-card__title:hover {
   color: #0f7abd;
   text-decoration: underline;
-}
-
-.calendar-activity-card__title-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
 }
 
 .calendar-activity-card__location {

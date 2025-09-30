@@ -11,7 +11,7 @@
             :available-cop-decisions="availableCopDecisions"
             :preloaded-country-options="availableCountryOptions"
             :preloaded-global-target-options="availableGlobalTargetOptions"
-            :initial-start-date="defaultStartDateIso"
+            :initial-start-date="initialStartDate"
             @update:filters="handleFiltersUpdate"
           />
       </div>
@@ -46,9 +46,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
+import { useRoute } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarAccordionItem from './calendar-accordion-item.vue';
 import { useCalendarData } from '../composables/use-calendar-data';
@@ -58,6 +59,7 @@ import type { CalendarDoc, FilterState, GroupedItem } from 'shared/types/calenda
 import type { LocaleCode } from 'shared/services/solr';
 
 const { t, te, locale } = useI18n();
+const route = useRoute();
 
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
@@ -76,12 +78,17 @@ const createRegionDisplayNames = (code: string) => {
 
 const defaultStartDateIso = DateTime.now().startOf('day').toISO();
 
-const allDocsFlat = computed(() => {
-  return groupedItems.value.flatMap(group => group.items);
-});
+// Check for startDate in query params - use it to override default
+const queryStartDate = route.query.startDate as string;
+const initialStartDate = queryStartDate || defaultStartDateIso;
+
+console.log('[Filters] Default start date:', defaultStartDateIso);
+console.log('[Filters] Query start date:', queryStartDate);
+console.log('[Filters] Using initial start date:', initialStartDate);
 
 const {
   loading,
+  docs,
   locale: calendarLocale,
   groupedItems,
   availableTypes,
@@ -93,12 +100,16 @@ const {
   availableGlobalTargetOptions,
   setFilters,
 } = useCalendarData({
-  initialStartDate: defaultStartDateIso,
+  initialStartDate,
   locale: locale.value as LocaleCode,
   messages: {
     notificationNotFound: () => t('calendar.notifications.notFound') as string,
     notificationLoadFailed: () => t('calendar.notifications.loadFailed') as string,
   },
+});
+
+const allDocsFlat = computed(() => {
+  return docs.value;
 });
 
 setRegionDisplayNames(createRegionDisplayNames(locale.value));
@@ -132,6 +143,70 @@ const groupLabel = (group: GroupedItem): string => {
 const handleFiltersUpdate = (filters: FilterState) => {
   setFilters(filters);
 };
+
+// Handle auto-expand from query parameter
+const autoExpandId = route.query.autoExpand as string;
+
+console.log('[AutoExpand] Query params:', route.query);
+console.log('[AutoExpand] Target ID:', autoExpandId);
+
+if (autoExpandId) {
+  // Watch for loading to complete
+  const stopWatch = watch(
+    () => ({ isLoading: loading.value, docsCount: docs.value.length }),
+    ({ isLoading, docsCount }) => {
+      console.log('[AutoExpand] Watch triggered - Loading:', isLoading, 'Docs count:', docsCount);
+      console.log('[AutoExpand] Grouped items count:', groupedItems.value.length);
+      
+      if (!isLoading && docsCount > 0) {
+        console.log('[AutoExpand] Data loaded, stopping watcher');
+        // Stop watching once we've found the right moment
+        stopWatch();
+        
+        // Get all visible docs from grouped items (filtered results)
+        const visibleDocs = groupedItems.value.flatMap(group => group.items);
+        
+        // Log all doc IDs for debugging
+        console.log('[AutoExpand] All doc IDs:', docs.value.map(d => d.id));
+        console.log('[AutoExpand] Visible (filtered) doc IDs:', visibleDocs.map(d => d.id));
+        
+        // Wait for DOM to update
+        nextTick(() => {
+          setTimeout(() => {
+            // Find the item in visible (filtered) docs
+            const docExists = visibleDocs.some(doc => String(doc.id) === autoExpandId);
+            
+            console.log('[AutoExpand] Doc exists?', docExists);
+            
+            if (docExists) {
+              console.log('[AutoExpand] Expanding item:', autoExpandId);
+              openItems.value[autoExpandId] = true;
+              
+              console.log('[AutoExpand] openItems state:', openItems.value);
+              
+              // Wait for accordion animation, then scroll
+              setTimeout(() => {
+                const element = document.getElementById(`heading-${autoExpandId}`);
+                
+                console.log('[AutoExpand] Found element?', !!element, `#heading-${autoExpandId}`);
+                
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  console.log('[AutoExpand] Scrolled to element');
+                }
+              }, 400);
+            } else {
+              console.error('[AutoExpand] Could not find doc with ID:', autoExpandId);
+            }
+          }, 200);
+        });
+      }
+    },
+    { immediate: true }
+  );
+} else {
+  console.log('[AutoExpand] No autoExpand query parameter');
+}
 </script>
 
 <style lang="scss">

@@ -35,6 +35,8 @@ interface FilterOption {
   label: string;
 }
 
+const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
+
 const defaultFilters: FilterState = {
   types: [],
   subjects: [],
@@ -47,6 +49,7 @@ const defaultFilters: FilterState = {
   startDate: '',
   endDate: '',
   actionRequired: false,
+  sort: [...DEFAULT_SORT_VALUES],
 };
 
 export interface UseCalendarDataOptions {
@@ -64,7 +67,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   const allFieldNames = ref<string[]>([]);
   const locale = ref<LocaleCode>(options.locale ?? 'en');
   const subjectOptions = ref<SubjectOption[]>([]);
-  const currentFilters = ref<FilterState>({ ...defaultFilters, startDate: options.initialStartDate ?? '' });
+  const currentFilters = ref<FilterState>({ ...defaultFilters, startDate: options.initialStartDate ?? '', sort: [...DEFAULT_SORT_VALUES] });
   const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
   const notificationErrors = ref<Record<NotificationKey, string>>({});
   const notificationLoadingMap = ref<Record<NotificationKey, boolean>>({});
@@ -204,6 +207,17 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     void ensureSubjectLabels();
   });
 
+  type SortField = 'startDate' | 'endDate' | 'status' | 'schema' | 'actionRequired';
+  type SortDirection = 'asc' | 'desc';
+
+  interface SortDirective {
+    field: SortField;
+    direction: SortDirection;
+  }
+
+  const SORT_FIELDS: SortField[] = ['startDate', 'endDate', 'status', 'schema', 'actionRequired'];
+  const FALLBACK_SORT_DIRECTIVE: SortDirective = { field: 'startDate', direction: 'asc' };
+
   const filteredDocs = computed<CalendarDoc[]>(() => {
     let filtered = docs.value;
     const filters = currentFilters.value;
@@ -322,7 +336,26 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       });
     }
 
-    return filtered;
+    const sortDirectives = normalizeSortDirectives(filters.sort);
+
+    return [...filtered].sort((a, b) => {
+      for (const directive of sortDirectives) {
+        const comparison = compareByDirective(a, b, directive);
+
+        if (comparison !== 0) {
+          return comparison;
+        }
+      }
+
+      // Final deterministic fallback by start date then ID
+      const fallbackComparison = compareByDirective(a, b, FALLBACK_SORT_DIRECTIVE);
+
+      if (fallbackComparison !== 0) {
+        return fallbackComparison;
+      }
+
+      return compareStringValues(String(a.id ?? ''), String(b.id ?? ''));
+    });
   });
 
   const groupedItems = computed<GroupedItem[]>(() => {
@@ -439,12 +472,143 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       .sort((a, b) => a.label.localeCompare(b.label));
   });
 
+  function parseSortValue(value: string): SortDirective | null {
+    if (!value) {
+      return null;
+    }
+
+    const [rawField, rawDirection] = value.split(':', 2);
+
+    if (!rawField || !SORT_FIELDS.includes(rawField as SortField)) {
+      return null;
+    }
+
+    const direction: SortDirection = rawDirection === 'desc' ? 'desc' : 'asc';
+
+    return {
+      field: rawField as SortField,
+      direction,
+    };
+  }
+
+  function normalizeSortDirectives(sortValues: string[] | undefined): SortDirective[] {
+    const values = sortValues && sortValues.length > 0 ? sortValues : Array.from(DEFAULT_SORT_VALUES);
+    const directives = values
+      .map(parseSortValue)
+      .filter((value): value is SortDirective => value !== null);
+
+    if (directives.length === 0) {
+      return [{ ...FALLBACK_SORT_DIRECTIVE }];
+    }
+
+    return directives;
+  }
+
+  function compareByDirective(a: CalendarDoc, b: CalendarDoc, directive: SortDirective): number {
+    let comparison = 0;
+
+    switch (directive.field) {
+      case 'startDate':
+        comparison = compareDateValues(getStartDateForSort(a), getStartDateForSort(b));
+        break;
+      case 'endDate':
+        comparison = compareDateValues(getEndDateForSort(a), getEndDateForSort(b));
+        break;
+      case 'status':
+        comparison = compareStringValues(getStatusSortValue(a), getStatusSortValue(b));
+        break;
+      case 'schema':
+        comparison = compareStringValues(getSchemaSortValue(a), getSchemaSortValue(b));
+        break;
+      case 'actionRequired':
+        comparison = compareNumberValues(getActionRequiredSortValue(a), getActionRequiredSortValue(b));
+        break;
+      default:
+        comparison = 0;
+    }
+
+    return directive.direction === 'desc' ? -comparison : comparison;
+  }
+
+  function compareDateValues(aDate: DateTime | null, bDate: DateTime | null): number {
+    if (aDate && bDate) {
+      if (aDate.toMillis() < bDate.toMillis()) return -1;
+      if (aDate.toMillis() > bDate.toMillis()) return 1;
+      return 0;
+    }
+    if (aDate) return -1;
+    if (bDate) return 1;
+    return 0;
+  }
+
+  function compareStringValues(aValue: string, bValue: string): number {
+    const a = aValue?.trim().toLowerCase() ?? '';
+    const b = bValue?.trim().toLowerCase() ?? '';
+
+    if (a && b) {
+      const result = a.localeCompare(b);
+
+      if (result < 0) return -1;
+      if (result > 0) return 1;
+      return 0;
+    }
+
+    if (a) return -1;
+    if (b) return 1;
+    return 0;
+  }
+
+  function compareNumberValues(a: number, b: number): number {
+    if (a === b) return 0;
+    return a < b ? -1 : 1;
+  }
+
+  function getStartDateForSort(doc: CalendarDoc): DateTime | null {
+    return safeDate(getDocStringValue(doc, 'startDate'))
+      ?? safeDate(getDocStringValue(doc, 'endDate'));
+  }
+
+  function getEndDateForSort(doc: CalendarDoc): DateTime | null {
+    return safeDate(getDocStringValue(doc, 'endDate'))
+      ?? safeDate(getDocStringValue(doc, 'startDate'));
+  }
+
+  function getStatusSortValue(doc: CalendarDoc): string {
+    return (getDocStringValue(doc, 'statusKey')
+      ?? normalizeStatusKey(getDocStringValue(doc, 'status'))
+      ?? '').toString();
+  }
+
+  function getSchemaSortValue(doc: CalendarDoc): string {
+    const schema = getDocStringValue(doc, 'schema');
+
+    if (schema) {
+      return schema.toLowerCase();
+    }
+
+    const rawType = getDocStringValue(doc, 'type');
+
+    return rawType ? normalizeTypeKey(rawType) : '';
+  }
+
+  function getActionRequiredSortValue(doc: CalendarDoc): number {
+    return getDocBooleanValue(doc, 'actionRequired') ? 1 : 0;
+  }
+
   function setFilters(filters: FilterState): void {
-    currentFilters.value = { ...filters };
+    const normalizedSort = filters.sort && filters.sort.length > 0
+      ? [...filters.sort]
+      : Array.from(DEFAULT_SORT_VALUES);
+
+    currentFilters.value = { ...filters, sort: normalizedSort };
   }
 
   function resetFilters(): void {
-    currentFilters.value = { ...defaultFilters, startDate: options.initialStartDate ?? '' };
+    currentFilters.value = {
+      ...defaultFilters,
+      startDate: options.initialStartDate ?? '',
+      sort: Array.from(DEFAULT_SORT_VALUES),
+    };
   }
 
   return {

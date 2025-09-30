@@ -62,7 +62,8 @@
         "startDate": "Date de début",
         "endDate": "Date de fin",
         "actionRequired": "Action requise",
-        "schemas": "Schéma(s)"
+        "schemas": "Schéma(s)",
+        "sort": "Trier les résultats"
       },
       "placeholders": {
         "typeActivity": "Sélectionner des types",
@@ -72,13 +73,24 @@
         "subjects": "Sélectionner des sujets",
         "statuses": "Sélectionner des statuts",
         "subsidiaryBodies": "Sélectionner des organes subsidiaires",
-        "decisions": "Sélectionner des décisions"
+        "decisions": "Sélectionner des décisions",
+        "schemas": "Sélectionner des schémas",
+        "sort": "Sélectionnez l'ordre de tri"
       },
       "toggles": {
         "actionRequiredOnly": "Afficher uniquement les éléments nécessitant une action"
       },
       "actions": {
         "clearAll": "Effacer tous les filtres"
+      },
+      "sortOptions": {
+        "startDateAsc": "Date de début (plus anciennes d'abord)",
+        "startDateDesc": "Date de début (plus récentes d'abord)",
+        "endDateAsc": "Date de fin (plus anciennes d'abord)",
+        "endDateDesc": "Date de fin (plus récentes d'abord)",
+        "statusAsc": "Statut (A à Z)",
+        "schemaAsc": "Schéma (A à Z)",
+        "actionRequired": "Actions requises en premier"
       },
       "typeLabel": "Type",
       "typePlaceholder": "Sélectionner des types",

@@ -62,7 +62,8 @@
         "startDate": "Start date",
         "endDate": "End date",
         "actionRequired": "Action required",
-        "schemas": "Schema(s)"
+        "schemas": "Schema(s)",
+        "sort": "Sort results"
       },
       "placeholders": {
         "typeActivity": "Select types",
@@ -73,13 +74,23 @@
         "statuses": "Select statuses",
         "subsidiaryBodies": "Select subsidiary bodies",
         "decisions": "Select decisions",
-        "schemas": "Select schemas"
+        "schemas": "Select schemas",
+        "sort": "Select sort order"
       },
       "toggles": {
         "actionRequiredOnly": "Show only items requiring action"
       },
       "actions": {
         "clearAll": "Clear all filters"
+      },
+      "sortOptions": {
+        "startDateAsc": "Start date (oldest first)",
+        "startDateDesc": "Start date (newest first)",
+        "endDateAsc": "End date (oldest first)",
+        "endDateDesc": "End date (newest first)",
+        "statusAsc": "Status (A to Z)",
+        "schemaAsc": "Schema (A to Z)",
+        "actionRequired": "Action required items first"
       },
       "typeLabel": "Type",
       "typePlaceholder": "Select types",

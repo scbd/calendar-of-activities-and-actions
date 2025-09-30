@@ -62,7 +62,8 @@
         "startDate": "开始日期",
         "endDate": "结束日期",
         "actionRequired": "需要采取行动",
-        "schemas": "架构"
+        "schemas": "架构",
+        "sort": "排序结果"
       },
       "placeholders": {
         "typeActivity": "选择类型",
@@ -72,13 +73,24 @@
         "subjects": "选择主题",
         "statuses": "选择状态",
         "subsidiaryBodies": "选择附属机构",
-        "decisions": "选择决定"
+        "decisions": "选择决定",
+        "schemas": "选择架构",
+        "sort": "选择排序方式"
       },
       "toggles": {
         "actionRequiredOnly": "仅显示需要采取行动的事项"
       },
       "actions": {
         "clearAll": "清除所有筛选条件"
+      },
+      "sortOptions": {
+        "startDateAsc": "开始日期（最旧优先）",
+        "startDateDesc": "开始日期（最新优先）",
+        "endDateAsc": "结束日期（最旧优先）",
+        "endDateDesc": "结束日期（最新优先）",
+        "statusAsc": "状态（A-Z）",
+        "schemaAsc": "架构（A-Z）",
+        "actionRequired": "优先显示需采取行动的条目"
       }
     },
     "types": {

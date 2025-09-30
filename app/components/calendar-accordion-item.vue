@@ -17,8 +17,9 @@
         </div>
 
         <div class="calendar-accordion__summary p-4">
-          <div class="calendar-accordion__title mb-2">{{ title }}</div>
+          <div class="calendar-accordion__title mb-3">{{ title }}</div>
           <div v-if="meetingLocation" class="calendar-accordion__location mb-3">{{ meetingLocation }}</div>
+          <div v-if="notificationSymbol" class="calendar-accordion__symbol mb-3">{{ notificationSymbol }}</div>
           <div
             v-if="statusLabel || isActionRequired || primaryLink"
             class="calendar-accordion__meta-block mt-2"
@@ -214,7 +215,28 @@ const typeStyle = computed(() => {
   };
 });
 
-const statusNarrative = computed(() => getDocStringValue(props.doc, 'statusNarrative'));
+const isNotification = computed(() => {
+  return props.doc.schema === 'notification';
+});
+
+const statusNarrative = computed(() => {
+  // For notifications, don't use statusNarrative field - use fulltext_s instead
+  if (isNotification.value) {
+    const fulltext = getDocStringValue(props.doc, 'fulltext_s');
+    
+    if (!fulltext) {
+      return '';
+    }
+    
+    // Extract first 3 sentences
+    const sentences = fulltext.match(/[^.!?]+[.!?]+/g) || [];
+    const firstThree = sentences.slice(0, 3).join(' ').trim();
+    
+    return firstThree ? `${firstThree}...` : '';
+  }
+  
+  return getDocStringValue(props.doc, 'statusNarrative');
+});
 
 const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired') === true);
 
@@ -247,6 +269,15 @@ const meetingLocation = computed(() => {
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
 
   return parts.join(', ');
+});
+
+const notificationSymbol = computed(() => {
+  if (!isNotification.value) {
+    return '';
+  }
+  const symbol = getDocStringValue(props.doc, 'symbol');
+  
+  return symbol ?? '';
 });
 
 const meetingSymbol = computed(() => {
@@ -331,10 +362,6 @@ const decisionEntriesValue = computed(() => {
 const subjectLabels = computed(() => displaySubjectLabels(props.doc));
 
 const notificationEntries = computed(() => notificationDisplayEntries(props.doc));
-
-const isNotification = computed(() => {
-  return props.doc.schema === 'notification';
-});
 
 const notificationKey = computed(() => {
   if (!isNotification.value) {
@@ -585,6 +612,12 @@ const collapseId = computed(() => props.collapseId);
   color: #6c757d;
   font-size: 0.95rem;
   font-style: italic;
+}
+
+.calendar-accordion__symbol {
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .calendar-accordion__status-badge {

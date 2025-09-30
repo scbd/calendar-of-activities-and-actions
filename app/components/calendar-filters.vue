@@ -1,6 +1,23 @@
 <template>
   <div class="calendar-filters">
     <div class="row g-3">
+      <!-- Sort Filter -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <label for="sort-filter" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
+        <Multiselect
+          id="sort-filter"
+          v-model="selectedSorts"
+          :options="sortOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.sort')"
+        />
+      </div>
+
       <!-- Type Filter -->
       <div class="col-12 col-md-6 col-lg-3">
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
@@ -255,9 +272,12 @@ interface FilterState {
   startDate: string;
   endDate: string;
   actionRequired: boolean;
+  sort: string[];
 }
 
 type FilterSelectionValue = FilterOption | string;
+
+const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
 
 // Reactive filter values
 const selectedTypes = ref<FilterSelectionValue[]>([]);
@@ -268,6 +288,7 @@ const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
 const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
 const selectedGlobalTargets = ref<FilterSelectionValue[]>([]);
 const selectedCountries = ref<FilterSelectionValue[]>([]);
+const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
 const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
@@ -277,6 +298,8 @@ const hasUserInteracted = ref<boolean>(false);
 
 // Computed property to check if any filters are active
 const hasActiveFilters = computed<boolean>(() => {
+  const activeSorts = extractSelectedValues(selectedSorts.value);
+
   return (
     selectedTypes.value.length > 0 ||
     selectedSubjects.value.length > 0 ||
@@ -288,7 +311,8 @@ const hasActiveFilters = computed<boolean>(() => {
     selectedCountries.value.length > 0 ||
     startDate.value !== '' ||
     endDate.value !== '' ||
-    actionRequired.value
+    actionRequired.value ||
+    !areSortSelectionsDefault(activeSorts)
   );
 });
 
@@ -310,6 +334,16 @@ const countryOptions = computed<FilterOption[]>(() =>
 const globalTargetOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
 );
+
+const sortOptions = computed<FilterOption[]>(() => [
+  { value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string },
+  { value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string },
+  { value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string },
+  { value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string },
+  { value: 'status:asc', label: t('calendar.filters.sortOptions.statusAsc') as string },
+  { value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string },
+  { value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string },
+]);
 
 // Schemas are constrained to the canonical keys provided by the activity index service.
 const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
@@ -424,6 +458,12 @@ function updateUrlQuery(): void {
 
   if (countries.length > 0) query.countries = countries.join(',');
 
+  const sortSelections = extractSelectedValues(selectedSorts.value);
+
+  if (!areSortSelectionsDefault(sortSelections)) {
+    query.sort = sortSelections.join(',');
+  }
+
   // Only add date filters if they differ from initial default
   if (startDate.value && startDate.value !== props.initialStartDate) {
     query.startDate = startDate.value;
@@ -450,6 +490,7 @@ function _loadFiltersFromUrl(): void {
   const activityTypes = parseQueryArray(query.activityTypes as string | string[] | undefined);
   const globalTargets = parseQueryArray(query.globalTargets as string | string[] | undefined);
   const countries = parseQueryArray(query.countries as string | string[] | undefined);
+  const sortOrder = parseQueryArray(query.sort as string | string[] | undefined);
 
   // Set selections (these will be normalized by syncSelectionWithOptions)
   if (types.length > 0) {
@@ -483,6 +524,13 @@ function _loadFiltersFromUrl(): void {
   if (countries.length > 0) {
     selectedCountries.value = countries;
     hasUserInteracted.value = true;
+  }
+
+  if (sortOrder.length > 0) {
+    selectedSorts.value = sortOrder;
+    hasUserInteracted.value = true;
+  } else {
+    selectedSorts.value = [...DEFAULT_SORT_VALUES];
   }
 
   // Load date filters
@@ -567,6 +615,7 @@ function updateFilters(): void {
     startDate: startDate.value,
     endDate: endDate.value,
     actionRequired: actionRequired.value,
+    sort: extractSelectedValues(selectedSorts.value),
   };
 
   emit('update:filters', filters);
@@ -582,6 +631,7 @@ function clearFilters(): void {
   selectedActivityTypes.value = [];
   selectedGlobalTargets.value = [];
   selectedCountries.value = [];
+  selectedSorts.value = [...DEFAULT_SORT_VALUES];
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;
@@ -611,6 +661,14 @@ function mergeOptions(primary: FilterOption[], fallback: FilterOption[]): Filter
   }
 
   return Array.from(merged.values()).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function areSortSelectionsDefault(values: string[]): boolean {
+  if (values.length !== DEFAULT_SORT_VALUES.length) {
+    return false;
+  }
+
+  return values.every((value, index) => value === DEFAULT_SORT_VALUES[index]);
 }
 
 function formatSchemaLabel(key: string): string {
@@ -663,6 +721,7 @@ syncSelectionWithOptions(selectedCopDecisions, copDecisionOptions);
 syncSelectionWithOptions(selectedActivityTypes, activityTypeOptions);
 syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
 syncSelectionWithOptions(selectedCountries, countryOptions);
+syncSelectionWithOptions(selectedSorts, sortOptions);
 
 // Watch for first user interaction with any filter
 watch(
@@ -675,6 +734,7 @@ watch(
     selectedActivityTypes,
     selectedGlobalTargets,
     selectedCountries,
+    selectedSorts,
     actionRequired,
   ],
   () => {
@@ -688,6 +748,7 @@ watch(
         selectedActivityTypes.value.length > 0 ||
         selectedGlobalTargets.value.length > 0 ||
         selectedCountries.value.length > 0 ||
+        !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
         actionRequired.value;
 
       if (hasAnySelection) {
@@ -713,6 +774,7 @@ watchEffect(() => {
   void selectedActivityTypes.value;
   void selectedGlobalTargets.value;
   void selectedCountries.value;
+  void selectedSorts.value;
   void startDate.value;
   void endDate.value;
   void actionRequired.value;

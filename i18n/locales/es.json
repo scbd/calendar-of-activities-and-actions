@@ -62,7 +62,8 @@
         "startDate": "Fecha de inicio",
         "endDate": "Fecha de finalización",
         "actionRequired": "Acción requerida",
-        "schemas": "Esquema(s)"
+        "schemas": "Esquema(s)",
+        "sort": "Ordenar resultados"
       },
       "placeholders": {
         "typeActivity": "Seleccionar tipos",
@@ -72,13 +73,24 @@
         "subjects": "Seleccionar temas",
         "statuses": "Seleccionar estados",
         "subsidiaryBodies": "Seleccionar órganos subsidiarios",
-        "decisions": "Seleccionar decisiones"
+        "decisions": "Seleccionar decisiones",
+        "schemas": "Seleccionar esquemas",
+        "sort": "Selecciona el orden de clasificación"
       },
       "toggles": {
         "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
       },
       "actions": {
         "clearAll": "Limpiar todos los filtros"
+      },
+      "sortOptions": {
+        "startDateAsc": "Fecha de inicio (más antiguas primero)",
+        "startDateDesc": "Fecha de inicio (más recientes primero)",
+        "endDateAsc": "Fecha de finalización (más antiguas primero)",
+        "endDateDesc": "Fecha de finalización (más recientes primero)",
+        "statusAsc": "Estado (A a Z)",
+        "schemaAsc": "Esquema (A a Z)",
+        "actionRequired": "Elementos con acción requerida primero"
       }
     },
     "types": {
