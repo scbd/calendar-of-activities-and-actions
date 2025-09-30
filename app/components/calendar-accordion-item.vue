@@ -19,12 +19,9 @@
         <div class="calendar-accordion__summary p-4">
           <div class="calendar-accordion__title mb-4">{{ title }}</div>
           <div
-            v-if="subjectLabels.length || statusLabel || isActionRequired || primaryLink"
+            v-if="statusLabel || isActionRequired || primaryLink"
             class="calendar-accordion__meta-block mt-2"
           >
-            <div v-if="subjectLabels.length" class="calendar-accordion__subjects">
-              <ExpandablePillList :items="subjectLabels" />
-            </div>
             <div
               v-if="primaryLink || statusLabel || isActionRequired"
               class="calendar-accordion__footer"
@@ -81,7 +78,7 @@
           :location="meetingLocation"
           :is-action-required="isActionRequired"
           :description="description"
-          :subject-labels="subjectLabels"
+          :subject-labels="[]"
           :subsidiary-bodies="subsidiaryBodies"
           :decision-entries="decisionEntriesValue"
           :responsible-unit="responsibleUnit"
@@ -117,10 +114,8 @@ import {
   getDocBooleanValue,
   getDocRaw,
   getDocStringValue,
-  getDocSubjects,
   getDocSubsidiaryBodies,
 } from 'shared/utils/document-processing';
-import { subjectLabelMap, resolveSubjectLabel } from 'shared/utils/subjects';
 import {
   normalizeDecisionLabel,
   responsibleOfficerLabel,
@@ -131,7 +126,6 @@ import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statu
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import { notificationDisplayEntries, resolveNotificationUrl } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
-import ExpandablePillList from './expandable-pill-list.vue';
 
 const meetingLinksCache = new WeakMap<CalendarDoc, string[]>();
 const decisionEntriesCache = new WeakMap<CalendarDoc, DecisionEntry[]>();
@@ -274,14 +268,6 @@ const statusLabel = computed(() => {
 });
 
 const statusColorValue = computed(() => statusColor(props.doc));
-
-const subjectLabels = computed(() => {
-  const labels = subjectLabelMap.value;
-
-  return getDocSubjects(props.doc)
-    .map(subject => resolveSubjectLabel(subject, labels))
-    .filter(label => Boolean(label && label.trim())) as string[];
-});
 
 const subsidiaryBodies = computed(() => getDocSubsidiaryBodies(props.doc));
 
@@ -558,19 +544,6 @@ const collapseId = computed(() => props.collapseId);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
-/* Subjects chips */
-.calendar-accordion__subjects :deep(.calendar-pill) {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  background-color: #f1f3f5;
-  color: #1f1f1f;
-  font-size: 0.875rem;
-  margin: 0 0.25rem 0.25rem 0;
-}
-
 @media (max-width: 768px) {
   .calendar-accordion__title { font-size: 1.125rem; }
 }
