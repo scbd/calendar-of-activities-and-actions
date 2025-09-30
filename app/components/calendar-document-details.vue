@@ -1,55 +1,62 @@
 <template>
-  <div class="row">
-    <!-- Status narrative at the top, full width -->
-    <div v-if="statusNarrative" class="col-12">
-      <p><strong>{{ t('calendar.labels.statusNarrative') }}:</strong> {{ statusNarrative }}</p>
+  <div class="calendar-details">
+    <!-- Status narrative -->
+    <div v-if="statusNarrative" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.statusNarrative') }}</span>
+      <div class="calendar-detail-content">{{ statusNarrative }}</div>
     </div>
 
-    <!-- Left column: symbol, description -->
-    <div class="col-md-6">
-      <p v-if="symbol"><strong>{{ t('calendar.labels.symbol') }}:</strong> {{ symbol }}</p>
-      <p v-if="description"><strong>{{ t('calendar.labels.description') }}:</strong> {{ description }}</p>
+    <!-- Symbol -->
+    <div v-if="symbol" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.symbol') }}</span>
+      <div class="calendar-detail-content">{{ symbol }}</div>
     </div>
 
-    <!-- Right column: subsidiary bodies, decisions, responsible -->
-    <div class="col-md-6">
-      <p v-if="subsidiaryBodies.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ subsidiaryBodies.join(', ') }}</p>
-      <p v-if="decisionEntries.length">
-        <strong>{{ t('calendar.labels.decision') }}:</strong>
-        <span class="ms-1">
-          <template
-            v-for="(entry, index) in decisionEntries"
-            :key="`${entry.href ?? entry.label}-${index}`"
-          >
-            <DecisionLink :href="entry.href" :label="entry.label" />
-            <span v-if="index < decisionEntries.length - 1">, </span>
-          </template>
-        </span>
-      </p>
-      <div v-if="showResponsible" class="card">
-        <div class="card-header">
-          <strong>{{ t('calendar.labels.responsible') }}</strong>
-        </div>
-        <ul class="list-group list-group-flush">
-          <li v-if="responsibleUnit" class="list-group-item">
-            <span class="fw-bold">{{ t('calendar.labels.unit') }}: </span>{{ responsibleUnit }}
-          </li>
-          <li v-if="responsibleOfficer" class="list-group-item">
-            <span class="fw-bold">{{ t('calendar.labels.officer') }}: </span>{{ responsibleOfficer }}
-          </li>
-        </ul>
+    <!-- Description -->
+    <div v-if="description" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.description') }}</span>
+      <div class="calendar-detail-content">{{ description }}</div>
+    </div>
+
+    <!-- Subsidiary bodies -->
+    <div v-if="subsidiaryBodies.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.associatedBody') }}</span>
+      <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
+    </div>
+
+    <!-- Decisions -->
+    <div v-if="decisionEntries.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.decision') }}</span>
+      <div class="calendar-detail-content">
+        <template
+          v-for="(entry, index) in decisionEntries"
+          :key="`${entry.href ?? entry.label}-${index}`"
+        >
+          <DecisionLink :href="entry.href" :label="entry.label" />
+          <span v-if="index < decisionEntries.length - 1">, </span>
+        </template>
       </div>
     </div>
 
-    <!-- Subjects at the bottom, full width -->
-    <div v-if="subjectLabels.length" class="col-12 mt-3">
-      <div class="calendar-subjects">
-        <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
-        <ExpandablePillList
-          class="calendar-pill-row"
-          :items="subjectLabels"
-        />
-      </div>
+    <!-- Responsible Unit -->
+    <div v-if="showResponsible && responsibleUnit" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.unit') }}</span>
+      <div class="calendar-detail-content">{{ responsibleUnit }}</div>
+    </div>
+
+    <!-- Responsible Officer -->
+    <div v-if="showResponsible && responsibleOfficer" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.officer') }}</span>
+      <div class="calendar-detail-content">{{ responsibleOfficer }}</div>
+    </div>
+
+    <!-- Subjects -->
+    <div v-if="subjectLabels.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.subjects') }}</span>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="subjectLabels"
+      />
     </div>
   </div>
 </template>
@@ -76,13 +83,19 @@ const { t } = useI18n();
 </script>
 
 <style scoped>
-.calendar-subjects {
+.calendar-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calendar-detail-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.calendar-pill-label {
+.calendar-detail-label {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -90,13 +103,19 @@ const { t } = useI18n();
   color: #6c757d;
 }
 
-.calendar-subjects :deep(.calendar-pill-row) {
+.calendar-detail-content {
+  font-size: 0.875rem;
+  color: #1f1f1f;
+  line-height: 1.5;
+}
+
+.calendar-pill-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.calendar-subjects :deep(.calendar-pill) {
+.calendar-detail-section :deep(.calendar-pill) {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.75rem;
