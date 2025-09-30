@@ -30,10 +30,11 @@
       "date": "日期",
       "location": "地点",
       "responsible": "责任",
-      "unit": "部门",
+      "unit": "单位",
       "officer": "负责人",
       "notifications": "通知",
-      "untitled": "未命名",
+      "relatedActivities": "相关活动",
+      "untitled": "无标题",
       "unknownDate": "日期未知"
     },
     "links": {

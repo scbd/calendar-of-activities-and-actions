@@ -552,3 +552,27 @@ export function notificationDisplayEntries(doc: CalendarDoc): NotificationDispla
     error: errorsMap[key],
   }));
 }
+
+/**
+ * Get activities that reference this notification.
+ * @param notificationKey - Notification key (e.g., "2025-001").
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of activity documents that reference this notification.
+ */
+export function getRelatedActivities(notificationKey: string, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!notificationKey || !allDocs) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    // Skip the notification itself
+    if (doc.schema === 'notification') {
+      return false;
+    }
+
+    // Check if this activity references the notification
+    const keys = getNotificationKeys(doc);
+
+    return keys.includes(notificationKey);
+  });
+}

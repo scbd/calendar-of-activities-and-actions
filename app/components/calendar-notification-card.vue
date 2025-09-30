@@ -1,34 +1,37 @@
 <template>
   <div class="calendar-notification-card">
-    <div class="calendar-notification-card__pill-row">
-      <a
-        :href="notificationLink"
-        target="_blank"
-        rel="noopener"
-        class="calendar-notification-card__pill"
-      >
-        {{ t('calendar.notifications.notificationLabel', { id: entry.key }) }}
-      </a>
-      <span
-        v-if="entry.details?.actionRequired"
-        class="calendar-notification-card__badge"
-      >
-        {{ t('calendar.labels.actionRequired') }}
-        <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
-          {{ t('calendar.notifications.deadline', { date: formattedDeadline }) }}
-        </span>
-      </span>
-    </div>
-
-    <div
-      v-if="entry.details?.publishedOn || entry.details?.from"
-      class="calendar-notification-card__meta"
-    >
-      <div v-if="entry.details?.publishedOn" class="calendar-notification-card__meta-line">
-        {{ t('calendar.notifications.publishedOnDate', { date: formattedPublishedOn }) }}
+    <div class="calendar-notification-card__header">
+      <div class="calendar-notification-card__header-left">
+        <a
+          :href="notificationLink"
+          target="_blank"
+          rel="noopener"
+          class="calendar-notification-card__pill"
+        >
+          {{ t('calendar.notifications.notificationLabel', { id: entry.key }) }}
+        </a>
       </div>
-      <div v-if="entry.details?.from" class="calendar-notification-card__meta-line">
-        {{ t('calendar.notifications.fromSource', { source: entry.details.from }) }}
+      <div
+        v-if="entry.details?.publishedOn || entry.details?.from"
+        class="calendar-notification-card__header-center"
+      >
+        <div v-if="entry.details?.publishedOn" class="calendar-notification-card__meta-line">
+          {{ t('calendar.notifications.publishedOnDate', { date: formattedPublishedOn }) }}
+        </div>
+        <div v-if="entry.details?.from" class="calendar-notification-card__meta-line">
+          {{ t('calendar.notifications.fromSource', { source: entry.details.from }) }}
+        </div>
+      </div>
+      <div class="calendar-notification-card__header-right">
+        <span
+          v-if="entry.details?.actionRequired"
+          class="calendar-notification-card__badge"
+        >
+          {{ t('calendar.labels.actionRequired') }}
+          <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
+            {{ t('calendar.notifications.deadline', { date: formattedDeadline }) }}
+          </span>
+        </span>
       </div>
     </div>
 
@@ -140,13 +143,39 @@ const thematicLabels = computed(() => {
 .calendar-notification-card {
   padding: 1rem;
   border-bottom: 1px solid #f1f3f5;
+  background-color: #fafbfc;
 }
 
-.calendar-notification-card__pill-row {
+.calendar-notification-card__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.calendar-notification-card__header-left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+}
+
+.calendar-notification-card__header-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.calendar-notification-card__header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.calendar-notification-card__meta-line {
+  white-space: nowrap;
 }
 
 .calendar-notification-card__pill {
@@ -173,21 +202,13 @@ const thematicLabels = computed(() => {
 
 .calendar-notification-card__badge-deadline { font-weight: 400; }
 
-.calendar-notification-card__meta {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
 .calendar-notification-card__status { margin-top: 0.75rem; font-weight: 600; }
 .calendar-notification-card__status--error { color: #b91c1c; }
 
 .calendar-notification-card__title {
   display: inline-block;
   margin-top: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #0f172a;
   text-decoration: none;
@@ -224,14 +245,14 @@ const thematicLabels = computed(() => {
 
 .calendar-notification-card__actions { margin-top: 1rem; }
 .calendar-notification-card__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  background-color: #0f7abd;
-  color: #fff;
-  font-weight: 600;
+  color: #0f7abd;
+  font-weight: 500;
   text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.calendar-notification-card__cta:hover {
+  border-bottom-color: #0f7abd;
 }
 </style>

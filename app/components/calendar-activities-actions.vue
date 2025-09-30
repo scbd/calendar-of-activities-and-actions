@@ -31,6 +31,7 @@
               v-for="doc in group.items"
               :key="itemKey(doc)"
               :doc="doc"
+              :all-docs="allDocsFlat"
               :is-open="isItemOpen(doc)"
               :heading-id="headingId(doc)"
               :collapse-id="collapseId(doc)"
@@ -74,6 +75,10 @@ const createRegionDisplayNames = (code: string) => {
 };
 
 const defaultStartDateIso = DateTime.now().startOf('day').toISO();
+
+const allDocsFlat = computed(() => {
+  return groupedItems.value.flatMap(group => group.items);
+});
 
 const {
   loading,

@@ -82,7 +82,9 @@
           :show-responsible="showResponsible"
         />
 
-        <div v-if="notificationEntries.length" class="calendar-notifications mt-4">
+        <hr v-if="notificationEntries.length" class="calendar-notifications__separator">
+
+        <div v-if="notificationEntries.length" class="calendar-notifications mt-3">
           <div class="calendar-notifications__header">
             <strong>{{ t('calendar.labels.notifications') }}</strong>
           </div>
@@ -90,6 +92,21 @@
             v-for="entry in notificationEntries"
             :key="entry.key"
             :entry="entry"
+            class="mb-2"
+          />
+        </div>
+
+        <hr v-if="relatedActivities.length" class="calendar-activities__separator">
+
+        <div v-if="relatedActivities.length" class="calendar-activities mt-3">
+          <div class="calendar-activities__header">
+            <strong>{{ t('calendar.labels.relatedActivities') }}</strong>
+          </div>
+          <CalendarActivityCard
+            v-for="activity in relatedActivities"
+            :key="activity.id"
+            :doc="activity"
+            class="mb-2"
           />
         </div>
       </div>
@@ -105,6 +122,7 @@ import type { LocaleCode } from 'shared/services/solr';
 import type { CalendarDoc } from 'shared/types/calendar';
 import CalendarDocumentDetails from './calendar-document-details.vue';
 import CalendarNotificationCard from './calendar-notification-card.vue';
+import CalendarActivityCard from './calendar-activity-card.vue';
 import { formatDateRange } from 'shared/utils/date';
 import {
   getDocBooleanValue,
@@ -120,7 +138,7 @@ import {
 } from 'shared/utils/labels';
 import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
-import { notificationDisplayEntries, resolveNotificationUrl } from 'shared/utils/notifications';
+import { notificationDisplayEntries, resolveNotificationUrl, getRelatedActivities } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels } from 'shared/utils/subjects';
 
@@ -129,6 +147,7 @@ const decisionEntriesCache = new WeakMap<CalendarDoc, DecisionEntry[]>();
 
 const props = defineProps<{
   doc: CalendarDoc;
+  allDocs?: CalendarDoc[];
   isOpen: boolean;
   headingId: string;
   collapseId: string;
@@ -312,6 +331,26 @@ const decisionEntriesValue = computed(() => {
 const subjectLabels = computed(() => displaySubjectLabels(props.doc));
 
 const notificationEntries = computed(() => notificationDisplayEntries(props.doc));
+
+const isNotification = computed(() => {
+  return props.doc.schema === 'notification';
+});
+
+const notificationKey = computed(() => {
+  if (!isNotification.value) {
+    return null;
+  }
+
+  return props.doc.notificationKey || props.doc.symbol || null;
+});
+
+const relatedActivities = computed(() => {
+  if (!isNotification.value || !notificationKey.value || !props.allDocs) {
+    return [];
+  }
+
+  return getRelatedActivities(notificationKey.value, props.allDocs);
+});
 
 const primaryLink = computed(() => {
   const links = meetingLinks(props.doc);
@@ -552,6 +591,27 @@ const collapseId = computed(() => props.collapseId);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+.calendar-notifications__separator {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+.calendar-notifications__header {
+  font-size: 1.125rem;
+}
+
+.calendar-activities__separator {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+.calendar-activities__header {
+  font-size: 1.125rem;
+}
+
 @media (max-width: 768px) {
   .calendar-accordion__title { font-size: 1.125rem; }
 }
