@@ -92,6 +92,8 @@ describe('CalendarFilters Component', () => {
     expect(latest?.startDate).toBe('');
     expect(latest?.endDate).toBe('');
     expect(latest?.actionRequired).toBe(false);
+    expect(latest?.searchText).toBe('');
+    expect(latest?.sort).toEqual(['startDate:asc']);
   });
 
   it('provides the canonical schema options', async () => {
@@ -101,5 +103,21 @@ describe('CalendarFilters Component', () => {
 
     expect(options.map(option => option.value)).toEqual(['meeting', 'notification', 'activity']);
     expect(options.map(option => option.label)).toEqual(['Meeting', 'Notification', 'Activity']);
+  });
+
+  it('emits search text updates when typing into the search field', async () => {
+    const wrapper = await mountFilters();
+    const searchInput = wrapper.find('#search-filter');
+
+    await searchInput.setValue(' biodiversity ');
+    await nextTick();
+    await nextTick();
+
+    const emissions = wrapper.emitted('update:filters');
+
+    expect(emissions).toBeTruthy();
+    const latest = emissions?.[emissions.length - 1]?.[0];
+
+    expect(latest?.searchText).toBe('biodiversity');
   });
 });

@@ -63,8 +63,9 @@
         "endDate": "Fecha de finalización",
         "actionRequired": "Acción requerida",
         "schemas": "Esquema(s)",
-        "sort": "Ordenar resultados"
-      },
+    "sort": "Ordenar resultados",
+    "search": "Búsqueda"
+  },
       "placeholders": {
         "typeActivity": "Seleccionar tipos",
         "activityTypes": "Seleccionar tipos de actividad",
@@ -75,8 +76,9 @@
         "subsidiaryBodies": "Seleccionar órganos subsidiarios",
         "decisions": "Seleccionar decisiones",
         "schemas": "Seleccionar esquemas",
-        "sort": "Selecciona el orden de clasificación"
-      },
+    "sort": "Selecciona el orden de clasificación",
+    "search": "Introduce palabras clave"
+  },
       "toggles": {
         "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
       },

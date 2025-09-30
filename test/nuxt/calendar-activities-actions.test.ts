@@ -40,6 +40,7 @@ vi.mock('../../shared/utils/subjects', () => ({
   buildSubjectLabelMap: () => new Map<string, string>(),
   resolveSubjectLabel: (value: string) => value,
   setSubjectLabelMap: vi.fn(),
+  displaySubjectLabels: (values: string[]) => values,
 }));
 
 vi.mock('../../shared/services/thesaurus', () => ({
@@ -409,6 +410,8 @@ describe('CalendarActivitiesActions Component', () => {
       startDate: '',
       endDate: '',
       actionRequired: false,
+      searchText: '',
+      sort: ['startDate:asc'],
     });
 
     await flushPromises();

@@ -63,8 +63,9 @@
         "endDate": "结束日期",
         "actionRequired": "需要采取行动",
         "schemas": "架构",
-        "sort": "排序结果"
-      },
+    "sort": "排序结果",
+    "search": "搜索"
+  },
       "placeholders": {
         "typeActivity": "选择类型",
         "activityTypes": "选择活动类型",
@@ -75,8 +76,9 @@
         "subsidiaryBodies": "选择附属机构",
         "decisions": "选择决定",
         "schemas": "选择架构",
-        "sort": "选择排序方式"
-      },
+    "sort": "选择排序方式",
+    "search": "输入关键词"
+  },
       "toggles": {
         "actionRequiredOnly": "仅显示需要采取行动的事项"
       },

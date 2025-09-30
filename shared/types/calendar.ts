@@ -50,6 +50,7 @@ export interface FilterState {
   startDate: string;
   endDate: string;
   actionRequired: boolean;
+  searchText: string;
   sort: string[];
 }
 

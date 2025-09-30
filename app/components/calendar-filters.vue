@@ -1,21 +1,16 @@
 <template>
   <div class="calendar-filters">
     <div class="row g-3">
-      <!-- Sort Filter -->
+      <!-- Free Text Search -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="sort-filter" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
-        <Multiselect
-          id="sort-filter"
-          v-model="selectedSorts"
-          :options="sortOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          label="label"
-          track-by="value"
-          :placeholder="t('calendar.filters.placeholders.sort')"
-        />
+        <label for="search-filter" class="form-label">{{ t('calendar.filters.labels.search') }}</label>
+        <input
+          id="search-filter"
+          v-model="searchText"
+          type="search"
+          class="form-control form-control-sm"
+          :placeholder="t('calendar.filters.placeholders.search')"
+        >
       </div>
 
       <!-- Type Filter -->
@@ -194,6 +189,23 @@
         </div>
       </div>
 
+      <!-- Sort Filter -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <label for="sort-filter" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
+        <Multiselect
+          id="sort-filter"
+          v-model="selectedSorts"
+          :options="sortOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.sort')"
+        />
+      </div>
+
       <!-- Clear Filters Button -->
       <div class="col-12">
         <button
@@ -272,6 +284,7 @@ interface FilterState {
   startDate: string;
   endDate: string;
   actionRequired: boolean;
+  searchText: string;
   sort: string[];
 }
 
@@ -292,6 +305,7 @@ const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
 const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
+const searchText = ref<string>('');
 
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
@@ -312,6 +326,7 @@ const hasActiveFilters = computed<boolean>(() => {
     startDate.value !== '' ||
     endDate.value !== '' ||
     actionRequired.value ||
+    searchText.value.trim().length > 0 ||
     !areSortSelectionsDefault(activeSorts)
   );
 });
@@ -473,6 +488,12 @@ function updateUrlQuery(): void {
 
   if (actionRequired.value) query.actionRequired = 'true';
 
+  const normalizedSearch = searchText.value.trim();
+
+  if (normalizedSearch.length > 0) {
+    query.search = normalizedSearch;
+  }
+
   // Update URL without reloading page
   router.replace({ query });
 }
@@ -491,6 +512,9 @@ function _loadFiltersFromUrl(): void {
   const globalTargets = parseQueryArray(query.globalTargets as string | string[] | undefined);
   const countries = parseQueryArray(query.countries as string | string[] | undefined);
   const sortOrder = parseQueryArray(query.sort as string | string[] | undefined);
+  const searchParam = typeof query.search === 'string'
+    ? query.search
+    : Array.isArray(query.search) ? query.search[0] ?? '' : '';
 
   // Set selections (these will be normalized by syncSelectionWithOptions)
   if (types.length > 0) {
@@ -531,6 +555,11 @@ function _loadFiltersFromUrl(): void {
     hasUserInteracted.value = true;
   } else {
     selectedSorts.value = [...DEFAULT_SORT_VALUES];
+  }
+
+  if (searchParam) {
+    searchText.value = searchParam;
+    hasUserInteracted.value = true;
   }
 
   // Load date filters
@@ -603,6 +632,8 @@ function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
 }
 
 function updateFilters(): void {
+  const normalizedSearch = searchText.value.trim();
+
   const filters: FilterState = {
     types: extractSelectedValues(selectedTypes.value),
     subjects: extractSelectedValues(selectedSubjects.value),
@@ -615,6 +646,7 @@ function updateFilters(): void {
     startDate: startDate.value,
     endDate: endDate.value,
     actionRequired: actionRequired.value,
+    searchText: normalizedSearch,
     sort: extractSelectedValues(selectedSorts.value),
   };
 
@@ -635,6 +667,7 @@ function clearFilters(): void {
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;
+  searchText.value = '';
   hasUserInteracted.value = false;
 
   updateFilters();
@@ -736,6 +769,7 @@ watch(
     selectedCountries,
     selectedSorts,
     actionRequired,
+    searchText,
   ],
   () => {
     if (!hasUserInteracted.value) {
@@ -748,6 +782,7 @@ watch(
         selectedActivityTypes.value.length > 0 ||
         selectedGlobalTargets.value.length > 0 ||
         selectedCountries.value.length > 0 ||
+        searchText.value.trim().length > 0 ||
         !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
         actionRequired.value;
 
@@ -778,6 +813,7 @@ watchEffect(() => {
   void startDate.value;
   void endDate.value;
   void actionRequired.value;
+  void searchText.value;
   updateFilters();
 });
 </script>

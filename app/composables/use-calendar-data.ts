@@ -49,6 +49,7 @@ const defaultFilters: FilterState = {
   startDate: '',
   endDate: '',
   actionRequired: false,
+  searchText: '',
   sort: [...DEFAULT_SORT_VALUES],
 };
 
@@ -67,7 +68,11 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   const allFieldNames = ref<string[]>([]);
   const locale = ref<LocaleCode>(options.locale ?? 'en');
   const subjectOptions = ref<SubjectOption[]>([]);
-  const currentFilters = ref<FilterState>({ ...defaultFilters, startDate: options.initialStartDate ?? '', sort: [...DEFAULT_SORT_VALUES] });
+  const currentFilters = ref<FilterState>({
+    ...defaultFilters,
+    startDate: options.initialStartDate ?? '',
+    sort: [...DEFAULT_SORT_VALUES],
+  });
   const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
   const notificationErrors = ref<Record<NotificationKey, string>>({});
   const notificationLoadingMap = ref<Record<NotificationKey, boolean>>({});
@@ -336,6 +341,12 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       });
     }
 
+    const normalizedSearch = filters.searchText.trim().toLowerCase();
+
+    if (normalizedSearch.length > 0) {
+      filtered = filtered.filter(doc => docMatchesSearch(doc, normalizedSearch));
+    }
+
     const sortDirectives = normalizeSortDirectives(filters.sort);
 
     return [...filtered].sort((a, b) => {
@@ -561,6 +572,72 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   function compareNumberValues(a: number, b: number): number {
     if (a === b) return 0;
     return a < b ? -1 : 1;
+  }
+
+  function docMatchesSearch(doc: CalendarDoc, normalizedTerm: string): boolean {
+    return collectSearchableValues(doc).some(value => value.includes(normalizedTerm));
+  }
+
+  function collectSearchableValues(doc: CalendarDoc): string[] {
+    const seen = new Set<string>();
+    const values: string[] = [];
+
+    const add = (raw?: string | null) => {
+      if (!raw) {
+        return;
+      }
+      const trimmed = raw.trim();
+
+      if (!trimmed) {
+        return;
+      }
+      const lower = trimmed.toLowerCase();
+
+      if (seen.has(lower)) {
+        return;
+      }
+      seen.add(lower);
+      values.push(lower);
+    };
+
+    const addMany = (collection?: Iterable<unknown> | null) => {
+      if (!collection) {
+        return;
+      }
+      for (const entry of collection) {
+        if (typeof entry === 'string') {
+          add(entry);
+        } else if (entry !== undefined && entry !== null) {
+          add(String(entry));
+        }
+      }
+    };
+
+    add(getDocStringValue(doc, 'title', 'titleEn', 'titleFr', 'titleEs', 'titleRu', 'titleZh', 'titleAr'));
+    add(getDocStringValue(doc, 'description', 'notesEn', 'statusNarrative'));
+    add(getDocStringValue(doc, 'status', 'statusKey'));
+    add(getDocStringValue(doc, 'meetingCode', 'meetingType', 'eventType', 'type', 'schema', 'activityType'));
+    add(getDocStringValue(doc, 'identifier', '_id', 'notificationKey', 'notificationSymbol'));
+    add(getDocStringValue(doc, 'city', 'cityEn'));
+    add(getDocStringValue(doc, 'country', 'countryEn'));
+    add(getDocStringValue(doc, 'responsibleUnit', 'responsibleOfficer'));
+    add(getDocStringValue(doc, 'outcome'));
+
+    addMany(getDocSubjects(doc));
+    addMany(getDocGlobalTargets(doc));
+    addMany(getDocCountries(doc));
+    addMany(getDocSubsidiaryBodies(doc));
+    addMany(getDocDecisionLabels(doc));
+
+    if (Array.isArray(doc.actors)) addMany(doc.actors);
+    if (Array.isArray(doc.relatedDocuments)) addMany(doc.relatedDocuments);
+    if (Array.isArray(doc.links)) addMany(doc.links);
+    if (Array.isArray(doc.recipients)) addMany(doc.recipients);
+    if (Array.isArray(doc.notificationKeys)) addMany(doc.notificationKeys);
+    if (Array.isArray(doc.gbfTargets)) addMany(doc.gbfTargets);
+    if (Array.isArray(doc.countries)) addMany(doc.countries);
+
+    return values;
   }
 
   function getStartDateForSort(doc: CalendarDoc): DateTime | null {
