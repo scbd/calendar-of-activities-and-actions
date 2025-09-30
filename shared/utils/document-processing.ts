@@ -1,6 +1,7 @@
 import { normalizeSolrDocument, normalizeSolrFieldName } from '../services/solr';
 import type { CalendarDoc } from '../types/calendar';
-import { extractDecisionEntries } from './decision-links';
+import { extractDecisionEntries, parseDecisionLabel } from './decision-links';
+import { normalizeDecisionLabel } from './labels';
 import { rawDocMap } from './calendar-document-normalizer';
 import { splitValues } from './text';
 
@@ -214,9 +215,43 @@ export function getDocSubsidiaryBodies(doc: CalendarDoc): string[] {
  * @returns Decision labels list.
  */
 export function getDocDecisionLabels(doc: CalendarDoc): string[] {
-  return extractDecisionEntries(doc as Record<string, unknown>)
-    .map(entry => entry.label)
-    .filter(label => Boolean(label && label.trim())) as string[];
+  const entries = extractDecisionEntries(doc as Record<string, unknown>);
+  const seen = new Set<string>();
+  const results: string[] = [];
+
+  const pushBase = (label: string | null | undefined) => {
+    if (!label) return;
+
+    const trimmed = label.trim();
+    if (!trimmed) return;
+
+    const parsed = parseDecisionLabel(trimmed);
+
+    if (parsed) {
+      const base = parsed.type === 'COP'
+        ? `${parsed.type} ${parsed.meetingNumber}/${parsed.decisionNumber}`
+        : `${parsed.type}-${parsed.meetingNumber}/${parsed.decisionNumber}`;
+
+      if (!seen.has(base)) {
+        seen.add(base);
+        results.push(base);
+      }
+      return;
+    }
+
+    // Fallback: strip any paragraph suffix patterns like "P. ..." or "PARA ..."
+    const stripped = trimmed.replace(/\s+P(?:\.|\s*(?:ARAS?|ARAGRAPH))\.?\s*.*$/i, '').trim();
+    const normalized = normalizeDecisionLabel(stripped) ?? stripped;
+
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      results.push(normalized);
+    }
+  };
+
+  entries.forEach(entry => pushBase(entry.label));
+
+  return results;
 }
 
 /**
