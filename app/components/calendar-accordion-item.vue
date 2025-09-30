@@ -17,7 +17,8 @@
         </div>
 
         <div class="calendar-accordion__summary p-4">
-          <div class="calendar-accordion__title mb-4">{{ title }}</div>
+          <div class="calendar-accordion__title mb-2">{{ title }}</div>
+          <div v-if="meetingLocation" class="calendar-accordion__location mb-3">{{ meetingLocation }}</div>
           <div
             v-if="statusLabel || isActionRequired || primaryLink"
             class="calendar-accordion__meta-block mt-2"
@@ -32,11 +33,11 @@
                 :href="primaryLink"
                 target="_blank"
                 rel="noopener"
-                class="calendar-notification-card__cta calendar-accordion__cta calendar-accordion__cta--documents"
+                class="calendar-accordion__cta calendar-accordion__cta--link"
                 :aria-label="t('calendar.actions.viewDocumentsAria', { title })"
                 data-testid="calendar-accordion-view-documents"
               >
-                {{ t('calendar.actions.viewDocuments') }}
+                {{ t('calendar.actions.viewDocuments') }} →
               </a>
               <div
                 v-if="statusLabel || isActionRequired"
@@ -70,15 +71,10 @@
     >
       <div class="accordion-body">
         <CalendarDocumentDetails
-          :status-label="statusLabel"
-          :status-color="statusColorValue"
           :status-narrative="statusNarrative"
           :symbol="meetingSymbol"
-          :date="dateRange"
-          :location="meetingLocation"
-          :is-action-required="isActionRequired"
           :description="description"
-          :subject-labels="[]"
+          :subject-labels="subjectLabels"
           :subsidiary-bodies="subsidiaryBodies"
           :decision-entries="decisionEntriesValue"
           :responsible-unit="responsibleUnit"
@@ -126,6 +122,7 @@ import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statu
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import { notificationDisplayEntries, resolveNotificationUrl } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
+import { displaySubjectLabels } from 'shared/utils/subjects';
 
 const meetingLinksCache = new WeakMap<CalendarDoc, string[]>();
 const decisionEntriesCache = new WeakMap<CalendarDoc, DecisionEntry[]>();
@@ -311,6 +308,8 @@ const decisionEntriesValue = computed(() => {
   decisionEntriesCache.set(props.doc, normalized);
   return normalized;
 });
+
+const subjectLabels = computed(() => displaySubjectLabels(props.doc));
 
 const notificationEntries = computed(() => notificationDisplayEntries(props.doc));
 
@@ -532,12 +531,21 @@ const collapseId = computed(() => props.collapseId);
   font-weight: 600;
 }
 
-.calendar-accordion__cta--documents {
-  background-color: var(--bs-primary);
-  color: #fff;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+.calendar-accordion__cta--link {
+  color: var(--bs-primary);
   text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.calendar-accordion__cta--link:hover {
+  border-bottom-color: var(--bs-primary);
+}
+
+.calendar-accordion__location {
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-style: italic;
 }
 
 .calendar-accordion__status-badge {

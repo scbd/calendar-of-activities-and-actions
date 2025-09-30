@@ -51,16 +51,17 @@
       "labels": {
         "typeActivity": "النوع",
         "activityTypes": "أنواع الأنشطة",
-        "globalTargets": "الأهداف العالمية",
+        "globalTargets": "الهدف/الأهداف العالمية",
         "countries": "الدول",
         "subjects": "الموضوعات",
-        "statuses": "الحالات",
-        "subsidiaryBodies": "الأجهزة الفرعية",
-        "decisions": "القرارات",
+        "statuses": "الحالة/الحالات",
+        "subsidiaryBodies": "الجهاز/الأجهزة الفرعية",
+        "decisions": "القرار/القرارات",
         "dateRange": "نطاق التاريخ",
         "startDate": "تاريخ البدء",
         "endDate": "تاريخ الانتهاء",
-        "actionRequired": "الإجراء المطلوب"
+        "actionRequired": "الإجراء المطلوب",
+        "schemas": "المخطط/المخططات"
       },
       "placeholders": {
         "typeActivity": "اختر الأنواع",

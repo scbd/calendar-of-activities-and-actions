@@ -1,40 +1,18 @@
 <template>
   <div class="row">
+    <!-- Status narrative at the top, full width -->
+    <div v-if="statusNarrative" class="col-12">
+      <p><strong>{{ t('calendar.labels.statusNarrative') }}:</strong> {{ statusNarrative }}</p>
+    </div>
+
+    <!-- Left column: symbol, description -->
     <div class="col-md-6">
-      <p v-if="statusLabel">
-        <strong>{{ t('calendar.labels.status') }}: </strong>
-        <span
-          v-if="statusLabel"
-          class="badge calendar-accordion__status-badge"
-          :class="`bg-${statusColor}`"
-        >
-          {{ statusLabel }}
-        </span>
-        <br>
-        <span v-if="statusNarrative">{{ statusNarrative }}</span>
-      </p>
-
       <p v-if="symbol"><strong>{{ t('calendar.labels.symbol') }}:</strong> {{ symbol }}</p>
-
-      <p v-if="date"><strong>{{ t('calendar.labels.date') }}:</strong> {{ date }}</p>
-
-      <p v-if="location"><strong>{{ t('calendar.labels.location') }}:</strong> {{ location }}</p>
-
-      <p v-if="isActionRequired">
-        <strong>{{ t('calendar.labels.actionRequiredByParties') }}:</strong>
-        {{ t('calendar.common.yes') }}
-      </p>
-
       <p v-if="description"><strong>{{ t('calendar.labels.description') }}:</strong> {{ description }}</p>
     </div>
+
+    <!-- Right column: subsidiary bodies, decisions, responsible -->
     <div class="col-md-6">
-      <div v-if="subjectLabels.length" class="mb-3 calendar-subjects">
-        <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
-        <ExpandablePillList
-          class="calendar-pill-row"
-          :items="subjectLabels"
-        />
-      </div>
       <p v-if="subsidiaryBodies.length"><strong>{{ t('calendar.labels.associatedBody') }}:</strong> {{ subsidiaryBodies.join(', ') }}</p>
       <p v-if="decisionEntries.length">
         <strong>{{ t('calendar.labels.decision') }}:</strong>
@@ -62,6 +40,17 @@
         </ul>
       </div>
     </div>
+
+    <!-- Subjects at the bottom, full width -->
+    <div v-if="subjectLabels.length" class="col-12 mt-3">
+      <div class="calendar-subjects">
+        <span class="calendar-pill-label">{{ t('calendar.labels.subjects') }}</span>
+        <ExpandablePillList
+          class="calendar-pill-row"
+          :items="subjectLabels"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -71,14 +60,9 @@ import ExpandablePillList from './expandable-pill-list.vue';
 import DecisionLink from './decision-link.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
 
-const props = defineProps<{
-  statusLabel?: string;
-  statusColor: string;
+const _props = defineProps<{
   statusNarrative?: string | null;
   symbol?: string;
-  date?: string;
-  location?: string;
-  isActionRequired: boolean;
   description?: string;
   subjectLabels: string[];
   subsidiaryBodies: string[];

@@ -51,17 +51,17 @@
       "labels": {
         "typeActivity": "Type",
         "activityTypes": "Activity types",
-        "globalTargets": "GBF Targets",
+        "globalTargets": "GBF Target(s)",
         "countries": "Countries",
         "subjects": "Subjects",
-        "statuses": "Status",
-        "subsidiaryBodies": "Subsidiary body",
-        "decisions": "Decision",
+        "statuses": "Status(es)",
+        "subsidiaryBodies": "Subsidiary body (bodies)",
+        "decisions": "Decision(s)",
         "dateRange": "Date range",
         "startDate": "Start date",
         "endDate": "End date",
         "actionRequired": "Action required",
-        "schemas": "Schemas"
+        "schemas": "Schema(s)"
       },
       "placeholders": {
         "typeActivity": "Select types",

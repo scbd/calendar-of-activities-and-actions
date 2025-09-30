@@ -51,16 +51,17 @@
       "labels": {
         "typeActivity": "Type",
         "activityTypes": "Types d'activité",
-        "globalTargets": "Objectifs mondiaux",
+        "globalTargets": "Objectif(s) mondial(aux)",
         "countries": "Pays",
         "subjects": "Sujets",
-        "statuses": "Statuts",
-        "subsidiaryBodies": "Organe subsidiaire",
-        "decisions": "Décision",
+        "statuses": "Statut(s)",
+        "subsidiaryBodies": "Organe(s) subsidiaire(s)",
+        "decisions": "Décision(s)",
         "dateRange": "Période",
         "startDate": "Date de début",
         "endDate": "Date de fin",
-        "actionRequired": "Action requise"
+        "actionRequired": "Action requise",
+        "schemas": "Schéma(s)"
       },
       "placeholders": {
         "typeActivity": "Sélectionner des types",

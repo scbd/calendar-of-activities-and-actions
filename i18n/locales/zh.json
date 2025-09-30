@@ -60,7 +60,8 @@
         "dateRange": "日期范围",
         "startDate": "开始日期",
         "endDate": "结束日期",
-        "actionRequired": "需要采取行动"
+        "actionRequired": "需要采取行动",
+        "schemas": "架构"
       },
       "placeholders": {
         "typeActivity": "选择类型",

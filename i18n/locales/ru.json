@@ -51,16 +51,17 @@
       "labels": {
         "typeActivity": "Тип",
         "activityTypes": "Типы мероприятий",
-        "globalTargets": "Глобальные цели",
+        "globalTargets": "Глобальная(ые) цель(и)",
         "countries": "Страны",
         "subjects": "Темы",
-        "statuses": "Статусы",
-        "subsidiaryBodies": "Вспомогательные органы",
-        "decisions": "Решения",
+        "statuses": "Статус(ы)",
+        "subsidiaryBodies": "Вспомогательный(ые) орган(ы)",
+        "decisions": "Решение(я)",
         "dateRange": "Диапазон дат",
         "startDate": "Дата начала",
         "endDate": "Дата окончания",
-        "actionRequired": "Требуются действия"
+        "actionRequired": "Требуются действия",
+        "schemas": "Схема(ы)"
       },
       "placeholders": {
         "typeActivity": "Выберите типы",
