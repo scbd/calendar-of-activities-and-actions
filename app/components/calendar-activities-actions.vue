@@ -17,8 +17,8 @@
       </div>
     </div>
 
-      <div v-if="loading" class="d-flex justify-content-center align-items-center py-5">
-        <div class="spinner-border text-dark" role="status">
+      <div v-if="loading" class="loading-container">
+        <div class="spinner-border spinner-large" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -385,5 +385,20 @@ h3 {
   .calendar-accordion__summary {
     padding-left: 0.75rem;
   }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 3rem 0;
+}
+
+.spinner-large {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+  color: #0d6efd;
 }
 </style>

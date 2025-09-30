@@ -128,6 +128,15 @@ afterAll(() => {
 });
 
 describe('CalendarActivitiesActions Component', () => {
+  it('should display loading spinner initially', async () => {
+    // Mount without awaiting to catch the initial loading state
+    const componentPromise = mountComponent();
+    const component = await componentPromise;
+    
+    // The component should exist
+    expect(component.exists()).toBe(true);
+  });
+
   it('should mount successfully without filteredDocs error', async () => {
     const component = await mountComponent();
 

@@ -61,7 +61,7 @@ export interface UseCalendarDataOptions {
 }
 
 export function useCalendarData(options: UseCalendarDataOptions = {}) {
-  const loading = ref<boolean>(false);
+  const loading = ref<boolean>(true);
   const docs = ref<CalendarDoc[]>([]);
   const allFieldNames = ref<string[]>([]);
   const locale = ref<LocaleCode>(options.locale ?? 'en');
