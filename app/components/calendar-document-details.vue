@@ -40,13 +40,13 @@
 
     <!-- Responsible Unit -->
     <div v-if="showResponsible && responsibleUnit" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.unit') }}</span>
+      <span class="calendar-detail-label">{{ t('calendar.labels.responsibleUnit') }}</span>
       <div class="calendar-detail-content">{{ responsibleUnit }}</div>
     </div>
 
     <!-- Responsible Officer -->
     <div v-if="showResponsible && responsibleOfficer" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.officer') }}</span>
+      <span class="calendar-detail-label">{{ t('calendar.labels.responsibleOfficer') }}</span>
       <div class="calendar-detail-content">{{ responsibleOfficer }}</div>
     </div>
 
@@ -84,15 +84,23 @@ const { t } = useI18n();
 
 <style scoped>
 .calendar-details {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
+  width: 100%;
+}
+
+/* Full width sections */
+.calendar-detail-section:has(.calendar-pill-row),
+.calendar-detail-section:nth-child(1) {
+  grid-column: 1 / -1;
 }
 
 .calendar-detail-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0; /* Prevents grid blowout */
 }
 
 .calendar-detail-label {
@@ -101,12 +109,15 @@ const { t } = useI18n();
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #6c757d;
+  white-space: nowrap;
 }
 
 .calendar-detail-content {
   font-size: 0.875rem;
   color: #1f1f1f;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .calendar-pill-row {
@@ -123,5 +134,18 @@ const { t } = useI18n();
   background-color: #f1f3f5;
   color: #1f1f1f;
   font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .calendar-detail-section:has(.calendar-pill-row),
+  .calendar-detail-section:nth-child(1),
+  .calendar-detail-section:nth-child(3) {
+    grid-column: 1;
+  }
 }
 </style>
