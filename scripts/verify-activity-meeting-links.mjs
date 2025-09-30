@@ -14,6 +14,7 @@ console.log('=== ACTIVITY TO MEETING LINKING SUMMARY ===\n');
 
 // Activities with meetings
 const activitiesWithMeetings = activities.filter(a => a.meetings && a.meetings.length > 0);
+
 console.log('Total activities with meetings:', activitiesWithMeetings.length);
 
 console.log('\n--- Activities and their meetings ---\n');
@@ -26,6 +27,7 @@ activitiesWithMeetings.forEach(activity => {
 
 // Meetings with activities
 const meetingsWithActivities = meetings.filter(m => m.activities && m.activities.length > 0);
+
 console.log('\n--- Meetings and their activities ---\n');
 console.log('Total meetings with activities:', meetingsWithActivities.length);
 console.log('');
@@ -43,8 +45,10 @@ let allLinksValid = true;
 activitiesWithMeetings.forEach(activity => {
   activity.meetings.forEach(meetingCode => {
     const meeting = meetings.find(m => m.meetingCode === meetingCode);
+
     if (meeting) {
       const hasBacklink = meeting.activities && meeting.activities.includes(activity.identifier);
+
       if (!hasBacklink) {
         console.log('❌ ERROR: Activity', activity.identifier, 'references meeting', meetingCode, 'but the meeting does not reference it back');
         allLinksValid = false;
