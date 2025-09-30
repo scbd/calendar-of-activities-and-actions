@@ -7,8 +7,6 @@ import { slugify, splitValues } from './text';
 export type SnapshotMeeting = Record<string, unknown>;
 export type SnapshotActivity = Record<string, unknown>;
 
-export type MarkdownRow = Record<string, string>;
-
 /**
  * WeakMap storing raw source data for normalized documents.
  */
@@ -110,192 +108,105 @@ export function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): Ca
 }
 
 /**
- * Parse a markdown table string into structured rows.
- * @param raw - Markdown table content.
- * @returns Array of rows keyed by header titles.
- */
-export function parseMarkdownTable(raw: string): MarkdownRow[] {
-  const lines = raw.split('\n').filter(line => line.trim().startsWith('|'));
-
-  if (lines.length < 3) {
-    return [];
-  }
-
-  const headerLine = lines[0];
-
-  if (!headerLine) return [];
-  const headerCells = headerLine.split('|').map(cell => cell.trim());
-  const header = headerCells.slice(1, headerCells.length - 1);
-  const dataLines = lines.slice(2);
-  const rows: MarkdownRow[] = [];
-
-  for (const line of dataLines) {
-    const cells = line.split('|').map(cell => cell.trim());
-
-    if (cells.length < header.length + 2) continue;
-    const row: MarkdownRow = {};
-
-    for (let i = 0; i < header.length; i += 1) {
-      const key = header[i]!;
-
-      row[key] = cells[i + 1] ?? '';
-    }
-    if (!row.Title) continue;
-    rows.push(row);
-  }
-
-  return rows;
-}
-
-/**
- * Map a markdown table row to a normalized calendar document.
- * @param row - Markdown row data.
- * @param index - Row index used for deterministic IDs.
- * @param sourceId - Optional source identifier.
- * @returns Normalized calendar document.
- */
-export function mapMarkdownRowToDoc(row: MarkdownRow, index: number, sourceId: string = 'markdown:2024-12-01'): CalendarDoc {
-  const subjects = splitValues(row['Subject']);
-  const bodies = splitValues(row['Associatedbody']);
-  const relatedDocs = splitValues(row['Related_documents']);
-  const actors = splitValues(row['Actors']);
-  const targets = splitValues(row['GBF_Targets']);
-  const countries = splitValues(row['Country'] || row['Countries']);
-
-  const startDate = parseFlexibleDate(row['Startdate']);
-  const endDate = parseFlexibleDate(row['Enddate']);
-
-  const slug = slugify(row['Title'] || `calendar-item-${index}`);
-  const id = `markdown-${slug}-${index}`;
-
-  const rawStatus = row['Status'] || '';
-  const statusKey = normalizeStatusKey(rawStatus);
-  const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
-
-  const activityType = String(row['Type'] || '').trim() || undefined;
-
-  const baseRecord: Record<string, unknown> = {
-    id,
-    identifier: id,
-    source: sourceId,
-    title: row['Title'],
-    titleEn: row['Title'],
-    description: row['Description'] || null,
-    type: String(row['Type'] || 'Activity'),
-    activityType,
-    actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
-    subjects,
-    subjectEn: subjects.join(', '),
-    status: statusLabel,
-    statusKey: statusKey ?? null,
-    statusNarrative: row['Status_narrative'] || null,
-    startDate: startDate ?? undefined,
-    endDate: endDate ?? undefined,
-    subsidiaryBody: bodies[0] ?? null,
-    subsidiaryBodies: bodies,
-    copDecision: row['COPDecision'] || undefined,
-    copParagraph: row['COPParagraph_no'] || undefined,
-    responsibleUnit: row['Responsible_Unit'] || undefined,
-    responsibleOfficer: row['Responsible_Officer'] || undefined,
-    fundingSource: row['Funding_source'] || undefined,
-    fundingAllocated: row['Funding_allocated'] || undefined,
-    actors,
-    actorsComments: row['Actors_comments'] || undefined,
-    gbfTargets: targets,
-    relatedDocuments: relatedDocs,
-    links: [] as string[],
-    country: countries[0] ?? undefined,
-    countries,
-    countryEn: countries[0] ?? undefined,
-    countriesEn: countries,
-    outcome: row['Outcome'] || undefined,
-  };
-
-  const normalizedRecord = normalizeSolrDocument(baseRecord);
-  const doc = {
-    ...normalizedRecord,
-    id,
-    schema: 'activity',
-    source: sourceId,
-    subjects,
-    subsidiaryBodies: bodies,
-    links: Array.isArray(normalizedRecord['links']) ? normalizedRecord['links'] as string[] : [],
-    status: statusLabel,
-    statusKey,
-    statusNarrative: row['Status_narrative'] || null,
-    startDate: startDate ?? undefined,
-    endDate: endDate ?? undefined,
-    actors,
-    gbfTargets: targets,
-    relatedDocuments: relatedDocs,
-    countries,
-    countriesEn: countries,
-    country: countries[0] ?? undefined,
-    countryEn: countries[0] ?? undefined,
-    outcome: row['Outcome'] || undefined,
-    actionRequired: row['Action Required by Parties']?.toUpperCase() === 'Y',
-    activityType,
-  } as CalendarDoc;
-
-  delete (doc as Record<string, unknown>)._id;
-  rawDocMap.set(doc, baseRecord);
-
-  if (!doc.type) {
-    doc.type = String(row['Type'] || 'Activity');
-  }
-  if (!doc.title && typeof row['Title'] === 'string') {
-    doc.title = row['Title'];
-  }
-
-  return doc;
-}
-
-/**
- * Convert markdown table content into normalized calendar documents.
- * @param raw - Markdown table markup.
- * @returns Array of normalized documents.
- */
-export function buildDocsFromMarkdown(raw: string): CalendarDoc[] {
-  const rows = parseMarkdownTable(raw);
-
-  return rows.map((row, index) => mapMarkdownRowToDoc(row, index));
-}
-
-/**
  * Convert snapshot activity records to normalized documents.
  * @param records - Snapshot activities.
  * @returns Array of normalized calendar documents.
  */
 export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDoc[] {
   return records.map((record, index) => {
-    const row: MarkdownRow = {
-      Title: record.title ? String(record.title) : '',
-      Description: record.description ? String(record.description) : '',
-      Type: record.type ? String(record.type) : '',
-      'Action Required by Parties': record.actionRequiredByParties ? String(record.actionRequiredByParties) : '',
-      Subject: record.subject ? String(record.subject) : '',
-      Status: record.status ? String(record.status) : '',
-      Status_narrative: record.statusNarrative ? String(record.statusNarrative) : '',
-      Startdate: record.startDate ? String(record.startDate) : '',
-      Enddate: record.endDate ? String(record.endDate) : '',
-      Associatedbody: record.associatedBody ? String(record.associatedBody) : '',
-      AgendaItem: record.agendaItem ? String(record.agendaItem) : '',
-      COPDecision: record.copDecision ? String(record.copDecision) : '',
-      COPParagraph_no: record.copParagraphNo ? String(record.copParagraphNo) : '',
-      COPParagraph_type: record.copParagraphType ? String(record.copParagraphType) : '',
-      Responsible_Unit: record.responsibleUnit ? String(record.responsibleUnit) : '',
-      Responsible_Officer: record.responsibleOfficer ? String(record.responsibleOfficer) : '',
-      Funding_source: record.fundingSource ? String(record.fundingSource) : '',
-      Funding_allocated: record.fundingAllocated ? String(record.fundingAllocated) : '',
-      Actors: record.actors ? String(record.actors) : '',
-      Actors_comments: record.actorsComments ? String(record.actorsComments) : '',
-      GBF_Targets: record.gbfTargets ? String(record.gbfTargets) : '',
-      Related_documents: record.relatedDocuments ? String(record.relatedDocuments) : '',
-      Outcome: record.outcome ? String(record.outcome) : '',
-      Country: record.country ? String(record.country) : '',
-      Countries: record.countries ? String(record.countries) : '',
+    const subjects = splitValues(record.subject);
+    const bodies = splitValues(record.associatedBody);
+    const relatedDocs = splitValues(record.relatedDocuments);
+    const actors = splitValues(record.actors);
+    const targets = splitValues(record.gbfTargets);
+    const countries = splitValues(record.country || record.countries);
+
+    const startDate = parseFlexibleDate(String(record.startDate || ''));
+    const endDate = parseFlexibleDate(String(record.endDate || ''));
+
+    const title = record.title ? String(record.title) : '';
+    const slug = slugify(title || `calendar-item-${index}`);
+    const id = `activity-${slug}-${index}`;
+
+    const rawStatus = record.status ? String(record.status) : '';
+    const statusKey = normalizeStatusKey(rawStatus);
+    const statusLabel = normalizeStatusLabel(statusKey, rawStatus);
+
+    const activityType = record.type ? String(record.type).trim() : undefined;
+
+    const baseRecord: Record<string, unknown> = {
+      id,
+      identifier: id,
+      source: 'activities-json:25-26',
+      title,
+      titleEn: title,
+      description: record.description ? String(record.description) : null,
+      type: activityType || 'Activity',
+      activityType,
+      actionRequired: record.actionRequiredByParties ? String(record.actionRequiredByParties).toUpperCase() === 'Y' : false,
+      subjects,
+      subjectEn: subjects.join(', '),
+      status: statusLabel,
+      statusKey: statusKey ?? null,
+      statusNarrative: record.statusNarrative ? String(record.statusNarrative) : null,
+      startDate: startDate ?? undefined,
+      endDate: endDate ?? undefined,
+      subsidiaryBody: bodies[0] ?? null,
+      subsidiaryBodies: bodies,
+      copDecision: record.copDecision ? String(record.copDecision) : undefined,
+      copParagraph: record.copParagraphNo ? String(record.copParagraphNo) : undefined,
+      responsibleUnit: record.responsibleUnit ? String(record.responsibleUnit) : undefined,
+      responsibleOfficer: record.responsibleOfficer ? String(record.responsibleOfficer) : undefined,
+      fundingSource: record.fundingSource ? String(record.fundingSource) : undefined,
+      fundingAllocated: record.fundingAllocated ? String(record.fundingAllocated) : undefined,
+      actors,
+      actorsComments: record.actorsComments ? String(record.actorsComments) : undefined,
+      gbfTargets: targets,
+      relatedDocuments: relatedDocs,
+      links: [] as string[],
+      country: countries[0] ?? undefined,
+      countries,
+      countryEn: countries[0] ?? undefined,
+      countriesEn: countries,
+      outcome: record.outcome ? String(record.outcome) : undefined,
     };
 
-    return mapMarkdownRowToDoc(row, index, 'activities-json:25-26');
+    const normalizedRecord = normalizeSolrDocument(baseRecord);
+    const doc = {
+      ...normalizedRecord,
+      id,
+      schema: 'activity',
+      source: 'activities-json:25-26',
+      subjects,
+      subsidiaryBodies: bodies,
+      links: Array.isArray(normalizedRecord['links']) ? normalizedRecord['links'] as string[] : [],
+      status: statusLabel,
+      statusKey,
+      statusNarrative: record.statusNarrative ? String(record.statusNarrative) : null,
+      startDate: startDate ?? undefined,
+      endDate: endDate ?? undefined,
+      actors,
+      gbfTargets: targets,
+      relatedDocuments: relatedDocs,
+      countries,
+      countriesEn: countries,
+      country: countries[0] ?? undefined,
+      countryEn: countries[0] ?? undefined,
+      outcome: record.outcome ? String(record.outcome) : undefined,
+      actionRequired: record.actionRequiredByParties ? String(record.actionRequiredByParties).toUpperCase() === 'Y' : false,
+      activityType,
+    } as CalendarDoc;
+
+    delete (doc as Record<string, unknown>)._id;
+    rawDocMap.set(doc, baseRecord);
+
+    if (!doc.type) {
+      doc.type = activityType || 'Activity';
+    }
+    if (!doc.title && title) {
+      doc.title = title;
+    }
+
+    return doc;
   });
 }

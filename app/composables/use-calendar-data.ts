@@ -1,14 +1,12 @@
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { DateTime } from 'luxon';
 import { collectAllFieldNames, type LocaleCode } from 'shared/services/solr';
-import { useCalendarMarkdown } from './use-calendar-markdown';
 import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
 import activitiesSnapshot from 'shared/data/25-26-activities.js';
 import notificationsSnapshot from 'shared/data/notifications.js';
 import { loadSubjectOptions, buildSubjectLabelMap, type SubjectOption, setSubjectLabelMap as setSubjectLabelMapSubjects } from 'shared/utils/subjects';
 import {
   buildDocsFromActivities,
-  buildDocsFromMarkdown,
   normalizeMeetingDoc,
   type SnapshotMeeting,
 } from 'shared/utils/calendar-document-normalizer';
@@ -193,26 +191,12 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       notificationDetailsMap.value = seededDetails;
     }
 
-    try {
-      const markdownRaw = await useCalendarMarkdown();
+    const activitiesDocs = activitiesSnapshot.length > 0
+      ? buildDocsFromActivities(activitiesSnapshot)
+      : [];
 
-      let markdownDocs = buildDocsFromMarkdown(markdownRaw);
-
-      if (markdownDocs.length === 0 && activitiesSnapshot.length > 0) {
-        markdownDocs = buildDocsFromActivities(activitiesSnapshot);
-      }
-
-      docs.value = [...normalizedMeetings, ...markdownDocs, ...notificationDocs];
-    } catch (error) {
-      console.error('Failed to load snapshot data', error);
-      const fallbackActivities = activitiesSnapshot.length > 0
-        ? buildDocsFromActivities(activitiesSnapshot)
-        : [];
-
-      docs.value = [...normalizedMeetings, ...fallbackActivities, ...notificationDocs];
-    } finally {
-      loading.value = false;
-    }
+    docs.value = [...normalizedMeetings, ...activitiesDocs, ...notificationDocs];
+    loading.value = false;
   }
 
   onMounted(() => {

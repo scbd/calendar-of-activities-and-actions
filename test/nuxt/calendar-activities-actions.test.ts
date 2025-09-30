@@ -39,6 +39,7 @@ vi.mock('../../shared/utils/subjects', () => ({
   loadSubjectOptions: vi.fn().mockResolvedValue([]),
   buildSubjectLabelMap: () => new Map<string, string>(),
   resolveSubjectLabel: (value: string) => value,
+  setSubjectLabelMap: vi.fn(),
 }));
 
 vi.mock('../../shared/services/thesaurus', () => ({
@@ -71,9 +72,60 @@ vi.mock('../../shared/data/notifications.js', () => ({
   ],
 }));
 
-// Provide markdown table with two non-meeting activity types to ensure they are visible by default
-vi.mock('../../app/composables/use-calendar-markdown', () => ({
-  useCalendarMarkdown: vi.fn().mockResolvedValue(`| Title | Description | Type | Action Required by Parties | Subject | Status | Status_narrative | Startdate | Enddate | Associatedbody | AgendaItem | COPDecision | COPParagraph_no | COPParagraph_type | Responsible_Unit | Responsible_Officer | Funding_source | Funding_allocated | Actors | Actors_comments | GBF_Targets | Related_documents | Outcome |\n|-------|-------------|------|----------------------------|---------|--------|------------------|-----------|---------|----------------|------------|-------------|-----------------|-------------------|------------------|---------------------|----------------|-------------------|--------|-----------------|-------------|--------------------|---------|\n| Sample Activity | | Activity | Y | Sample Subject | Confirmed | | 1-Jan-2025 | 2-Jan-2025 | SBSTTA | | 15/3 | | | UNIT | Officer | | | | | | | |\n| Second Item | | Nominations | N | Another Subject | Completed | | 5-Feb-2025 | 6-Feb-2025 | SBSTTA | | 15/4 | | | UNIT | Officer | | | | | | | |`)
+// Mock activities data with two non-meeting activity types to ensure they are visible by default
+vi.mock('../../shared/data/25-26-activities.js', () => ({
+  default: [
+    {
+      title: 'Sample Activity',
+      description: '',
+      type: 'Activity',
+      actionRequiredByParties: 'Y',
+      subject: 'Sample Subject',
+      status: 'Confirmed',
+      statusNarrative: '',
+      startDate: '1-Jan-2025',
+      endDate: '2-Jan-2025',
+      associatedBody: 'SBSTTA',
+      agendaItem: '',
+      copDecision: '15/3',
+      copParagraphNo: '',
+      copParagraphType: '',
+      responsibleUnit: 'UNIT',
+      responsibleOfficer: 'Officer',
+      fundingSource: '',
+      fundingAllocated: '',
+      actors: '',
+      actorsComments: '',
+      gbfTargets: '',
+      relatedDocuments: '',
+      outcome: '',
+    },
+    {
+      title: 'Second Item',
+      description: '',
+      type: 'Nominations',
+      actionRequiredByParties: 'N',
+      subject: 'Another Subject',
+      status: 'Completed',
+      statusNarrative: '',
+      startDate: '5-Feb-2025',
+      endDate: '6-Feb-2025',
+      associatedBody: 'SBSTTA',
+      agendaItem: '',
+      copDecision: '15/4',
+      copParagraphNo: '',
+      copParagraphType: '',
+      responsibleUnit: 'UNIT',
+      responsibleOfficer: 'Officer',
+      fundingSource: '',
+      fundingAllocated: '',
+      actors: '',
+      actorsComments: '',
+      gbfTargets: '',
+      relatedDocuments: '',
+      outcome: '',
+    },
+  ],
 }));
 
 vi.mock('../../shared/data/meetings.js', () => ({
