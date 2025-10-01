@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from '#imports';
-import ExpandablePillList from './expandable-pill-list.vue';
+import ExpandablePillList from '../expandable-pill-list.vue';
 import { buildNotificationLink } from 'shared/utils/notifications';
 import { formatNotificationDate } from 'shared/utils/date';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';

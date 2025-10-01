@@ -39,13 +39,13 @@
     </div>
 
     <!-- Responsible Unit -->
-    <div v-if="showResponsible && responsibleUnit" class="calendar-detail-section">
+    <div v-if="false && showResponsible && responsibleUnit" class="calendar-detail-section">
       <span class="calendar-detail-label">{{ t('calendar.labels.responsibleUnit') }}</span>
       <div class="calendar-detail-content">{{ responsibleUnit }}</div>
     </div>
 
     <!-- Responsible Officer -->
-    <div v-if="showResponsible && responsibleOfficer" class="calendar-detail-section">
+    <div v-if="false && showResponsible && responsibleOfficer" class="calendar-detail-section">
       <span class="calendar-detail-label">{{ t('calendar.labels.responsibleOfficer') }}</span>
       <div class="calendar-detail-content">{{ responsibleOfficer }}</div>
     </div>
@@ -63,8 +63,8 @@
 
 <script setup lang="ts">
 import { useI18n } from '#imports';
-import ExpandablePillList from './expandable-pill-list.vue';
-import DecisionLink from './decision-link.vue';
+import ExpandablePillList from '../expandable-pill-list.vue';
+import DecisionLink from '../decision-link.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
 
 const _props = defineProps<{

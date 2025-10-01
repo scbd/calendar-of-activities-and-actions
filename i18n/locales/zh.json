@@ -95,7 +95,29 @@
         "statusAsc": "状态（A-Z）",
         "schemaAsc": "架构（A-Z）",
         "actionRequired": "优先显示需采取行动的条目"
-      }
+      },
+      "typeLabel": "类型",
+      "typePlaceholder": "选择类型",
+      "activityLabel": "活动类型",
+      "activityPlaceholder": "选择活动类型",
+      "globalTargetLabel": "全球目标",
+      "globalTargetPlaceholder": "选择全球目标",
+      "countryLabel": "国家",
+      "countryPlaceholder": "选择国家",
+      "subjectLabel": "主题",
+      "subjectPlaceholder": "选择主题",
+      "statusLabel": "状态",
+      "statusPlaceholder": "选择状态",
+      "subsidiaryBodyLabel": "附属机构",
+      "subsidiaryBodyPlaceholder": "选择附属机构",
+      "decisionLabel": "决定",
+      "decisionPlaceholder": "选择决定",
+      "dateRangeLabel": "日期范围",
+      "startDateLabel": "开始日期",
+      "endDateLabel": "结束日期",
+      "actionRequiredLabel": "需要采取行动",
+      "actionRequiredHint": "仅显示需要采取行动的事项",
+      "clearAll": "清除所有筛选条件"
     },
     "types": {
       "cop": "缔约方大会会议",
@@ -114,7 +136,11 @@
       "training": "培训",
       "consultation": "磋商",
       "campaign": "宣传活动",
-      "other": "其他"
+      "other": "其他",
+      "conference": "大会",
+      "side-event": "边会",
+      "default": "活动",
+      "unknown": "活动"
     },
     "status": {
       "confirm": "已确认",

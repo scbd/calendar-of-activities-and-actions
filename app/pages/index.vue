@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActions from '../components/calendar-activities-actions.vue';
+import CalendarActivitiesActions from '../components/calendar/calendar-activities-actions.vue';
 </script>

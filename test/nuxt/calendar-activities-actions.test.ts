@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vites
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
-import CalendarActivitiesActions from '../../app/components/calendar-activities-actions.vue';
-import CalendarFilters from '../../app/components/calendar-filters.vue';
+import CalendarActivitiesActions from '../../app/components/calendar/calendar-activities-actions.vue';
+import CalendarFilters from '../../app/components/calendar/calendar-filters.vue';
 import DecisionLink from '../../app/components/decision-link.vue';
 import { resolveDecisionHrefWithFallback } from '../../shared/utils/decision-links';
 import en from '../../i18n/locales/en.json';

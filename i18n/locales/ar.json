@@ -95,7 +95,29 @@
         "statusAsc": "الحالة (أ-ي)",
         "schemaAsc": "المخطط (أ-ي)",
         "actionRequired": "العناصر التي تتطلب إجراء أولاً"
-      }
+      },
+      "typeLabel": "النوع",
+      "typePlaceholder": "اختر الأنواع",
+      "activityLabel": "أنواع الأنشطة",
+      "activityPlaceholder": "اختر أنواع الأنشطة",
+      "globalTargetLabel": "الأهداف العالمية",
+      "globalTargetPlaceholder": "اختر الأهداف العالمية",
+      "countryLabel": "الدول",
+      "countryPlaceholder": "اختر الدول",
+      "subjectLabel": "الموضوع",
+      "subjectPlaceholder": "اختر الموضوعات",
+      "statusLabel": "الحالة",
+      "statusPlaceholder": "اختر الحالات",
+      "subsidiaryBodyLabel": "الجهاز الفرعي",
+      "subsidiaryBodyPlaceholder": "اختر الأجهزة الفرعية",
+      "decisionLabel": "القرار",
+      "decisionPlaceholder": "اختر القرارات",
+      "dateRangeLabel": "نطاق التاريخ",
+      "startDateLabel": "تاريخ البدء",
+      "endDateLabel": "تاريخ الانتهاء",
+      "actionRequiredLabel": "الإجراء المطلوب",
+      "actionRequiredHint": "عرض العناصر التي تتطلب إجراء فقط",
+      "clearAll": "مسح جميع عوامل التصفية"
     },
     "types": {
       "cop": "اجتماع مؤتمر الأطراف",
@@ -114,7 +136,11 @@
       "training": "تدريب",
       "consultation": "مشاورة",
       "campaign": "حملة",
-      "other": "أخرى"
+      "other": "أخرى",
+      "conference": "مؤتمر",
+      "side-event": "فعالية جانبية",
+      "default": "نشاط",
+      "unknown": "نشاط"
     },
     "status": {
       "confirm": "مؤكد",

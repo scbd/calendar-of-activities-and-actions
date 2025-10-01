@@ -52,13 +52,13 @@
     },
     "filters": {
       "labels": {
-        "typeActivity": "Type",
-        "activityTypes": "Activity types",
+        "typeActivity": "Record type(s)",
+        "activityTypes": "Activity type(s)",
         "globalTargets": "GBF Target(s)",
-        "countries": "Countries",
-        "subjects": "Subjects",
+        "countries": "Country(ies)",
+        "subjects": "Subject(s)",
     "statuses": "Status(es)",
-    "subsidiaryBodies": "Subsidiary body (bodies)",
+    "subsidiaryBodies": "Subsidiary body(ies)",
     "decisions": "Decision(s)",
     "dateRange": "Date range",
     "startDate": "Start date",

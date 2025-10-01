@@ -95,7 +95,29 @@
         "statusAsc": "Статус (A–Z)",
         "schemaAsc": "Схема (A–Z)",
         "actionRequired": "Сначала записи с требуемыми действиями"
-      }
+      },
+      "typeLabel": "Тип",
+      "typePlaceholder": "Выберите типы",
+      "activityLabel": "Типы мероприятий",
+      "activityPlaceholder": "Выберите типы мероприятий",
+      "globalTargetLabel": "Глобальные цели",
+      "globalTargetPlaceholder": "Выберите глобальные цели",
+      "countryLabel": "Страны",
+      "countryPlaceholder": "Выберите страны",
+      "subjectLabel": "Тема",
+      "subjectPlaceholder": "Выберите темы",
+      "statusLabel": "Статус",
+      "statusPlaceholder": "Выберите статусы",
+      "subsidiaryBodyLabel": "Вспомогательный орган",
+      "subsidiaryBodyPlaceholder": "Выберите вспомогательные органы",
+      "decisionLabel": "Решение",
+      "decisionPlaceholder": "Выберите решения",
+      "dateRangeLabel": "Диапазон дат",
+      "startDateLabel": "Дата начала",
+      "endDateLabel": "Дата окончания",
+      "actionRequiredLabel": "Требуются действия",
+      "actionRequiredHint": "Показывать только элементы, требующие действий",
+      "clearAll": "Очистить все фильтры"
     },
     "types": {
       "cop": "Заседание КС",
@@ -114,7 +136,11 @@
       "training": "Обучение",
       "consultation": "Консультация",
       "campaign": "Кампания",
-      "other": "Другое"
+      "other": "Другое",
+      "conference": "Конференция",
+      "side-event": "Параллельное мероприятие",
+      "default": "Мероприятие",
+      "unknown": "Мероприятие"
     },
     "status": {
       "confirm": "Подтверждено",

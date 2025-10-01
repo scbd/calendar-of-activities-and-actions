@@ -52,7 +52,7 @@ import { useI18n } from '#imports';
 import { useRoute } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarAccordionItem from './calendar-accordion-item.vue';
-import { useCalendarData } from '../composables/use-calendar-data';
+import { useCalendarData } from '../../composables/use-calendar-data';
 import { configureStatusLocalization } from 'shared/utils/status';
 import { configureLabelLocalization, setRegionDisplayNames } from 'shared/utils/labels';
 import type { CalendarDoc, FilterState, GroupedItem } from 'shared/types/calendar';
@@ -210,7 +210,7 @@ if (autoExpandId) {
 </script>
 
 <style lang="scss">
-@use '../assets/styles/main.scss' as *;
+@use '../../assets/styles/main.scss' as *;
 </style>
 <style scoped>
 .activities-explorer {

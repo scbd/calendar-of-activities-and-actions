@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { createI18n } from 'vue-i18n';
-import CalendarNotificationCard from '../../app/components/calendar-notification-card.vue';
+import CalendarNotificationCard from '../../app/components/calendar/calendar-notification-card.vue';
 import { subjectLabelMap } from '../../shared/utils/subjects';
 import en from '../../i18n/locales/en.json';
 

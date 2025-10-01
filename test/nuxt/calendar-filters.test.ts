@@ -3,7 +3,7 @@ import { nextTick } from 'vue';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import Multiselect from 'vue-multiselect';
 import { createI18n } from 'vue-i18n';
-import CalendarFilters from '../../app/components/calendar-filters.vue';
+import CalendarFilters from '../../app/components/calendar/calendar-filters.vue';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
