@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { CalendarDoc } from '../../types/calendar';
+import type { CalendarDoc } from 'shared/types/calendar';
 import {
   configureStatusLocalization,
   normalizeStatusKey,
   normalizeStatusLabel,
   shouldDisplayCompleted,
   statusColor,
-} from '../status';
+} from 'shared/utils/status';
 
 describe('status utilities', () => {
   beforeEach(() => {
