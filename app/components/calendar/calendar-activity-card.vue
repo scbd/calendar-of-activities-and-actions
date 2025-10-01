@@ -155,10 +155,6 @@ const statusLabel = computed(() => {
     return t('calendar.status.completed') as string;
   }
 
-  if (rawStatus) {
-    return rawStatus;
-  }
-
   return normalizeStatusLabel(statusKey ?? null, rawStatus ?? undefined);
 });
 

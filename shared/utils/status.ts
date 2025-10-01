@@ -29,6 +29,7 @@ export function normalizeStatusKey(label: string | undefined): string | null {
 
   if (!value) return null;
   if (value === 'confirmed') return 'CONFIRM';
+  if (value === 'tentative') return 'TENTAT';
   return value.replace(/\s+/g, '_').toUpperCase();
 }
 
@@ -53,6 +54,14 @@ export function normalizeStatusLabel(key: string | null | undefined, fallback?: 
 
     if (normalized === 'confirm') {
       const result = translate?.('calendar.status.confirmed');
+
+      if (typeof result === 'string' && result.trim().length > 0) {
+        return result.trim();
+      }
+    }
+
+    if (normalized === 'tentat') {
+      const result = translate?.('calendar.status.tentative');
 
       if (typeof result === 'string' && result.trim().length > 0) {
         return result.trim();
