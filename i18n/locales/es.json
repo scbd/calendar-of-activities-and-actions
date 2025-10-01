@@ -145,6 +145,8 @@
     "status": {
       "confirm": "Confirmado",
       "confirmed": "Confirmado",
+      "tentat": "Tentativo",
+      "tentative": "Tentativo",
       "not_set": "Not Set",
       "completed": "Completado",
       "ongoing": "En curso",

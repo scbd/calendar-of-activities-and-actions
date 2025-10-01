@@ -145,6 +145,8 @@
     "status": {
       "confirm": "مؤكد",
       "confirmed": "مؤكد",
+      "tentat": "مبدئي",
+      "tentative": "مبدئي",
       "not_set": "Not Set",
       "completed": "مكتمل",
       "ongoing": "قيد التنفيذ",
