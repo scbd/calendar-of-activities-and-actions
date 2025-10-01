@@ -350,15 +350,38 @@ const globalTargetOptions = computed<FilterOption[]>(() =>
   mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
 );
 
-const sortOptions = computed<FilterOption[]>(() => [
-  { value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string },
-  { value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string },
-  { value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string },
-  { value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string },
-  { value: 'status:asc', label: t('calendar.filters.sortOptions.statusAsc') as string },
-  { value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string },
-  { value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string },
-]);
+const sortOptions = computed<FilterOption[]>(() => {
+  const selectedValues = extractSelectedValues(selectedSorts.value);
+  const hasStartDateAsc = selectedValues.includes('startDate:asc');
+  const hasStartDateDesc = selectedValues.includes('startDate:desc');
+  const hasEndDateAsc = selectedValues.includes('endDate:asc');
+  const hasEndDateDesc = selectedValues.includes('endDate:desc');
+
+  const options: FilterOption[] = [];
+
+  // Only show startDate options if the opposite isn't selected
+  if (!hasStartDateDesc) {
+    options.push({ value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string });
+  }
+  if (!hasStartDateAsc) {
+    options.push({ value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string });
+  }
+
+  // Only show endDate options if the opposite isn't selected
+  if (!hasEndDateDesc) {
+    options.push({ value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string });
+  }
+  if (!hasEndDateAsc) {
+    options.push({ value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string });
+  }
+
+  // Add title and schema sort options (replacing status)
+  options.push({ value: 'title:asc', label: t('calendar.filters.sortOptions.titleAsc') as string });
+  options.push({ value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string });
+  options.push({ value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string });
+
+  return options;
+});
 
 // Schemas are constrained to the canonical keys provided by the activity index service.
 const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
