@@ -223,6 +223,7 @@ export function getDocDecisionLabels(doc: CalendarDoc): string[] {
     if (!label) return;
 
     const trimmed = label.trim();
+
     if (!trimmed) return;
 
     const parsed = parseDecisionLabel(trimmed);

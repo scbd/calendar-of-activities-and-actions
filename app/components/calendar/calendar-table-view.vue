@@ -29,7 +29,7 @@
             <table class="table table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th style="width: 40px;"></th>
+                  <th/>
                   <th style="width: 180px;">
                     <button class="sort-header" @click="toggleSort('startDate')">
                       Date
@@ -264,8 +264,21 @@ import { useRoute } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarDocumentDetails from './calendar-document-details.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
-import { configureStatusLocalization } from 'shared/utils/status';
-import { configureLabelLocalization, setRegionDisplayNames } from 'shared/utils/labels';
+import {
+  configureStatusLocalization,
+  normalizeStatusKey,
+  normalizeStatusLabel,
+  shouldDisplayCompleted,
+  statusColor,
+} from 'shared/utils/status';
+import {
+  configureLabelLocalization,
+  setRegionDisplayNames,
+  normalizeDecisionLabel,
+  responsibleOfficerLabel,
+  responsibleUnitLabel,
+  resolveCountryLabel,
+} from 'shared/utils/labels';
 import type { CalendarDoc, FilterState } from 'shared/types/calendar';
 import type { LocaleCode } from 'shared/services/solr';
 import { getTitleFieldForLocale } from 'shared/services/solr';
@@ -275,13 +288,6 @@ import {
   getDocStringValue,
   getDocSubsidiaryBodies,
 } from 'shared/utils/document-processing';
-import {
-  normalizeDecisionLabel,
-  responsibleOfficerLabel,
-  responsibleUnitLabel,
-  resolveCountryLabel,
-} from 'shared/utils/labels';
-import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import {
   notificationDisplayEntries,
@@ -318,7 +324,6 @@ const initialStartDate = queryStartDate || defaultStartDateIso;
 const {
   loading,
   docs,
-  locale: calendarLocale,
   filteredDocs,
   availableTypes,
   availableSubjects,
@@ -374,24 +379,28 @@ const sortedDocs = computed<CalendarDoc[]>(() => {
       case 'startDate': {
         const aDate = getDocStringValue(a, 'startDate') || getDocStringValue(a, 'endDate') || '';
         const bDate = getDocStringValue(b, 'startDate') || getDocStringValue(b, 'endDate') || '';
+
         comparison = aDate.localeCompare(bDate);
         break;
       }
       case 'type': {
         const aType = getTypeLabel(a).toLowerCase();
         const bType = getTypeLabel(b).toLowerCase();
+
         comparison = aType.localeCompare(bType);
         break;
       }
       case 'title': {
         const aTitle = getTitle(a).toLowerCase();
         const bTitle = getTitle(b).toLowerCase();
+
         comparison = aTitle.localeCompare(bTitle);
         break;
       }
       case 'status': {
         const aStatus = getStatusLabel(a).toLowerCase();
         const bStatus = getStatusLabel(b).toLowerCase();
+
         comparison = aStatus.localeCompare(bStatus);
         break;
       }
@@ -407,6 +416,7 @@ const titleField = computed(() => getTitleFieldForLocale(locale.value as LocaleC
 
 const getTitle = (doc: CalendarDoc): string => {
   const value = getDocStringValue(doc, titleField.value, 'title', 'titleEn');
+
   if (value) {
     return value;
   }
@@ -431,6 +441,7 @@ const getTypeLabel = (doc: CalendarDoc): string => {
 
 const getTypeStyle = (doc: CalendarDoc) => {
   const palette = getTypeColor(normalizeTypeKey(getDocStringValue(doc, 'type')));
+
   return {
     backgroundColor: palette.background,
     color: palette.text,
@@ -443,10 +454,12 @@ const isNotification = (doc: CalendarDoc): boolean => {
 
 const isMeetingDoc = (doc: CalendarDoc): boolean => {
   const schemaValue = doc.schema ? String(doc.schema).toLowerCase() : getDocStringValue(doc, 'schema')?.toLowerCase();
+
   if (schemaValue === 'meeting') {
     return true;
   }
   const typeValue = getDocStringValue(doc, 'type');
+
   return Boolean(typeValue && typeValue.toLowerCase() === 'meeting');
 };
 
@@ -461,6 +474,7 @@ const getMeetingLocation = (doc: CalendarDoc): string => {
     ? resolveCountryLabel(rawCountry, providedCountry)
     : (providedCountry ?? '');
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+
   return parts.join(', ');
 };
 
@@ -476,6 +490,7 @@ const getMeetingSymbol = (doc: CalendarDoc): string => {
     return '';
   }
   const code = getDocStringValue(doc, 'meetingCode');
+
   if (code) {
     return code;
   }
@@ -509,11 +524,13 @@ const isActionRequired = (doc: CalendarDoc): boolean => getDocBooleanValue(doc, 
 const getStatusNarrative = (doc: CalendarDoc): string => {
   if (isNotification(doc)) {
     const fulltext = getDocStringValue(doc, 'fulltext_s');
+
     if (!fulltext) {
       return '';
     }
     const sentences = fulltext.match(/[^.!?]+[.!?]+/g) || [];
     const firstThree = sentences.slice(0, 3).join(' ').trim();
+
     return firstThree ? `${firstThree}...` : '';
   }
   return getDocStringValue(doc, 'statusNarrative') ?? '';
@@ -548,6 +565,7 @@ const getDecisionEntries = (doc: CalendarDoc): DecisionEntry[] => {
 
   if (normalized.length === 0) {
     const fallback = normalizeDecisionLabel(getDocStringValue(doc, 'copDecision'));
+
     if (fallback) {
       normalized.push({ label: fallback });
     }
