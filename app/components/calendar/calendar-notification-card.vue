@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-notification-card">
+  <div class="calendar-notification-card" :style="cardBackgroundStyle">
     <div class="calendar-notification-card__header">
       <div class="calendar-notification-card__header-left">
         <a
@@ -102,6 +102,7 @@ import { buildNotificationLink } from 'shared/utils/notifications';
 import { formatNotificationDate } from 'shared/utils/date';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';
 import { subjectLabelMap, resolveSubjectLabel, fallbackSubjectLabel } from 'shared/utils/subjects';
+import { getTypeColor } from 'shared/utils/type-colors';
 
 // NOTE: allDocs prop is intentionally not used in this component
 // It is passed for potential future use (e.g., showing related meetings)
@@ -140,13 +141,30 @@ const thematicLabels = computed(() => {
       return true;
     });
 });
+
+const cardBackgroundStyle = computed(() => {
+  // Notification entries should use the notification type color
+  const palette = getTypeColor('notification');
+
+  // Convert hex to rgba with heavy alpha (0.15 = 15% opacity)
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  return {
+    backgroundColor: hexToRgba(palette.background, 0.15),
+  };
+});
 </script>
 
 <style scoped>
 .calendar-notification-card {
   padding: 1rem;
   border-bottom: 1px solid #f1f3f5;
-  background-color: #fafbfc;
 }
 
 .calendar-notification-card__header {

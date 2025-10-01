@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-activity-card">
+  <div class="calendar-activity-card" :style="cardBackgroundStyle">
     <div class="calendar-activity-card__header">
       <div class="calendar-activity-card__type" :style="typeStyle">
         {{ typeLabel }}
@@ -107,6 +107,23 @@ const typeStyle = computed(() => {
   };
 });
 
+const cardBackgroundStyle = computed(() => {
+  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type')));
+
+  // Convert hex to rgba with heavy alpha (0.15 = 15% opacity)
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  return {
+    backgroundColor: hexToRgba(palette.background, 0.15),
+  };
+});
+
 const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired') === true);
 
 const schemaValue = computed(() => {
@@ -186,7 +203,6 @@ const activityLink = computed(() => {
 .calendar-activity-card {
   padding: 1rem;
   border-bottom: 1px solid #f1f3f5;
-  background-color: #f8f9fa;
   border-radius: 0.375rem;
 }
 
