@@ -66,8 +66,7 @@
     "actionRequired": "Action required",
     "schemas": "Record Type(s)",
     "sort": "Sort results",
-    "search": "Search",
-    "filters": "All Filters"
+    "search": "Search"
   },
   "placeholders": {
     "typeActivity": "Select types",
@@ -80,12 +79,7 @@
     "decisions": "Select decisions",
     "schemas": "Select record types",
     "sort": "Select sort order",
-    "search": "Enter keywords",
-    "megaFilter": "Search existing filters or enter keywords and press Enter"
-  },
-  "messages": {
-    "noResults": "No matching filters found",
-    "typeToSearch": "Type to search or add custom keywords"
+    "search": "Enter keywords"
   },
       "toggles": {
         "actionRequiredOnly": "Show only items requiring action"

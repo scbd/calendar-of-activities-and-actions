@@ -3,7 +3,7 @@
     <div class="row g-3">
       <!-- Consolidated Mega Filter Dropdown -->
       <div class="col-12 col-md-6">
-        <label for="mega-filter" class="form-label">{{ t('calendar.filters.labels.filters') }}</label>
+        <label for="mega-filter" class="form-label">{{ t('calendar.filters.labels.search') }}</label>
         <Multiselect
           id="mega-filter"
           v-model="selectedFilters"
@@ -17,14 +17,14 @@
           group-label="groupLabel"
           label="label"
           track-by="value"
-          :placeholder="t('calendar.filters.placeholders.megaFilter')"
+          :placeholder="t('calendar.filters.placeholders.search')"
           @tag="addTag"
         >
           <template #noResult>
-            {{ t('calendar.filters.messages.noResults') }}
+            {{ t('calendar.messages.noResults') }}
           </template>
           <template #noOptions>
-            {{ t('calendar.filters.messages.typeToSearch') }}
+            {{ t('calendar.messages.noResults') }}
           </template>
         </Multiselect>
       </div>
