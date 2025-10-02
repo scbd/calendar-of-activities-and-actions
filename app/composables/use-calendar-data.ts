@@ -212,7 +212,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     void ensureSubjectLabels();
   });
 
-  type SortField = 'startDate' | 'endDate' | 'status' | 'schema' | 'actionRequired';
+  type SortField = 'startDate' | 'endDate' | 'title' | 'schema' | 'actionRequired';
   type SortDirection = 'asc' | 'desc';
 
   interface SortDirective {
@@ -220,7 +220,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     direction: SortDirection;
   }
 
-  const SORT_FIELDS: SortField[] = ['startDate', 'endDate', 'status', 'schema', 'actionRequired'];
+  const SORT_FIELDS: SortField[] = ['startDate', 'endDate', 'title', 'schema', 'actionRequired'];
   const FALLBACK_SORT_DIRECTIVE: SortDirective = { field: 'startDate', direction: 'asc' };
 
   const filteredDocs = computed<CalendarDoc[]>(() => {
@@ -525,8 +525,8 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       case 'endDate':
         comparison = compareDateValues(getEndDateForSort(a), getEndDateForSort(b));
         break;
-      case 'status':
-        comparison = compareStringValues(getStatusSortValue(a), getStatusSortValue(b));
+      case 'title':
+        comparison = compareStringValues(getTitleSortValue(a), getTitleSortValue(b));
         break;
       case 'schema':
         comparison = compareStringValues(getSchemaSortValue(a), getSchemaSortValue(b));
@@ -650,10 +650,8 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       ?? safeDate(getDocStringValue(doc, 'startDate'));
   }
 
-  function getStatusSortValue(doc: CalendarDoc): string {
-    return (getDocStringValue(doc, 'statusKey')
-      ?? normalizeStatusKey(getDocStringValue(doc, 'status'))
-      ?? '').toString();
+  function getTitleSortValue(doc: CalendarDoc): string {
+    return getDocStringValue(doc, 'title', 'titleEn', 'titleFr', 'titleEs', 'titleRu', 'titleZh', 'titleAr') ?? '';
   }
 
   function getSchemaSortValue(doc: CalendarDoc): string {

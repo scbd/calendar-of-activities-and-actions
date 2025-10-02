@@ -145,6 +145,8 @@
     "status": {
       "confirm": "已确认",
       "confirmed": "已确认",
+      "tentat": "暂定",
+      "tentative": "暂定",
       "not_set": "Not Set",
       "completed": "已完成",
       "ongoing": "进行中",

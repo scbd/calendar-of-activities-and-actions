@@ -145,6 +145,8 @@
     "status": {
       "confirm": "Подтверждено",
       "confirmed": "Подтверждено",
+      "tentat": "Предварительно",
+      "tentative": "Предварительно",
       "not_set": "Not Set",
       "completed": "Завершено",
       "ongoing": "В процессе",

@@ -64,7 +64,7 @@
     "startDate": "Start date",
     "endDate": "End date",
     "actionRequired": "Action required",
-    "schemas": "Schema(s)",
+    "schemas": "Record Type(s)",
     "sort": "Sort results",
     "search": "Search",
     "filters": "All Filters"
@@ -78,7 +78,7 @@
     "statuses": "Select statuses",
     "subsidiaryBodies": "Select subsidiary bodies",
     "decisions": "Select decisions",
-    "schemas": "Select schemas",
+    "schemas": "Select record types",
     "sort": "Select sort order",
     "search": "Enter keywords",
     "megaFilter": "Search existing filters or enter keywords and press Enter"
@@ -98,8 +98,8 @@
         "startDateDesc": "Start date (newest first)",
         "endDateAsc": "End date (oldest first)",
         "endDateDesc": "End date (newest first)",
-        "statusAsc": "Status (A to Z)",
-        "schemaAsc": "Schema (A to Z)",
+        "titleAsc": "Title (A to Z)",
+        "schemaAsc": "Record Type (A to Z)",
         "actionRequired": "Action required items first"
       },
       "typeLabel": "Type",
@@ -151,6 +151,8 @@
     "status": {
       "confirm": "Confirmed",
       "confirmed": "Confirmed",
+      "tentat": "Tentative",
+      "tentative": "Tentative",
       "not_set": "Not Set",
       "completed": "Completed",
       "ongoing": "Ongoing",
