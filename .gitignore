@@ -50,5 +50,5 @@ playwright/.cache/
 
 .github/*
 !.github/copilot-instructions.md
-
+!.github/workflows
 .yarn
