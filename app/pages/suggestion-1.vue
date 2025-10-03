@@ -1,9 +1,9 @@
 <template>
   <div>
-    <CalendarActivitiesActions />
+    <CalendarTableView />
   </div>
 </template>
 
 <script setup lang="ts">
-import CalendarActivitiesActions from '~/components/calendar/calendar-activities-actions.vue';
+import CalendarTableView from '~/components/calendar/calendar-table-view.vue';
 </script>
