@@ -759,7 +759,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/fontawesome-svg-core@npm:^7.1.0":
+"@fortawesome/fontawesome-svg-core@npm:7.1.0":
   version: 7.1.0
   resolution: "@fortawesome/fontawesome-svg-core@npm:7.1.0"
   dependencies:
@@ -768,7 +768,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/free-solid-svg-icons@npm:^7.1.0":
+"@fortawesome/free-solid-svg-icons@npm:7.1.0":
   version: 7.1.0
   resolution: "@fortawesome/free-solid-svg-icons@npm:7.1.0"
   dependencies:
@@ -777,7 +777,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fortawesome/vue-fontawesome@npm:^3.1.2":
+"@fortawesome/vue-fontawesome@npm:3.1.2":
   version: 3.1.2
   resolution: "@fortawesome/vue-fontawesome@npm:3.1.2"
   peerDependencies:
@@ -1100,7 +1100,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mahdikhashan/vue3-click-outside@npm:^0.1.2":
+"@mahdikhashan/vue3-click-outside@npm:0.1.2":
   version: 0.1.2
   resolution: "@mahdikhashan/vue3-click-outside@npm:0.1.2"
   dependencies:
@@ -4391,10 +4391,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "calendar-of-activities-and-actions@workspace:."
   dependencies:
-    "@fortawesome/fontawesome-svg-core": "npm:^7.1.0"
-    "@fortawesome/free-solid-svg-icons": "npm:^7.1.0"
-    "@fortawesome/vue-fontawesome": "npm:^3.1.2"
-    "@mahdikhashan/vue3-click-outside": "npm:^0.1.2"
+    "@fortawesome/fontawesome-svg-core": "npm:7.1.0"
+    "@fortawesome/free-solid-svg-icons": "npm:7.1.0"
+    "@fortawesome/vue-fontawesome": "npm:3.1.2"
+    "@mahdikhashan/vue3-click-outside": "npm:0.1.2"
     "@nuxt/eslint": "npm:1.9.0"
     "@nuxt/fonts": "npm:0.11.4"
     "@nuxt/image": "npm:1.11.0"
