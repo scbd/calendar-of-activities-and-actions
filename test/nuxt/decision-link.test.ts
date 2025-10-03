@@ -27,7 +27,8 @@ describe('DecisionLink component', () => {
 
     const anchor = wrapper.get('a');
 
-    expect(anchor.attributes('href')).toBe('/decisions/cop/16');
+    // NuxtLink includes the baseURL from nuxt.config.ts
+    expect(anchor.attributes('href')).toBe('/calendar-of-activities-and-actions/decisions/cop/16');
     expect(anchor.attributes('target')).toBeUndefined();
   });
 
