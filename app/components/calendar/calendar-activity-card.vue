@@ -162,17 +162,19 @@ const meetingLocation = computed(() => {
 const statusLabel = computed(() => {
   const rawStatus = getDocStringValue(props.doc, 'status');
   const statusKey = getDocStringValue(props.doc, 'statusKey');
-  const normalizedStatusKey = statusKey?.toUpperCase() ?? normalizeStatusKey(rawStatus);
+  
+  // Always normalize the status key to ensure consistent format
+  const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
   if (normalizedStatusKey === 'NOT_SET') {
     return '';
   }
 
-  if (shouldDisplayCompleted(props.doc, statusKey, rawStatus)) {
+  if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
   }
 
-  return normalizeStatusLabel(statusKey ?? null, rawStatus ?? undefined);
+  return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);
 });
 
 const statusColorValue = computed(() => statusColor(props.doc));

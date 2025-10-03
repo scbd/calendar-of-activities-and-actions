@@ -28,8 +28,8 @@ export function normalizeStatusKey(label: string | undefined): string | null {
   const value = String(label).trim().toLowerCase();
 
   if (!value) return null;
-  if (value === 'confirmed') return 'CONFIRM';
-  if (value === 'tentative') return 'TENTAT';
+  if (value === 'confirmed') return 'CONFIRMED';
+  if (value === 'tentative') return 'TENTATIVE';
   return value.replace(/\s+/g, '_').toUpperCase();
 }
 
@@ -52,7 +52,7 @@ export function normalizeStatusLabel(key: string | null | undefined, fallback?: 
       }
     }
 
-    if (normalized === 'confirm') {
+    if (normalized === 'confirmed') {
       const result = translate?.('calendar.status.confirmed');
 
       if (typeof result === 'string' && result.trim().length > 0) {
@@ -60,7 +60,7 @@ export function normalizeStatusLabel(key: string | null | undefined, fallback?: 
       }
     }
 
-    if (normalized === 'tentat') {
+    if (normalized === 'tentative') {
       const result = translate?.('calendar.status.tentative');
 
       if (typeof result === 'string' && result.trim().length > 0) {
@@ -89,7 +89,7 @@ export function shouldDisplayCompleted(
 ): boolean {
   const normalizedStatus = normalizeStatusKey(statusKey ?? rawStatus);
 
-  if (normalizedStatus !== 'CONFIRM') {
+  if (normalizedStatus !== 'CONFIRMED') {
     return false;
   }
 
@@ -131,7 +131,6 @@ export function statusColor(doc: CalendarDoc): string {
   switch (normalizedKey) {
     case 'COMPLETED':
       return 'success';
-    case 'CONFIRM':
     case 'CONFIRMED':
       return 'primary';
     case 'TO_BE_CONFIRMED':

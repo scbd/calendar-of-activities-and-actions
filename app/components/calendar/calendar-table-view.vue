@@ -528,21 +528,19 @@ const getMeetingSymbol = (doc: CalendarDoc): string => {
 const getStatusLabel = (doc: CalendarDoc): string => {
   const rawStatus = getDocStringValue(doc, 'status');
   const statusKey = getDocStringValue(doc, 'statusKey');
-  const normalizedStatusKey = statusKey?.toUpperCase() ?? normalizeStatusKey(rawStatus);
+  
+  // Always normalize the status key to ensure consistent format
+  const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
   if (normalizedStatusKey === 'NOT_SET') {
     return '';
   }
 
-  if (shouldDisplayCompleted(doc, statusKey, rawStatus)) {
+  if (shouldDisplayCompleted(doc, normalizedStatusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
   }
 
-  if (rawStatus) {
-    return rawStatus;
-  }
-
-  return normalizeStatusLabel(statusKey ?? null, rawStatus ?? undefined);
+  return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);
 };
 
 const getStatusColor = (doc: CalendarDoc): string => statusColor(doc);

@@ -11,10 +11,10 @@ import {
 describe('status utilities', () => {
   beforeEach(() => {
     configureStatusLocalization({
-      te: key => key === 'calendar.status.confirm' || key === 'calendar.status.confirmed' || key === 'calendar.status.tentat' || key === 'calendar.status.tentative',
+      te: key => key === 'calendar.status.confirmed' || key === 'calendar.status.tentative',
       t: key => {
-        if (key === 'calendar.status.confirm' || key === 'calendar.status.confirmed') return 'Confirmed';
-        if (key === 'calendar.status.tentat' || key === 'calendar.status.tentative') return 'Tentative';
+        if (key === 'calendar.status.confirmed') return 'Confirmed';
+        if (key === 'calendar.status.tentative') return 'Tentative';
         return key;
       },
     });
@@ -27,14 +27,14 @@ describe('status utilities', () => {
   });
 
   it('normalizes status keys', () => {
-    expect(normalizeStatusKey('Confirmed')).toBe('CONFIRM');
-    expect(normalizeStatusKey('Tentative')).toBe('TENTAT');
+    expect(normalizeStatusKey('Confirmed')).toBe('CONFIRMED');
+    expect(normalizeStatusKey('Tentative')).toBe('TENTATIVE');
     expect(normalizeStatusKey(' in progress ')).toBe('IN_PROGRESS');
   });
 
   it('resolves localized status labels', () => {
-    expect(normalizeStatusLabel('confirm')).toBe('Confirmed');
-    expect(normalizeStatusLabel('tentat')).toBe('Tentative');
+    expect(normalizeStatusLabel('confirmed')).toBe('Confirmed');
+    expect(normalizeStatusLabel('tentative')).toBe('Tentative');
     expect(normalizeStatusLabel(undefined, 'Fallback')).toBe('Fallback');
   });
 
@@ -45,14 +45,14 @@ describe('status utilities', () => {
       endDate: '2024-06-06T00:00:00.000Z',
     } as CalendarDoc;
 
-    expect(shouldDisplayCompleted(doc, 'CONFIRM')).toBe(true);
+    expect(shouldDisplayCompleted(doc, 'CONFIRMED')).toBe(true);
   });
 
   it('calculates status colors', () => {
     const doc = {
       id: 'doc-2',
       status: 'Confirmed',
-      statusKey: 'CONFIRM',
+      statusKey: 'CONFIRMED',
       startDate: '2024-06-05T00:00:00.000Z',
       endDate: '2024-06-06T00:00:00.000Z',
     } as CalendarDoc;

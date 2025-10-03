@@ -196,10 +196,6 @@ const subjectOptions = ref<FilterOption[]>([]);
 const remoteCountryOptions = ref<FilterOption[]>([]);
 const remoteGlobalTargetOptions = ref<FilterOption[]>([]);
 
-const STATUS_LABEL_OVERRIDES: Record<string, string> = {
-  tentat: 'Tentative',
-};
-
 const providedCountryOptions = computed(() => props.preloadedCountryOptions);
 const providedGlobalTargetOptions = computed(() => props.preloadedGlobalTargetOptions);
 
@@ -249,11 +245,11 @@ function statusKeyToLabel(status: string): string {
   if (te(translationKey)) {
     return t(translationKey) as string;
   }
-  if (normalizedKey in STATUS_LABEL_OVERRIDES) {
-    return STATUS_LABEL_OVERRIDES[normalizedKey];
-  }
-  if (normalizedKey === 'confirm') {
+  if (normalizedKey === 'confirmed') {
     return t('calendar.status.confirmed') as string;
+  }
+  if (normalizedKey === 'tentative') {
+    return t('calendar.status.tentative') as string;
   }
   const isAllCapsOrUnderscore = /^[A-Z0-9_]+$/.test(raw);
 
