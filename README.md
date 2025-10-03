@@ -113,4 +113,14 @@ test/
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
+## Development Tools
+
+### MCP Docker Gateway
+
+This project includes configuration for Docker Desktop's MCP Gateway, which provides access to containerized MCP servers (like neo4j-memory) directly in VS Code.
+
+**Configuration:** `.vscode/mcp.json`
+
+For troubleshooting MCP_DOCKER initialization issues, see [MCP Docker Troubleshooting Guide](./docs/MCP_DOCKER_TROUBLESHOOTING.md).
+
 

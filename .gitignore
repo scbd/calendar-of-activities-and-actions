@@ -34,9 +34,9 @@ playwright-report/
 playwright/.cache/
 
 # Editor directories and files
-.vscode
 .vscode/*
 !.vscode/extensions.json
+!.vscode/mcp.json
 .idea
 *.suo
 *.ntvs*
