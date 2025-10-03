@@ -51,6 +51,9 @@
       "locale": "Langue : {locale}"
     },
     "filters": {
+      "title": "Filtres",
+      "showBasic": "Afficher la recherche avancée",
+      "showAdvanced": "Afficher la recherche simple",
       "labels": {
         "typeActivity": "Type",
         "activityTypes": "Types d'activité",
@@ -188,6 +191,10 @@
       "SEC": "Stakeholder Engagement and Cooperation",
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
+    },
+    "views": {
+      "grid": "Vue Accordéon",
+      "list": "Vue Liste"
     }
   },
   "nav": {

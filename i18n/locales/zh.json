@@ -51,6 +51,9 @@
       "locale": "语言：{locale}"
     },
     "filters": {
+      "title": "筛选器",
+      "showBasic": "显示高级搜索",
+      "showAdvanced": "显示基本搜索",
       "labels": {
         "typeActivity": "类型",
         "activityTypes": "活动类型",
@@ -188,6 +191,10 @@
       "SEC": "Stakeholder Engagement and Cooperation",
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
+    },
+    "views": {
+      "grid": "手风琴视图",
+      "list": "列表视图"
     }
   },
   "nav": {

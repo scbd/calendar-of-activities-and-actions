@@ -51,6 +51,9 @@
       "locale": "Язык: {locale}"
     },
     "filters": {
+      "title": "Фильтры",
+      "showBasic": "Показать расширенный поиск",
+      "showAdvanced": "Показать простой поиск",
       "labels": {
         "typeActivity": "Тип",
         "activityTypes": "Типы мероприятий",
@@ -188,6 +191,10 @@
       "SEC": "Stakeholder Engagement and Cooperation",
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
+    },
+    "views": {
+      "grid": "Вид аккордеон",
+      "list": "Вид списка"
     }
   },
   "nav": {

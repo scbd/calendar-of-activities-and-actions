@@ -3,7 +3,19 @@
     <div class="container py-3">
       <div class="card mb-3">
         <div class="card-body">
-          <CalendarFilters
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h2 class="h5 mb-0">{{ t('calendar.filters.title') }}</h2>
+            <button
+              type="button"
+              class="btn btn-link btn-sm text-decoration-none p-0"
+              @click="$emit('toggle-filter-mode')"
+            >
+              {{ showAdvancedFilters ? t('calendar.filters.showBasic') : t('calendar.filters.showAdvanced') }}
+            </button>
+          </div>
+
+          <component
+            :is="currentFilterComponent"
             :available-types="availableTypes"
             :available-subjects="availableSubjects"
             :available-statuses="availableStatuses"
@@ -262,6 +274,7 @@ import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute } from '#app';
 import CalendarFilters from './calendar-filters.vue';
+import CalendarFilters2 from './calendar-filters-2.vue';
 import CalendarDocumentDetails from './calendar-document-details.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import {
@@ -299,11 +312,26 @@ import {
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels } from 'shared/utils/subjects';
 
+// Props
+const props = defineProps<{
+  showAdvancedFilters?: boolean;
+}>();
+
+// Emits
+defineEmits<{
+  'toggle-filter-mode': [];
+}>();
+
 const { t, te, locale } = useI18n();
 const route = useRoute();
 
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
+
+// Computed property for current filter component
+const currentFilterComponent = computed(() => {
+  return props.showAdvancedFilters ? CalendarFilters2 : CalendarFilters;
+});
 
 const RegionDisplayNames = (Intl as typeof Intl & { DisplayNames?: typeof Intl.DisplayNames }).DisplayNames;
 const createRegionDisplayNames = (code: string) => {

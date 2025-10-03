@@ -51,6 +51,9 @@
       "locale": "اللغة: {locale}"
     },
     "filters": {
+      "title": "المرشحات",
+      "showBasic": "إظهار البحث المتقدم",
+      "showAdvanced": "إظهار البحث الأساسي",
       "labels": {
         "typeActivity": "النوع",
         "activityTypes": "أنواع الأنشطة",
@@ -188,6 +191,10 @@
       "SEC": "Stakeholder Engagement and Cooperation",
       "CBKM": "Capacity Building and Knowledge Management",
       "HRA": "Human Resources and Administration"
+    },
+    "views": {
+      "grid": "عرض الأكورديون",
+      "list": "عرض القائمة"
     }
   },
   "nav": {
