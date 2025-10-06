@@ -591,7 +591,7 @@ export function convertToNotificationEntries(notifications: CalendarDoc[]): Noti
 
   return notifications
     .map(doc => {
-      const key = (typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey) || '';
+      const key = typeof doc.symbol === 'string' ? doc.symbol : '';
 
       if (!key) {
         return null;
@@ -623,7 +623,7 @@ export function getRelatedMeetings(notificationKey: string, allDocs: CalendarDoc
     if (doc.schema !== 'notification') {
       return false;
     }
-    const symbol = doc.symbol || doc.notificationKey;
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : undefined;
 
     return symbol === notificationKey;
   });
@@ -685,13 +685,11 @@ export function getRelatedNotificationsForMeeting(meetingDoc: CalendarDoc, allDo
       return false;
     }
 
-    // Check if the notification matches by ID, identifier, or symbol
-    const id = doc.id || doc.identifier;
-    const symbol = typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey;
+    // Check if the notification matches by symbol (primary key)
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : undefined;
     
-    // Meeting might store either IDs (long format) or symbols (YYYY-NNN format)
-    return (id && notifications.includes(id)) || 
-           (symbol && typeof symbol === 'string' && notifications.includes(symbol));
+    // Meetings store notification symbols (YYYY-NNN format)
+    return symbol && notifications.includes(symbol);
   });
 }
 
@@ -720,9 +718,13 @@ export function getRelatedActivitiesForMeeting(meetingDoc: CalendarDoc, allDocs:
       return false;
     }
 
-    const docId = doc.id || doc.identifier;
+    // Check if any of the activity identifiers match
+    const docId = doc.id;
+    const docIdentifier = doc.identifier;
     
-    return docId && activities.includes(docId);
+    return activities.some(activityRef => 
+      activityRef === docId || activityRef === docIdentifier
+    );
   });
 }
 
@@ -752,9 +754,11 @@ export function getRelatedMeetingsForActivity(activityDoc: CalendarDoc, allDocs:
       return false;
     }
 
+    // Check if any of the meeting identifiers (id, identifier, or meetingCode) match
     const docId = doc.id || doc.identifier;
+    const meetingCode = doc.meetingCode;
     
-    return docId && meetings.includes(docId);
+    return (docId && meetings.includes(docId)) || (meetingCode && meetings.includes(meetingCode));
   });
 }
 
@@ -780,9 +784,9 @@ export function getRelatedNotificationsForActivity(activityDoc: CalendarDoc, all
       return false;
     }
 
-    const symbol = typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey;
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : undefined;
     
-    return typeof symbol === 'string' && keys.includes(symbol);
+    return symbol && keys.includes(symbol);
   });
 }
 

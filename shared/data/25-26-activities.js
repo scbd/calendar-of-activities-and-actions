@@ -1977,7 +1977,7 @@ export default [
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
     "outcome": "",
-    "meetings": [],
+    "meetings": ['IMP-WS-2025-01'],
     "identifier": "ACT-2025-72"
   },
   {

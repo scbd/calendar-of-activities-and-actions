@@ -87,6 +87,9 @@ export function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): Ca
     gbfTargets: targets,
     countries,
     countriesEn: countries,
+    activities: Array.isArray(record['activities']) ? record['activities'] : [],
+    meetings: Array.isArray(record['meetings']) ? record['meetings'] : [],
+    notifications: Array.isArray(record['notifications']) ? record['notifications'] : [],
   };
 
   const doc = {
@@ -100,6 +103,9 @@ export function normalizeMeetingDoc(meeting: SnapshotMeeting, index: number): Ca
     gbfTargets: targets,
     countries,
     countriesEn: countries,
+    activities: Array.isArray(record['activities']) ? record['activities'] as string[] : [],
+    meetings: Array.isArray(record['meetings']) ? record['meetings'] as string[] : [],
+    notifications: Array.isArray(record['notifications']) ? record['notifications'] as string[] : [],
   } as CalendarDoc;
 
   rawDocMap.set(doc, baseRecord);
@@ -171,6 +177,9 @@ export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDo
       countryEn: countries[0] ?? undefined,
       countriesEn: countries,
       outcome: record.outcome ? String(record.outcome) : undefined,
+      meetings: Array.isArray(record.meetings) ? record.meetings as string[] : [],
+      activities: Array.isArray(record.activities) ? record.activities as string[] : [],
+      notifications: Array.isArray(record.notifications) ? record.notifications as string[] : [],
     };
 
     const normalizedRecord = normalizeSolrDocument(baseRecord);
@@ -197,6 +206,9 @@ export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDo
       outcome: record.outcome ? String(record.outcome) : undefined,
       actionRequired: record.actionRequiredByParties ? String(record.actionRequiredByParties).toUpperCase() === 'Y' : false,
       activityType,
+      meetings: Array.isArray(record.meetings) ? record.meetings as string[] : [],
+      activities: Array.isArray(record.activities) ? record.activities as string[] : [],
+      notifications: Array.isArray(record.notifications) ? record.notifications as string[] : [],
     } as CalendarDoc;
 
     delete (doc as Record<string, unknown>)._id;
