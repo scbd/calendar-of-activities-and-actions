@@ -509,6 +509,7 @@ export function getNotificationKeys(doc: CalendarDoc): NotificationKey[] {
   collectNotificationKeys(doc.notificationSymbol, keys, seen);
   collectNotificationKeys(doc.notificationKeys, keys, seen);
   collectNotificationKeys(doc.relatedDocuments, keys, seen);
+  collectNotificationKeys(doc.notifications, keys, seen);
 
   const raw = rawDocMap.get(doc);
 
@@ -518,6 +519,7 @@ export function getNotificationKeys(doc: CalendarDoc): NotificationKey[] {
     collectNotificationKeys((raw as Record<string, unknown>)['notificationSymbol'], keys, seen);
     collectNotificationKeys((raw as Record<string, unknown>)['symbol'], keys, seen);
     collectNotificationKeys((raw as Record<string, unknown>)['relatedDocuments'], keys, seen);
+    collectNotificationKeys((raw as Record<string, unknown>)['notifications'], keys, seen);
   }
 
   notificationKeyCache.set(doc, keys);
@@ -578,6 +580,34 @@ export function getRelatedActivities(notificationKey: string, allDocs: CalendarD
 }
 
 /**
+ * Convert CalendarDoc notifications to NotificationDisplayEntry format.
+ * @param notifications - Array of notification CalendarDocs.
+ * @returns Array of notification display entries.
+ */
+export function convertToNotificationEntries(notifications: CalendarDoc[]): NotificationDisplayEntry[] {
+  const detailsMap = getDetailsStore();
+  const loadingMap = getLoadingStore();
+  const errorsMap = getErrorStore();
+
+  return notifications
+    .map(doc => {
+      const key = (typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey) || '';
+
+      if (!key) {
+        return null;
+      }
+
+      return {
+        key,
+        details: detailsMap[key],
+        loading: Boolean(loadingMap[key]),
+        error: errorsMap[key],
+      };
+    })
+    .filter((entry): entry is NotificationDisplayEntry => entry !== null);
+}
+
+/**
  * Get meetings that reference this notification.
  * @param notificationKey - Notification key (e.g., "2025-001").
  * @param allDocs - All calendar documents to search through.
@@ -588,8 +618,38 @@ export function getRelatedMeetings(notificationKey: string, allDocs: CalendarDoc
     return [];
   }
 
+  // Find the notification document first to get its meetings array
+  const notificationDoc = allDocs.find(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+    const symbol = doc.symbol || doc.notificationKey;
+
+    return symbol === notificationKey;
+  });
+
+  if (!notificationDoc || !notificationDoc.meetings || !Array.isArray(notificationDoc.meetings)) {
+    // Fallback: look for meetings that have this notification in their notifications array
+    return allDocs.filter(doc => {
+      const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
+      const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
+      
+      if (schemaValue !== 'meeting' && typeValue !== 'meeting') {
+        return false;
+      }
+
+      const notifications = doc.notifications;
+      
+      if (!notifications || !Array.isArray(notifications)) {
+        return false;
+      }
+
+      return notifications.includes(notificationKey);
+    });
+  }
+
+  // Return meetings from the notification's meetings array
   return allDocs.filter(doc => {
-    // Only look at meeting documents
     const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
     const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
     
@@ -597,14 +657,9 @@ export function getRelatedMeetings(notificationKey: string, allDocs: CalendarDoc
       return false;
     }
 
-    // Check if the meeting's notifications array contains this notification key
-    const notifications = doc.notifications;
+    const docId = doc.id || doc.identifier;
     
-    if (!notifications || !Array.isArray(notifications)) {
-      return false;
-    }
-
-    return notifications.includes(notificationKey);
+    return docId && notificationDoc.meetings!.includes(docId);
   });
 }
 
@@ -630,9 +685,13 @@ export function getRelatedNotificationsForMeeting(meetingDoc: CalendarDoc, allDo
       return false;
     }
 
-    const symbol = doc.symbol || doc.notificationKey;
+    // Check if the notification matches by ID, identifier, or symbol
+    const id = doc.id || doc.identifier;
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey;
     
-    return symbol && notifications.includes(symbol);
+    // Meeting might store either IDs (long format) or symbols (YYYY-NNN format)
+    return (id && notifications.includes(id)) || 
+           (symbol && typeof symbol === 'string' && notifications.includes(symbol));
   });
 }
 
@@ -666,3 +725,64 @@ export function getRelatedActivitiesForMeeting(meetingDoc: CalendarDoc, allDocs:
     return docId && activities.includes(docId);
   });
 }
+
+/**
+ * Get meetings that are referenced by this activity.
+ * @param activityDoc - Activity document.
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of meeting documents referenced by this activity.
+ */
+export function getRelatedMeetingsForActivity(activityDoc: CalendarDoc, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!activityDoc || !allDocs) {
+    return [];
+  }
+
+  const meetings = activityDoc.meetings;
+  
+  if (!meetings || !Array.isArray(meetings) || meetings.length === 0) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    // Only look at meeting documents
+    const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
+    const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
+    
+    if (schemaValue !== 'meeting' && typeValue !== 'meeting') {
+      return false;
+    }
+
+    const docId = doc.id || doc.identifier;
+    
+    return docId && meetings.includes(docId);
+  });
+}
+
+/**
+ * Get notifications that are referenced by this activity.
+ * @param activityDoc - Activity document.
+ * @param allDocs - All calendar documents to search through.
+ * @returns Array of notification documents referenced by this activity.
+ */
+export function getRelatedNotificationsForActivity(activityDoc: CalendarDoc, allDocs: CalendarDoc[]): CalendarDoc[] {
+  if (!activityDoc || !allDocs) {
+    return [];
+  }
+
+  const keys = getNotificationKeys(activityDoc);
+  
+  if (keys.length === 0) {
+    return [];
+  }
+
+  return allDocs.filter(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : doc.notificationKey;
+    
+    return typeof symbol === 'string' && keys.includes(symbol);
+  });
+}
+

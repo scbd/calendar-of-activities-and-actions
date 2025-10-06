@@ -25,6 +25,7 @@ export interface CalendarDoc extends MeetingDoc {
   outcome?: string;
   actionRequired?: boolean;
   schema?: string | null;
+  symbol?: string;
   notificationKey?: string;
   notificationKeys?: string[];
   notificationSymbol?: string;
@@ -33,6 +34,9 @@ export interface CalendarDoc extends MeetingDoc {
   deadline?: string;
   recipients?: string[];
   activityType?: string;
+  notifications?: string[];
+  activities?: string[];
+  meetings?: string[];
 }
 
 /**

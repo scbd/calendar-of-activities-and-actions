@@ -1867,7 +1867,9 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-10T16:47:57Z",
     "source": "index:meeting",
-    "notifications": [],
+    "notifications": [
+      "52000000cbd0120000000de7"
+    ],
     "activities": []
   },
   {
@@ -1905,7 +1907,10 @@ export const meetings = [
     "notesEn": null,
     "updatedDate": "2025-09-10T16:49:16Z",
     "source": "index:meeting",
-    "notifications": [],
+    "notifications": [
+      "52000000cbd0120000000de7",
+      "52000000cbd0120000000df4"
+    ],
     "activities": [
       "ACT-2025-73"
     ]

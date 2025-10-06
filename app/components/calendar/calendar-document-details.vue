@@ -98,9 +98,11 @@ const { t } = useI18n();
 
 .calendar-detail-section {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline;
   gap: 0.5rem;
   min-width: 0; /* Prevents grid blowout */
+  flex-wrap: wrap;
 }
 
 .calendar-detail-label {
@@ -110,6 +112,10 @@ const { t } = useI18n();
   text-transform: uppercase;
   color: #6c757d;
   white-space: nowrap;
+}
+
+.calendar-detail-label::after {
+  content: ':';
 }
 
 .calendar-detail-content {

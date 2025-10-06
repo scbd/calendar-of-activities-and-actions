@@ -73,7 +73,7 @@
       <div class="accordion-body">
         <CalendarDocumentDetails
           :status-narrative="statusNarrative"
-          :symbol="meetingSymbol"
+          :symbol="documentSymbol"
           :description="description"
           :subject-labels="subjectLabels"
           :subsidiary-bodies="subsidiaryBodies"
@@ -82,21 +82,6 @@
           :responsible-officer="responsibleOfficer"
           :show-responsible="showResponsible"
         />
-
-        <hr v-if="notificationEntries.length" class="calendar-notifications__separator">
-
-        <div v-if="notificationEntries.length" class="calendar-notifications mt-3">
-          <div class="calendar-notifications__header">
-            <strong>{{ t('calendar.labels.notifications') }}</strong>
-          </div>
-          <CalendarNotificationCard
-            v-for="entry in notificationEntries"
-            :key="entry.key"
-            :entry="entry"
-            :all-docs="allDocs"
-            class="mb-2"
-          />
-        </div>
 
         <hr v-if="relatedActivities.length" class="calendar-activities__separator">
 
@@ -126,16 +111,31 @@
           />
         </div>
 
-        <hr v-if="relatedNotifications.length" class="calendar-related-notifications__separator">
+        <hr v-if="relatedNotifications.length" class="calendar-notifications-list__separator">
 
-        <div v-if="relatedNotifications.length" class="calendar-related-notifications mt-3">
-          <div class="calendar-related-notifications__header">
+        <div v-if="relatedNotifications.length" class="calendar-notifications-list mt-3">
+          <div class="calendar-notifications-list__header">
             <strong>{{ t('calendar.labels.relatedNotifications') }}</strong>
           </div>
           <CalendarActivityCard
             v-for="notification in relatedNotifications"
             :key="notification.id"
             :doc="notification"
+            class="mb-2"
+          />
+        </div>
+
+        <hr v-if="notificationEntries.length" class="calendar-notifications__separator">
+
+        <div v-if="notificationEntries.length" class="calendar-notifications mt-3">
+          <div class="calendar-notifications__header">
+            <strong>{{ t('calendar.labels.notifications') }}</strong>
+          </div>
+          <CalendarNotificationCard
+            v-for="entry in notificationEntries"
+            :key="entry.key"
+            :entry="entry"
+            :all-docs="allDocs"
             class="mb-2"
           />
         </div>
@@ -173,8 +173,9 @@ import {
   resolveNotificationUrl,
   getRelatedActivities,
   getRelatedMeetings,
-  getRelatedNotificationsForMeeting,
   getRelatedActivitiesForMeeting,
+  getRelatedMeetingsForActivity,
+  getRelatedNotificationsForMeeting,
 } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels } from 'shared/utils/subjects';
@@ -292,6 +293,11 @@ const isMeetingDoc = computed(() => {
   return Boolean(typeValue && typeValue.toLowerCase() === 'meeting');
 });
 
+const isActivityDoc = computed(() => {
+  // Activities are documents that are neither meetings nor notifications
+  return !isMeetingDoc.value && !isNotification.value;
+});
+
 const meetingLocation = computed(() => {
   if (!isMeetingDoc.value) {
     return '';
@@ -328,6 +334,21 @@ const meetingSymbol = computed(() => {
   const symbol = getDocStringValue(props.doc, 'symbol');
 
   return symbol ?? '';
+});
+
+const documentSymbol = computed(() => {
+  // For meetings, return meeting code
+  if (isMeetingDoc.value) {
+    return meetingSymbol.value;
+  }
+  
+  // For notifications, return notification symbol
+  if (isNotification.value) {
+    return notificationSymbol.value;
+  }
+  
+  // For activities, return identifier
+  return getDocStringValue(props.doc, 'identifier') ?? '';
 });
 
 const statusLabel = computed(() => {
@@ -420,23 +441,41 @@ const relatedActivities = computed(() => {
     return getRelatedActivitiesForMeeting(props.doc, props.allDocs);
   }
 
+  // Activities don't show other activities
   return [];
 });
 
 const relatedMeetings = computed(() => {
-  if (!isNotification.value || !notificationKey.value || !props.allDocs) {
+  if (!props.allDocs) {
     return [];
   }
 
-  return getRelatedMeetings(notificationKey.value, props.allDocs);
+  // For notifications, show meetings that reference this notification
+  if (isNotification.value && notificationKey.value) {
+    return getRelatedMeetings(notificationKey.value, props.allDocs);
+  }
+
+  // For activities, show meetings referenced in the activity's meetings array
+  if (isActivityDoc.value) {
+    return getRelatedMeetingsForActivity(props.doc, props.allDocs);
+  }
+
+  // Meetings don't show other meetings
+  return [];
 });
 
 const relatedNotifications = computed(() => {
-  if (!isMeetingDoc.value || !props.allDocs) {
+  if (!props.allDocs) {
     return [];
   }
 
-  return getRelatedNotificationsForMeeting(props.doc, props.allDocs);
+  // For meetings, show notifications referenced in the meeting's notifications array
+  if (isMeetingDoc.value) {
+    return getRelatedNotificationsForMeeting(props.doc, props.allDocs);
+  }
+
+  // Activities and notifications don't show related notifications (they use notificationEntries instead)
+  return [];
 });
 
 const primaryLink = computed(() => {

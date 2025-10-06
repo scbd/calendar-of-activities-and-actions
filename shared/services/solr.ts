@@ -294,4 +294,7 @@ export interface MeetingDoc extends Record<string, unknown> {
   decisionUrl?: string | null;
   decisionLinks?: string[];
   actionRequired?: boolean;
+  notifications?: string[];
+  activities?: string[];
+  meetings?: string[];
 }
