@@ -222,7 +222,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, watchEffect, type Ref, type ComputedRef } from 'vue';
+import { ref, computed, watch, onMounted, watchEffect, nextTick, type Ref, type ComputedRef } from 'vue';
 import Multiselect from 'vue-multiselect';
 import { loadDomainOptions } from 'shared/services/thesaurus';
 import { thesaurusDomains } from 'shared/constants/thesaurus';
@@ -311,6 +311,9 @@ const searchText = ref<string>('');
 
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
+
+// Track if we're loading from URL to prevent circular updates
+const isLoadingFromUrl = ref<boolean>(false);
 
 // Computed property to check if any filters are active
 const hasActiveFilters = computed<boolean>(() => {
@@ -462,6 +465,9 @@ function parseQueryArray(param: string | string[] | undefined): string[] {
 
 // Function to update URL query string
 function updateUrlQuery(): void {
+  // Don't update URL if we're currently loading from URL
+  if (isLoadingFromUrl.value) return;
+
   const query: Record<string, string | undefined> = {};
 
   // Only add non-empty filters to query string
@@ -524,6 +530,8 @@ function updateUrlQuery(): void {
 
 // Function to load filters from URL query string
 function _loadFiltersFromUrl(): void {
+  isLoadingFromUrl.value = true;
+
   const query = route.query;
 
   // Load filter selections from URL
@@ -540,42 +548,65 @@ function _loadFiltersFromUrl(): void {
     ? query.search
     : Array.isArray(query.search) ? query.search[0] ?? '' : '';
 
-  // Set selections (these will be normalized by syncSelectionWithOptions)
+  // Convert string values to FilterOption objects
   if (types.length > 0) {
-    selectedTypes.value = types;
+    selectedTypes.value = findOptionsFromValues(types, schemaOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedTypes.value = [];
   }
+  
   if (subjects.length > 0) {
-    selectedSubjects.value = subjects;
+    selectedSubjects.value = findOptionsFromValues(subjects, subjectOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedSubjects.value = [];
   }
+  
   if (statuses.length > 0) {
-    selectedStatuses.value = statuses;
+    selectedStatuses.value = findOptionsFromValues(statuses, statusOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedStatuses.value = [];
   }
+  
   if (subsidiaryBodies.length > 0) {
-    selectedSubsidiaryBodies.value = subsidiaryBodies;
+    selectedSubsidiaryBodies.value = findOptionsFromValues(subsidiaryBodies, subsidiaryBodyOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedSubsidiaryBodies.value = [];
   }
+  
   if (copDecisions.length > 0) {
-    selectedCopDecisions.value = copDecisions;
+    selectedCopDecisions.value = findOptionsFromValues(copDecisions, copDecisionOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedCopDecisions.value = [];
   }
+  
   if (activityTypes.length > 0) {
-    selectedActivityTypes.value = activityTypes;
+    selectedActivityTypes.value = findOptionsFromValues(activityTypes, activityTypeOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedActivityTypes.value = [];
   }
+  
   if (globalTargets.length > 0) {
-    selectedGlobalTargets.value = globalTargets;
+    selectedGlobalTargets.value = findOptionsFromValues(globalTargets, globalTargetOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedGlobalTargets.value = [];
   }
+  
   if (countries.length > 0) {
-    selectedCountries.value = countries;
+    selectedCountries.value = findOptionsFromValues(countries, countryOptions.value);
     hasUserInteracted.value = true;
+  } else {
+    selectedCountries.value = [];
   }
 
   if (sortOrder.length > 0) {
-    selectedSorts.value = sortOrder;
+    selectedSorts.value = findOptionsFromValues(sortOrder, sortOptions.value);
     hasUserInteracted.value = true;
   } else {
     selectedSorts.value = [...DEFAULT_SORT_VALUES];
@@ -584,23 +615,36 @@ function _loadFiltersFromUrl(): void {
   if (searchParam) {
     searchText.value = searchParam;
     hasUserInteracted.value = true;
+  } else {
+    searchText.value = '';
   }
 
   // Load date filters
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
+  } else {
+    startDate.value = props.initialStartDate ?? '';
   }
   if (query.endDate && typeof query.endDate === 'string') {
     endDate.value = query.endDate;
     hasUserInteracted.value = true;
+  } else {
+    endDate.value = '';
   }
 
   // Load action required filter
   if (query.actionRequired === 'true') {
     actionRequired.value = true;
     hasUserInteracted.value = true;
+  } else {
+    actionRequired.value = false;
   }
+
+  // Allow updates again after a short delay to ensure all reactive updates complete
+  nextTick(() => {
+    isLoadingFromUrl.value = false;
+  });
 }
 
 onMounted(async () => {
@@ -619,6 +663,9 @@ onMounted(async () => {
       remoteGlobalTargetOptions.value = options;
     }),
   ]);
+
+  // Load filters from URL after options are loaded
+  _loadFiltersFromUrl();
 });
 
 // Watch for locale changes and reload subject options
@@ -641,6 +688,11 @@ watch(() => locale.value, async (newLocale) => {
     remoteGlobalTargetOptions.value = [];
   }
 });
+
+// Watch for URL query changes (e.g., when tab view changes the type filter)
+watch(() => route.query, () => {
+  _loadFiltersFromUrl();
+}, { deep: true });
 
 function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
   return selection
@@ -698,8 +750,8 @@ function clearFilters(): void {
 }
 
 function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
-  const value = term.identifier;
   const label = term.name || (term.title && term.title['en']) || term.identifier;
+  const value = term.name || term.identifier;
 
   return { value, label };
 }
@@ -736,6 +788,16 @@ function formatSchemaLabel(key: string): string {
     .join(' ');
 }
 
+function findOptionsFromValues(values: string[], availableOptions: FilterOption[]): FilterOption[] {
+  if (!values.length || !availableOptions.length) return [];
+  
+  const optionMap = new Map(availableOptions.map(opt => [opt.value, opt]));
+  
+  return values
+    .map(value => optionMap.get(value))
+    .filter((option): option is FilterOption => Boolean(option));
+}
+
 function syncSelectionWithOptions(
   selection: Ref<FilterSelectionValue[]>,
   options: Ref<FilterOption[]> | ComputedRef<FilterOption[]>,
@@ -768,9 +830,9 @@ function syncSelectionWithOptions(
   );
 }
 
-// Intentionally NOT auto-syncing selectedTypes with schemaOptions to avoid
-// implicitly applying a type filter (which previously hid non-meeting items).
-// Users will explicitly choose types; empty selection means "show all".
+// Sync selections with options to ensure FilterOption objects are used
+// This is especially important when loading from URL (e.g., tab view setting types)
+syncSelectionWithOptions(selectedTypes, schemaOptions);
 syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
 syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);
