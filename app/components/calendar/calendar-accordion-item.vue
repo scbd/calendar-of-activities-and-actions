@@ -35,10 +35,10 @@
                 target="_blank"
                 rel="noopener"
                 class="calendar-accordion__cta calendar-accordion__cta--link"
-                :aria-label="t('calendar.actions.viewDocumentsAria', { title })"
+                :aria-label="isNotification ? t('calendar.notifications.viewNotificationAria', { title }) : t('calendar.actions.viewDocumentsAria', { title })"
                 data-testid="calendar-accordion-view-documents"
               >
-                {{ t('calendar.actions.viewDocuments') }} →
+                {{ isNotification ? t('calendar.notifications.viewNotification') : t('calendar.actions.viewDocuments') }} →
               </a>
               <div
                 v-if="statusLabel || isActionRequired"
@@ -111,33 +111,21 @@
           />
         </div>
 
-        <hr v-if="relatedNotifications.length" class="calendar-notifications-list__separator">
+        <hr v-if="allNotificationEntries.length" class="calendar-notifications-list__separator">
 
-        <div v-if="relatedNotifications.length" class="calendar-notifications-list mt-3">
+        <div v-if="allNotificationEntries.length" class="calendar-notifications-list mt-3">
           <div class="calendar-notifications-list__header">
             <strong>{{ t('calendar.labels.relatedNotifications') }}</strong>
           </div>
-          <CalendarActivityCard
-            v-for="notification in relatedNotifications"
-            :key="notification.id"
-            :doc="notification"
-            class="mb-2"
-          />
-        </div>
-
-        <hr v-if="notificationEntries.length" class="calendar-notifications__separator">
-
-        <div v-if="notificationEntries.length" class="calendar-notifications mt-3">
-          <div class="calendar-notifications__header">
-            <strong>{{ t('calendar.labels.notifications') }}</strong>
+          <div class="calendar-notifications">
+            <CalendarNotificationCard
+              v-for="notification in allNotificationEntries"
+              :key="notification.key"
+              :entry="notification"
+              :all-docs="allDocs"
+              class="mb-2"
+            />
           </div>
-          <CalendarNotificationCard
-            v-for="entry in notificationEntries"
-            :key="entry.key"
-            :entry="entry"
-            :all-docs="allDocs"
-            class="mb-2"
-          />
         </div>
       </div>
     </div>
@@ -478,6 +466,29 @@ const relatedNotifications = computed(() => {
   return [];
 });
 
+const allNotificationEntries = computed(() => {
+  // Notifications don't show notification entries - they show activities and meetings
+  if (isNotification.value) {
+    return [];
+  }
+  
+  // Combine direct notification entries and related notification entries for activities and meetings
+  const direct = notificationEntries.value;
+  const related = relatedNotifications.value.flatMap(notification => notificationDisplayEntries(notification));
+  
+  // Combine and deduplicate by key
+  const combined = [...direct, ...related];
+  const seen = new Set<string>();
+  
+  return combined.filter(entry => {
+    if (seen.has(entry.key)) {
+      return false;
+    }
+    seen.add(entry.key);
+    return true;
+  });
+});
+
 const primaryLink = computed(() => {
   const links = meetingLinks(props.doc);
 
@@ -762,6 +773,23 @@ const collapseId = computed(() => props.collapseId);
 
 .calendar-related-notifications__header {
   font-size: 1.125rem;
+}
+
+.calendar-notifications-list__separator {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+.calendar-notifications-list__header {
+  font-size: 1.125rem;
+  /* margin-bottom: 1rem; */
+}
+
+.calendar-notifications {
+  /* border: 1px solid #e5e5e5; */
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {

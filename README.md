@@ -114,3 +114,4 @@ test/
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
 
+ docker build --platform linux/amd64 -t scbd/calendar-of-activities-and-actions:proto-v8 .

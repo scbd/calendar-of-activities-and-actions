@@ -1,7 +1,7 @@
 <template>
   <section class="activities-explorer">
     <div class="container py-3">
-      <div class="card mb-3">
+      <div v-if="!hideFilterCard" class="card mb-3">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <h2 class="h5 mb-0">{{ t('calendar.filters.title') }}</h2>
@@ -24,6 +24,7 @@
             :preloaded-country-options="availableCountryOptions"
             :preloaded-global-target-options="availableGlobalTargetOptions"
             :initial-start-date="initialStartDate"
+            :hide-type-filter="hideTypeFilter"
             @update:filters="handleFiltersUpdate"
           />
       </div>
@@ -74,6 +75,8 @@ import type { LocaleCode } from 'shared/services/solr';
 // Props
 const props = defineProps<{
   showAdvancedFilters?: boolean;
+  hideTypeFilter?: boolean;
+  hideFilterCard?: boolean;
 }>();
 
 // Emits

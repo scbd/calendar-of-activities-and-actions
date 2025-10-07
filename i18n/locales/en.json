@@ -132,7 +132,7 @@
       "submission": "Submission",
       "peerReview": "Peer-review",
       "report": "Report",
-      "forum": "Forum",
+      "forum": "Online Forum",
       "activity": "Activity",
       "webinar": "Webinar",
       "workshop": "Workshop",
@@ -193,8 +193,9 @@
       "HRA": "Human Resources and Administration"
     },
     "views": {
-      "grid": "Accordion View",
-      "list": "List View"
+      "grid": "Grid View",
+      "list": "List View",
+      "tabView": "Tab View by Record Type"
     }
   },
   "nav": {

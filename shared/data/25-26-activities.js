@@ -24,7 +24,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2024-01"
+    "identifier": "ACT-2024-01",
+    "decisions": [
+      "CAL-DECISION-NP-4-3"
+    ]
   },
   {
     "title": "Submission by Parties of their 7th National reports",
@@ -51,7 +54,10 @@ export default [
     "relatedDocuments": "NTF 2025-074",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-01"
+    "identifier": "ACT-2025-01",
+    "decisions": [
+      "CAL-DECISION-15-6"
+    ]
   },
   {
     "title": "Submission of  views and information for enhanced policy coherence across the Rio conventions",
@@ -78,7 +84,10 @@ export default [
     "relatedDocuments": "NTF 2025-005",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-02"
+    "identifier": "ACT-2025-02",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Submission of Information on Biodiversity and Health Indicators",
@@ -105,7 +114,10 @@ export default [
     "relatedDocuments": "NTF 2025-012",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-03"
+    "identifier": "ACT-2025-03",
+    "decisions": [
+      "CAL-DECISION-16-19"
+    ]
   },
   {
     "title": "Submission of information on best practices for sustainable wildlife management",
@@ -132,7 +144,10 @@ export default [
     "relatedDocuments": "NTF 2025-015",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-04"
+    "identifier": "ACT-2025-04",
+    "decisions": [
+      "CAL-DECISION-16-15"
+    ]
   },
   {
     "title": "Submission of views and inputs on elements of global guidance on SWM",
@@ -159,7 +174,10 @@ export default [
     "relatedDocuments": "NTF 2025-014",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-05"
+    "identifier": "ACT-2025-05",
+    "decisions": [
+      "CAL-DECISION-16-15"
+    ]
   },
   {
     "title": "Submission of information on Parties’ needs and priorities related to risk assessment of LMOs",
@@ -186,7 +204,10 @@ export default [
     "relatedDocuments": "NTF 2025-017",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-06"
+    "identifier": "ACT-2025-06",
+    "decisions": [
+      "CAL-DECISION-CP11-7"
+    ]
   },
   {
     "title": "Invitation to participate in the Online Forum on Invasive Alien Species",
@@ -213,7 +234,10 @@ export default [
     "relatedDocuments": "NTF 2025-021",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-07"
+    "identifier": "ACT-2025-07",
+    "decisions": [
+      "CAL-DECISION-16-18"
+    ]
   },
   {
     "title": "Nomination of Experts and Fellows for Second Global Assessment (IPBES)",
@@ -240,7 +264,10 @@ export default [
     "relatedDocuments": "NTF 2025-027",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-08"
+    "identifier": "ACT-2025-08",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Nomination of Experts for AHSTAG on the Global Report",
@@ -267,7 +294,10 @@ export default [
     "relatedDocuments": "NTF 2025-024, NTF 2025-042, NTF 2025-053",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-09"
+    "identifier": "ACT-2025-09",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Registration to consult on a supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -294,7 +324,10 @@ export default [
     "relatedDocuments": "NTF 2025-025",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-10"
+    "identifier": "ACT-2025-10",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Nominations for the Open-ended Online Forum on Risk Assessment and Risk Management",
@@ -323,7 +356,10 @@ export default [
     "meetings": [
       "CP-RA-OM-2025-2"
     ],
-    "identifier": "ACT-2025-11"
+    "identifier": "ACT-2025-11",
+    "decisions": [
+      "CAL-DECISION-CP11-7"
+    ]
   },
   {
     "title": "Submission of views and information on the strategic review and analysis of the forest biodiversity PoW",
@@ -350,7 +386,10 @@ export default [
     "relatedDocuments": "NTF 2025-031, NTF 2025-048",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-12"
+    "identifier": "ACT-2025-12",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Submission of views on specialised international access and benefit sharing instruments (Nagoya Protocol)",
@@ -377,7 +416,10 @@ export default [
     "relatedDocuments": "NTF 2025-033",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-13"
+    "identifier": "ACT-2025-13",
+    "decisions": [
+      "CAL-DECISION-NP-5-8"
+    ]
   },
   {
     "title": "Submissions of EBSA descriptions and modifications and peer-review of the submissions",
@@ -404,7 +446,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-14"
+    "identifier": "ACT-2025-14",
+    "decisions": [
+      "CAL-DECISION-16-16"
+    ]
   },
   {
     "title": "Consultations on a supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -431,7 +476,10 @@ export default [
     "relatedDocuments": "NTF 2025-025",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-15"
+    "identifier": "ACT-2025-15",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Nomination of experts to participate in the Global Workshop on Forest Ecosystem Restoration Initiative",
@@ -458,7 +506,10 @@ export default [
     "relatedDocuments": "NTF 2025-035",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-16"
+    "identifier": "ACT-2025-16",
+    "decisions": [
+      "CAL-DECISION-14-24"
+    ]
   },
   {
     "title": "Information webinar on the Global Action Plan to Mainstream Biodiversity and Health Interlinkages",
@@ -485,7 +536,10 @@ export default [
     "relatedDocuments": "NTF 2025-023",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-17"
+    "identifier": "ACT-2025-17",
+    "decisions": [
+      "CAL-DECISION-16-19"
+    ]
   },
   {
     "title": "Nominations for Regional and Subregional dialogues relating to monitoring and other issues",
@@ -512,7 +566,10 @@ export default [
     "relatedDocuments": "NTF 2025-038",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-18"
+    "identifier": "ACT-2025-18",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Nominations for Sub-regional workshop and dialogue for the Pacific small island developing States",
@@ -539,7 +596,10 @@ export default [
     "relatedDocuments": "NTF 2025-040",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-19"
+    "identifier": "ACT-2025-19",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Informational Webinar on IAS Tools to support Target 6 of the GBF",
@@ -566,7 +626,10 @@ export default [
     "relatedDocuments": "NTF 2025-011",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-20"
+    "identifier": "ACT-2025-20",
+    "decisions": [
+      "CAL-DECISION-16-18"
+    ]
   },
   {
     "title": "Online Forum on IAS",
@@ -593,7 +656,10 @@ export default [
     "relatedDocuments": "NTF 2025-021",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-21"
+    "identifier": "ACT-2025-21",
+    "decisions": [
+      "CAL-DECISION-16-18"
+    ]
   },
   {
     "title": "Submission of information on additional headline, component and complementary indicators for the monitoring framework",
@@ -620,7 +686,10 @@ export default [
     "relatedDocuments": "NTF 2025-044",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-22"
+    "identifier": "ACT-2025-22",
+    "decisions": [
+      "CAL-DECISION-16-31"
+    ]
   },
   {
     "title": "Request for inputs and relevant information to develop a methodology for additional component indicators for headline indicators 18.1 and 18.2 of the monitoring framework",
@@ -647,7 +716,10 @@ export default [
     "relatedDocuments": "NTF 2025-045",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-23"
+    "identifier": "ACT-2025-23",
+    "decisions": [
+      "CAL-DECISION-16-31"
+    ]
   },
   {
     "title": "Request for inputs and relevant information to develop a methodology for headline indicator 22.1 of the monitoring framework",
@@ -674,7 +746,10 @@ export default [
     "relatedDocuments": "NTF 2025-046",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-24"
+    "identifier": "ACT-2025-24",
+    "decisions": [
+      "CAL-DECISION-16-31"
+    ]
   },
   {
     "title": "Information webinar on modalities for the modification of existing descriptions of EBSAs and the description of new areas",
@@ -701,7 +776,10 @@ export default [
     "relatedDocuments": "NTF 2025-034, NTF 2025-041",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-25"
+    "identifier": "ACT-2025-25",
+    "decisions": [
+      "CAL-DECISION-16-16"
+    ]
   },
   {
     "title": "Nominations for the AHTEG on Risk Assessment",
@@ -715,7 +793,7 @@ export default [
     "endDate": "9-May-25",
     "associatedBody": "SBSTTA, CP",
     "agendaItem": "",
-    "copDecision": "CP11/7",
+    "copDecision": "CP-11/7",
     "copParagraphNo": "Para 7",
     "copParagraphType": "",
     "responsibleUnit": "CP",
@@ -728,7 +806,10 @@ export default [
     "relatedDocuments": "NTF 2025-051",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-26"
+    "identifier": "ACT-2025-26",
+    "decisions": [
+      "CAL-DECISION-CP-11-7"
+    ]
   },
   {
     "title": "Open-ended Online Forum on Risk Assessment and Risk Management",
@@ -757,7 +838,10 @@ export default [
     "meetings": [
       "CP-RA-OM-2025-2"
     ],
-    "identifier": "ACT-2025-27"
+    "identifier": "ACT-2025-27",
+    "decisions": [
+      "CAL-DECISION-CP11-7"
+    ]
   },
   {
     "title": "Submission of views and relevant experiences on new work areas to support the implementation of the GBF",
@@ -784,7 +868,10 @@ export default [
     "relatedDocuments": "NTF 2025-058",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-28"
+    "identifier": "ACT-2025-28",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Nominations for technical information exchange to support the implementation of the Rio Conventions",
@@ -811,7 +898,10 @@ export default [
     "relatedDocuments": "NTF 2025-060",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-29"
+    "identifier": "ACT-2025-29",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Nominations for the IAG on Ecologically or Biologically Significant Marine Areas",
@@ -838,7 +928,10 @@ export default [
     "relatedDocuments": "NTF 2025-064",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-30"
+    "identifier": "ACT-2025-30",
+    "decisions": [
+      "CAL-DECISION-16-16"
+    ]
   },
   {
     "title": "Submission of views and information on the modus operandi for SB8J",
@@ -865,7 +958,10 @@ export default [
     "relatedDocuments": "NTF 2025-061",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-31"
+    "identifier": "ACT-2025-31",
+    "decisions": [
+      "CAL-DECISION-16-5"
+    ]
   },
   {
     "title": "Submission of views and information on the implementation of the PoW on Article 8(j) and other provisions of the CBD related to indigenous peoples and local communities",
@@ -892,7 +988,10 @@ export default [
     "relatedDocuments": "NTF 2025-061",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-32"
+    "identifier": "ACT-2025-32",
+    "decisions": [
+      "CAL-DECISION-16-4"
+    ]
   },
   {
     "title": "Hybrid Workshop on the supplement to the voluntary guidelines for implementation of ecosystem-based approaches to climate change adaptation and DRR",
@@ -919,7 +1018,10 @@ export default [
     "relatedDocuments": "NTF 2025-025",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-33"
+    "identifier": "ACT-2025-33",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Submissions of information on synthetic biology to support the preparation of the thematic action plan",
@@ -946,7 +1048,10 @@ export default [
     "relatedDocuments": "NTF 2025-065",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-34"
+    "identifier": "ACT-2025-34",
+    "decisions": [
+      "CAL-DECISION-16-21"
+    ]
   },
   {
     "title": "Submission of national funding priorities, including funding needs that could be eligible for funding under the financial mechanism from July 2026 to June 2030",
@@ -973,7 +1078,10 @@ export default [
     "relatedDocuments": "NTF 2025-066",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-35"
+    "identifier": "ACT-2025-35",
+    "decisions": [
+      "CAL-DECISION-16-33"
+    ]
   },
   {
     "title": "Questionnaire on implementation of the Plan of Action (2020-2030) for the Conservation and Sustainable Use of Soil Biodiversity",
@@ -1000,7 +1108,10 @@ export default [
     "relatedDocuments": "NTF 2025-067",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-36"
+    "identifier": "ACT-2025-36",
+    "decisions": [
+      "CAL-DECISION-15-28"
+    ]
   },
   {
     "title": "Nomination for the expert workshop to support implementation of Tasks 1.1 and 1.2 of the PoW on Article 8(j) and other provisions of the CBD related to indigenous peoples and local communities to 2030",
@@ -1027,7 +1138,10 @@ export default [
     "relatedDocuments": "NTF 2025-069",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-37"
+    "identifier": "ACT-2025-37",
+    "decisions": [
+      "CAL-DECISION-16-4"
+    ]
   },
   {
     "title": "Regional dialogue for the Southern African Development Community and the East African Community on the update or revision of national and regional biodiversity strategies and action plans",
@@ -1054,7 +1168,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-38"
+    "identifier": "ACT-2025-38",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Nominations for the sixth meeting of the Informal Advisory Committee on Capacity-building for the Implementation of the Nagoya Protocol",
@@ -1083,7 +1200,10 @@ export default [
     "meetings": [
       "NP-CB-IAC-2026-01"
     ],
-    "identifier": "ACT-2025-39"
+    "identifier": "ACT-2025-39",
+    "decisions": [
+      "CAL-DECISION-NP-5-4"
+    ]
   },
   {
     "title": "Subregional workshop for the Pacific SIDS on strengthening national contributions to global environmental commitments through the synergistic implementation of multilateral environmental agreements",
@@ -1110,7 +1230,10 @@ export default [
     "relatedDocuments": "NTF 2025-040",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-40"
+    "identifier": "ACT-2025-40",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Subregional dialogue for the Pacific SIDS on biodiversity monitoring and reporting",
@@ -1137,7 +1260,10 @@ export default [
     "relatedDocuments": "NTF 2025-040",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-41"
+    "identifier": "ACT-2025-41",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Peer-review comments on the draft strategic review and analysis",
@@ -1164,7 +1290,10 @@ export default [
     "relatedDocuments": "NTF 2025-078",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-42"
+    "identifier": "ACT-2025-42",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Peer-review of the draft analysis of PoW on forest biodiversity",
@@ -1191,7 +1320,10 @@ export default [
     "relatedDocuments": "NTF 2025-079",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-43"
+    "identifier": "ACT-2025-43",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Technical Information Exchange to support the implementation of the Rio Conventions",
@@ -1218,7 +1350,10 @@ export default [
     "relatedDocuments": "NTF 2025-060",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-44"
+    "identifier": "ACT-2025-44",
+    "decisions": [
+      "CAL-DECISION-16-22"
+    ]
   },
   {
     "title": "Submission of views to inform a preliminary review of the procedures and mechanisms on compliance under the Nagoya Protocol",
@@ -1245,7 +1380,10 @@ export default [
     "relatedDocuments": "NTF 2025-080",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-45"
+    "identifier": "ACT-2025-45",
+    "decisions": [
+      "CAL-DECISION-NP-3-1"
+    ]
   },
   {
     "title": "Draft Report of the Strategic Review and Analysis",
@@ -1272,7 +1410,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-46"
+    "identifier": "ACT-2025-46",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Submission of views on the strategic review and analysis of the PoW on Protected Areas",
@@ -1299,7 +1440,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-47"
+    "identifier": "ACT-2025-47",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Peer-review of draft voluntary guidelines on peer-review processes for the description of areas meeting the criteria for EBSAs and other scientific criteria",
@@ -1326,7 +1470,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-48"
+    "identifier": "ACT-2025-48",
+    "decisions": [
+      "CAL-DECISION-16-16"
+    ]
   },
   {
     "title": "Submission of national legislation, regulations and guidelines on new developments in modern biotechnology that are relevant to the Cartagena Protocol and not published in the BCH",
@@ -1353,7 +1500,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-49"
+    "identifier": "ACT-2025-49",
+    "decisions": [
+      "CAL-DECISION-CP-11-1"
+    ]
   },
   {
     "title": "Consultations on reviewing of the effectiveness of structures and processes under the Convention and its Protocols",
@@ -1380,7 +1530,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-50"
+    "identifier": "ACT-2025-50",
+    "decisions": [
+      "CAL-DECISION-16-25"
+    ]
   },
   {
     "title": "Survey of Bureau Members on the effectiveness of structures and processes under the Convention and its Protocols",
@@ -1407,7 +1560,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-51"
+    "identifier": "ACT-2025-51",
+    "decisions": [
+      "CAL-DECISION-16-25"
+    ]
   },
   {
     "title": "Nominations for Regional dialogue on biodiversity monitoring and reporting for francophone African countries",
@@ -1436,7 +1592,10 @@ export default [
     "meetings": [
       "NBSAP-OM-2025-03"
     ],
-    "identifier": "ACT-2025-52"
+    "identifier": "ACT-2025-52",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Submit fifth national reports on the implementation of the Cartagena Protocol on Biosafety",
@@ -1463,7 +1622,10 @@ export default [
     "relatedDocuments": "NTF 2024-073",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-53"
+    "identifier": "ACT-2025-53",
+    "decisions": [
+      "CAL-DECISION-CP-10-9"
+    ]
   },
   {
     "title": "Peer Review by Parties of the Annotated Outline of the Global Report",
@@ -1490,7 +1652,10 @@ export default [
     "relatedDocuments": "NTF 2025-093",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-54"
+    "identifier": "ACT-2025-54",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Nominations for Regional meetings related to the implementation of the KMGBF for Asia and the Pacific",
@@ -1517,7 +1682,10 @@ export default [
     "relatedDocuments": "NTF 2025-095",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-55"
+    "identifier": "ACT-2025-55",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "First External Review of the Monitoring Assessment (Draft Chapters and Summary)",
@@ -1544,7 +1712,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-56"
+    "identifier": "ACT-2025-56",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Submission of views and inputs on the draft synthesis for sustainable wildlife management",
@@ -1571,7 +1742,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-57"
+    "identifier": "ACT-2025-57",
+    "decisions": [
+      "CAL-DECISION-16-15"
+    ]
   },
   {
     "title": "Online forum for the Informal Advisory Group on Technical and Scientific Cooperation",
@@ -1598,7 +1772,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-58"
+    "identifier": "ACT-2025-58",
+    "decisions": [
+      "CAL-DECISION-16-3"
+    ]
   },
   {
     "title": "Submission of views for the Mid-term review of the implementation of the Gender Plan of Action 2023-2030",
@@ -1625,7 +1802,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-59"
+    "identifier": "ACT-2025-59",
+    "decisions": [
+      "CAL-DECISION-15-11"
+    ]
   },
   {
     "title": "Global Workshop on Forest Ecosystem Restoration Initiative",
@@ -1652,7 +1832,10 @@ export default [
     "relatedDocuments": "NTF 2025-035",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-60"
+    "identifier": "ACT-2025-60",
+    "decisions": [
+      "CAL-DECISION-14-24"
+    ]
   },
   {
     "title": "Synthesis and analysis of views<br>and peer review of the report on<br>the midterm review of the Gender Plan of Action",
@@ -1679,7 +1862,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-61"
+    "identifier": "ACT-2025-61",
+    "decisions": [
+      "CAL-DECISION-15-11"
+    ]
   },
   {
     "title": "Survey of ABS Focal Points: Views on challenges related to the implementation of the Protocol and operation of the clearing house",
@@ -1706,7 +1892,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-62"
+    "identifier": "ACT-2025-62",
+    "decisions": [
+      "CAL-DECISION-NP-3-1"
+    ]
   },
   {
     "title": "Subregional dialogue on biodiversity monitoring and reporting with a focus on ecosystem restoration (Target 2)",
@@ -1733,7 +1922,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-63"
+    "identifier": "ACT-2025-63",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Regional dialogue on biodiversity monitoring and reporting for francophone African countries",
@@ -1762,7 +1954,10 @@ export default [
     "meetings": [
       "NBSAP-OM-2025-03"
     ],
-    "identifier": "ACT-2025-64"
+    "identifier": "ACT-2025-64",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Workshop on the detection and identification of LMOs and the role of customs in enforcing the Cartagena Protocol",
@@ -1789,7 +1984,10 @@ export default [
     "relatedDocuments": "NTF 2025-085",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-65"
+    "identifier": "ACT-2025-65",
+    "decisions": [
+      "CAL-DECISION-CP-11-8"
+    ]
   },
   {
     "title": "Nominations for the Open-ended Online Forum on Synthetic Biology",
@@ -1816,7 +2014,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-66"
+    "identifier": "ACT-2025-66",
+    "decisions": [
+      "CAL-DECISION-16-21"
+    ]
   },
   {
     "title": "Nominations for the Ad Hoc Technical Expert Group on Synthetic Biology",
@@ -1843,7 +2044,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-67"
+    "identifier": "ACT-2025-67",
+    "decisions": [
+      "CAL-DECISION-16-21"
+    ]
   },
   {
     "title": "Submission of information on best practices and lessons learned on the implementation of the Framework, in particular for Goal D, Targets 14, 15, 18 and 19 and the strategy for resource mobilization",
@@ -1870,7 +2074,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-68"
+    "identifier": "ACT-2025-68",
+    "decisions": [
+      "CAL-DECISION-16-34"
+    ]
   },
   {
     "title": "Submission of contributions from subnational governments, cities and other local authorities to the implementation of the GBF",
@@ -1897,7 +2104,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-69"
+    "identifier": "ACT-2025-69",
+    "decisions": [
+      "CAL-DECISION-15-12"
+    ]
   },
   {
     "title": "Submission of information to support biodiversity mainstreaming",
@@ -1924,7 +2134,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-70"
+    "identifier": "ACT-2025-70",
+    "decisions": [
+      "CAL-DECISION-16-13"
+    ]
   },
   {
     "title": "Draft report on activities in cooperation with other conventions and international organizations: Part 1 (September 2024 to November 2025)",
@@ -1951,7 +2164,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-71"
+    "identifier": "ACT-2025-71",
+    "decisions": [
+      "CAL-DECISION-16-35"
+    ]
   },
   {
     "title": "The regional workshop for Asia and the Pacific on implementing KMGBF through an integrated and synergistic approach",
@@ -1977,8 +2193,13 @@ export default [
     "gbfTargets": "",
     "relatedDocuments": "NTF 2025-095",
     "outcome": "",
-    "meetings": ['IMP-WS-2025-01'],
-    "identifier": "ACT-2025-72"
+    "meetings": [
+      "IMP-WS-2025-01"
+    ],
+    "identifier": "ACT-2025-72",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "The regional dialogue for East and South Asia on biodiversity monitoring and reporting",
@@ -2007,7 +2228,10 @@ export default [
     "meetings": [
       "NBSAP-OM-2025-04"
     ],
-    "identifier": "ACT-2025-73"
+    "identifier": "ACT-2025-73",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "The Pacific sub-regional consultation on the implementation of the KMGBF",
@@ -2034,7 +2258,10 @@ export default [
     "relatedDocuments": "NTF 2025-095",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-74"
+    "identifier": "ACT-2025-74",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Workshop on the assessments adopted by IPBES in 2024",
@@ -2061,7 +2288,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-75"
+    "identifier": "ACT-2025-75",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Peer-review of the thematic action plan to support capacity-building and development, access to and transfer of technology and knowledge-sharing in the context of synthetic biology",
@@ -2088,7 +2318,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-76"
+    "identifier": "ACT-2025-76",
+    "decisions": [
+      "CAL-DECISION-16-21"
+    ]
   },
   {
     "title": "Peer-Review of the Final Draft of the Biodiversity and Business Assessment Summary for Policymakers",
@@ -2115,7 +2348,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2025-77"
+    "identifier": "ACT-2025-77",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Peer-Review of Work on Biodiveristy and Health Indicators for the Global Action Plan",
@@ -2142,7 +2378,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-01"
+    "identifier": "ACT-2026-01",
+    "decisions": [
+      "CAL-DECISION-16-19"
+    ]
   },
   {
     "title": "Nominations to participate in the CBD regional EBSA workshop to review submissions of EBSA descriptions and modifications",
@@ -2169,7 +2408,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-02"
+    "identifier": "ACT-2026-02",
+    "decisions": [
+      "CAL-DECISION-16-16"
+    ]
   },
   {
     "title": "Invitation for Parties to communicate interest in receiving support to build a national website",
@@ -2196,7 +2438,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-03"
+    "identifier": "ACT-2026-03",
+    "decisions": [
+      "CAL-DECISION-CP-11-3"
+    ]
   },
   {
     "title": "Draft report on activities in cooperation with other conventions and international organizations: Part 2 (December 2025 to July 2026)",
@@ -2223,7 +2468,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-04"
+    "identifier": "ACT-2026-04",
+    "decisions": [
+      "CAL-DECISION-16-35"
+    ]
   },
   {
     "title": "Submission of views and inputs on draft guidance for sustainable wildlife management",
@@ -2250,7 +2498,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-05"
+    "identifier": "ACT-2026-05",
+    "decisions": [
+      "CAL-DECISION-16-15"
+    ]
   },
   {
     "title": "Submission of views and inputs on the draft strategic review and analysis on the PoW on Protected Areas",
@@ -2277,7 +2528,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-06"
+    "identifier": "ACT-2026-06",
+    "decisions": [
+      "CAL-DECISION-16-12"
+    ]
   },
   {
     "title": "Inviting submissions for updates to the Training Manual (Biosafety Technical Series 05)",
@@ -2304,7 +2558,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-07"
+    "identifier": "ACT-2026-07",
+    "decisions": [
+      "CAL-DECISION-CP-11-8"
+    ]
   },
   {
     "title": "Peer-Review of the report on collective progress in implementing the GBF",
@@ -2331,7 +2588,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-08"
+    "identifier": "ACT-2026-08",
+    "decisions": [
+      "CAL-DECISION-16-32"
+    ]
   },
   {
     "title": "Peer-Review for the Monitoring Assessment Summary for Policymakers",
@@ -2358,7 +2618,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-09"
+    "identifier": "ACT-2026-09",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "First Peer-Review of the spatial planning assessment (draft chapters and summary for policymakers)",
@@ -2385,7 +2648,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-10"
+    "identifier": "ACT-2026-10",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Expert workshop on opportunities for scientific and technical work to contribute to the conservation and sustainable use of marine biodiversity in ABNJ",
@@ -2412,7 +2678,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-11"
+    "identifier": "ACT-2026-11",
+    "decisions": [
+      "CAL-DECISION-16-17"
+    ]
   },
   {
     "title": "Submission of experiences with new detection techniques on the BCH, and with developing, using and maintaining reference materials",
@@ -2439,7 +2708,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-12"
+    "identifier": "ACT-2026-12",
+    "decisions": [
+      "CAL-DECISION-CP-11-8"
+    ]
   },
   {
     "title": "Online discussions of the Network of Laboratories for the Detection and Identification of LMOs",
@@ -2466,7 +2738,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-13"
+    "identifier": "ACT-2026-13",
+    "decisions": [
+      "CAL-DECISION-CP-11-8"
+    ]
   },
   {
     "title": "Workshop on the outputs of IPBES",
@@ -2493,7 +2768,10 @@ export default [
     "relatedDocuments": "",
     "outcome": "",
     "meetings": [],
-    "identifier": "ACT-2026-14"
+    "identifier": "ACT-2026-14",
+    "decisions": [
+      "CAL-DECISION-16-11"
+    ]
   },
   {
     "title": "Biosafety Clearing-House Training Workshop on the margins of COPMOP12",
@@ -2522,6 +2800,9 @@ export default [
     "meetings": [
       "CP-BCH-WS-2024-01"
     ],
-    "identifier": "ACT-2026-15"
+    "identifier": "ACT-2026-15",
+    "decisions": [
+      "CAL-DECISION-CP-11-3"
+    ]
   }
 ];

@@ -132,7 +132,7 @@
       "submission": "Presentación de información",
       "peerReview": "Revisión por pares",
       "report": "Informe",
-      "forum": "Foro",
+      "forum": "Foro en línea",
       "activity": "Actividad",
       "webinar": "Seminario web",
       "workshop": "Taller",
@@ -193,8 +193,9 @@
       "HRA": "Human Resources and Administration"
     },
     "views": {
-      "grid": "Vista de Acordeón",
-      "list": "Vista de Lista"
+      "grid": "Vista de cuadrícula",
+      "list": "Vista de lista",
+      "tabView": "Vista de pestañas por tipo de registro"
     }
   },
   "nav": {

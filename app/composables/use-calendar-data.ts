@@ -17,7 +17,7 @@ import {
   collectGlobalTargetEntries,
   getDocBooleanValue,
   getDocCountries,
-  getDocDecisionLabels,
+  getDocDecisionIdentifiers,
   getDocGlobalTargets,
   getDocStringValue,
   getDocSubjects,
@@ -300,9 +300,9 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
     if (filters.copDecisions.length > 0) {
       filtered = filtered.filter(doc => {
-        const decisions = getDocDecisionLabels(doc);
+        const identifiers = getDocDecisionIdentifiers(doc);
 
-        return decisions.some(decision => filters.copDecisions.includes(decision));
+        return identifiers.some(identifier => filters.copDecisions.includes(identifier));
       });
     }
 
@@ -433,9 +433,9 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     const decisions = new Set<string>();
 
     docs.value.forEach(doc => {
-      getDocDecisionLabels(doc).forEach(label => {
-        if (label) {
-          decisions.add(label);
+      getDocDecisionIdentifiers(doc).forEach(identifier => {
+        if (identifier) {
+          decisions.add(identifier);
         }
       });
     });
@@ -627,7 +627,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     addMany(getDocGlobalTargets(doc));
     addMany(getDocCountries(doc));
     addMany(getDocSubsidiaryBodies(doc));
-    addMany(getDocDecisionLabels(doc));
+    addMany(getDocDecisionIdentifiers(doc));
 
     if (Array.isArray(doc.actors)) addMany(doc.actors);
     if (Array.isArray(doc.relatedDocuments)) addMany(doc.relatedDocuments);

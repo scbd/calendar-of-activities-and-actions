@@ -42,7 +42,16 @@
       {{ entry.error }}
     </div>
     <div v-else-if="entry.details" class="calendar-notification-card__content">
+      <NuxtLink
+        v-if="notificationCalendarLink"
+        :to="notificationCalendarLink"
+        target="_blank"
+        class="calendar-notification-card__title"
+      >
+        {{ entry.details.title }}
+      </NuxtLink>
       <a
+        v-else
         :href="entry.details.link"
         target="_blank"
         rel="noopener"
@@ -101,14 +110,13 @@ import ExpandablePillList from '../expandable-pill-list.vue';
 import { buildNotificationLink } from 'shared/utils/notifications';
 import { formatNotificationDate } from 'shared/utils/date';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';
+import type { CalendarDoc } from 'shared/types/calendar';
 import { subjectLabelMap, resolveSubjectLabel, fallbackSubjectLabel } from 'shared/utils/subjects';
 import { getTypeColor } from 'shared/utils/type-colors';
 
-// NOTE: allDocs prop is intentionally not used in this component
-// It is passed for potential future use (e.g., showing related meetings)
 const props = defineProps<{
   entry: NotificationDisplayEntry;
-  allDocs?: unknown[];
+  allDocs?: CalendarDoc[];
 }>();
 
 const { t } = useI18n();
@@ -116,6 +124,41 @@ const { t } = useI18n();
 const notificationLink = computed(() => buildNotificationLink(props.entry.key));
 const formattedDeadline = computed(() => formatNotificationDate(props.entry.details?.actionDeadline) || '');
 const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.details?.publishedOn) || '');
+
+const notificationCalendarLink = computed(() => {
+  // Find the notification doc in allDocs to link to it in the main calendar view
+  if (!props.allDocs) {
+    return null;
+  }
+
+  const notificationDoc = props.allDocs.find(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+    // Match by notificationKey or symbol
+    return doc.notificationKey === props.entry.key || doc.symbol === props.entry.key;
+  });
+
+  if (!notificationDoc) {
+    return null;
+  }
+
+  const startDate = notificationDoc.startDate;
+  const docId = notificationDoc.id || '';
+  const query: Record<string, string> = {
+    autoExpand: docId,
+  };
+  
+  if (startDate) {
+    query.startDate = startDate;
+  }
+  
+  return {
+    path: '/',
+    query,
+  };
+});
+
 const thematicLabels = computed(() => {
   if (!props.entry.details) {
     return [] as string[];

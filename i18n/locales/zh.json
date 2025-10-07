@@ -132,7 +132,7 @@
       "submission": "提交信息",
       "peerReview": "同行评审",
       "report": "报告",
-      "forum": "论坛",
+      "forum": "在线论坛",
       "activity": "活动",
       "webinar": "网络研讨会",
       "workshop": "研讨班",
@@ -193,8 +193,9 @@
       "HRA": "Human Resources and Administration"
     },
     "views": {
-      "grid": "手风琴视图",
-      "list": "列表视图"
+      "grid": "网格视图",
+      "list": "列表视图",
+      "tabView": "按记录类型的标签视图"
     }
   },
   "nav": {

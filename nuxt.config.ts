@@ -24,7 +24,7 @@ export default defineNuxtConfig({
       { code: 'zh', name: '中文', file: 'zh.json' }
     ],
     defaultLocale: 'en',
-    langDir: 'locales',
+    langDir: fileURLToPath(new URL('./i18n/locales', import.meta.url)),
     strategy: 'no_prefix',
     detectBrowserLanguage: {
       alwaysRedirect: false,

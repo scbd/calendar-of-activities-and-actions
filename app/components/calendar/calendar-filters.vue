@@ -14,7 +14,7 @@
       </div>
 
       <!-- Type Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div v-if="!hideTypeFilter" class="col-12 col-md-6 col-lg-3">
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
@@ -134,7 +134,7 @@
 
       <!-- COP Decision Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
+        <label for="cop-decision-filter" class="form-label">{{copDecisionOptions.length}} {{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
           v-model="selectedCopDecisions"
@@ -148,7 +148,7 @@
           track-by="value"
         />
       </div>
-
+      
       <!-- Date Range Filter -->
       <div class="col-12 col-md-6 col-lg-3">
         <label class="form-label">{{ t('calendar.filters.labels.dateRange') }}</label>
@@ -251,6 +251,7 @@ interface Props {
   preloadedCountryOptions?: FilterOption[];
   preloadedGlobalTargetOptions?: FilterOption[];
   initialStartDate?: string;
+  hideTypeFilter?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -262,6 +263,7 @@ const props = withDefaults(defineProps<Props>(), {
   preloadedCountryOptions: () => [],
   preloadedGlobalTargetOptions: () => [],
   initialStartDate: '',
+  hideTypeFilter: false,
 });
 
 // Define emits
@@ -438,11 +440,10 @@ const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
 });
 
 const copDecisionOptions = computed<FilterOption[]>(() => {
-  if (props.availableCopDecisions.length > 0) {
-    return props.availableCopDecisions.map(decision => ({ value: decision, label: decision }));
-  }
+  // Use identifiers as values for exact matching in filter
+  // Display names as labels for user-friendly UI
   return copDecisionTerms
-    .map(term => mapLocalCalendarTermToOption(term))
+    .map(term => ({ value: term.identifier, label: term.name }))
     .sort((a, b) => a.label.localeCompare(b.label));
 });
 
@@ -697,8 +698,8 @@ function clearFilters(): void {
 }
 
 function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
-  const label = (term.title && term.title['en']) || term.name || term.identifier;
-  const value = term.name || term.identifier;
+  const value = term.identifier;
+  const label = term.name || (term.title && term.title['en']) || term.identifier;
 
   return { value, label };
 }

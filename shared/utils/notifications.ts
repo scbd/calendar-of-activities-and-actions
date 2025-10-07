@@ -567,8 +567,16 @@ export function getRelatedActivities(notificationKey: string, allDocs: CalendarD
   }
 
   return allDocs.filter(doc => {
-    // Skip the notification itself
+    // Skip notifications
     if (doc.schema === 'notification') {
+      return false;
+    }
+
+    // Skip meetings - they're handled separately
+    const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
+    const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
+    
+    if (schemaValue === 'meeting' || typeValue === 'meeting') {
       return false;
     }
 

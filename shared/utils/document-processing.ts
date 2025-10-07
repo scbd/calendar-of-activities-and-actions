@@ -1,9 +1,14 @@
 import { normalizeSolrDocument, normalizeSolrFieldName } from '../services/solr';
 import type { CalendarDoc } from '../types/calendar';
-import { extractDecisionEntries, parseDecisionLabel } from './decision-links';
-import { normalizeDecisionLabel } from './labels';
+import { extractDecisionEntries } from './decision-links';
 import { rawDocMap } from './calendar-document-normalizer';
 import { splitValues } from './text';
+import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
+
+// Create a mapping from decision identifiers to names
+const decisionIdentifierToNameMap = new Map(
+  copDecisionTerms.map(term => [term.identifier, term.name])
+);
 
 /**
  * Raw value/label association from multi-value fields.
@@ -215,7 +220,6 @@ export function getDocSubsidiaryBodies(doc: CalendarDoc): string[] {
  * @returns Decision labels list.
  */
 export function getDocDecisionLabels(doc: CalendarDoc): string[] {
-  const entries = extractDecisionEntries(doc as Record<string, unknown>);
   const seen = new Set<string>();
   const results: string[] = [];
 
@@ -226,33 +230,82 @@ export function getDocDecisionLabels(doc: CalendarDoc): string[] {
 
     if (!trimmed) return;
 
-    const parsed = parseDecisionLabel(trimmed);
-
-    if (parsed) {
-      const base = parsed.type === 'COP'
-        ? `${parsed.type} ${parsed.meetingNumber}/${parsed.decisionNumber}`
-        : `${parsed.type}-${parsed.meetingNumber}/${parsed.decisionNumber}`;
-
-      if (!seen.has(base)) {
-        seen.add(base);
-        results.push(base);
-      }
-      return;
-    }
-
-    // Fallback: strip any paragraph suffix patterns like "P. ..." or "PARA ..."
+    // Strip any paragraph suffix patterns like "P. ..." or "PARA ..." but preserve the base format
     const stripped = trimmed.replace(/\s+P(?:\.|\s*(?:ARAS?|ARAGRAPH))\.?\s*.*$/i, '').trim();
-    const normalized = normalizeDecisionLabel(stripped) ?? stripped;
 
-    if (normalized && !seen.has(normalized)) {
-      seen.add(normalized);
-      results.push(normalized);
+    if (stripped && !seen.has(stripped)) {
+      seen.add(stripped);
+      results.push(stripped);
     }
   };
 
-  entries.forEach(entry => pushBase(entry.label));
+  // First, check for the new decisions property (array of identifiers)
+  const record = doc as Record<string, unknown>;
+  const decisionsArray = record['decisions'];
+
+  if (Array.isArray(decisionsArray) && decisionsArray.length > 0) {
+    decisionsArray.forEach(identifier => {
+      if (typeof identifier === 'string') {
+        const name = decisionIdentifierToNameMap.get(identifier);
+
+        if (name) {
+          pushBase(name);
+        }
+      }
+    });
+    
+    // If decisions array exists and has entries, don't use fallback
+    // to avoid duplicates and incorrect prefix handling for CP/NP decisions
+    return results;
+  }
+
+  // Fallback to legacy copDecision fields (only for documents without decisions array)
+  const entries = extractDecisionEntries(record);
+
+  entries.forEach(entry => {
+    // Strip "COP " prefix to match term.name format (e.g., "COP 15/6" → "15/6")
+    // This ensures consistency with the identifier-to-name mapping above
+    const label = entry.label.replace(/^COP\s+/i, '');
+    
+    pushBase(label);
+  });
 
   return results;
+}
+
+/**
+ * Retrieve decision identifiers from the document for filtering.
+ * @param doc - Calendar document.
+ * @returns Array of decision identifiers (e.g., ["CAL-DECISION-CP-11-7"]).
+ */
+export function getDocDecisionIdentifiers(doc: CalendarDoc): string[] {
+  const record = doc as Record<string, unknown>;
+  const decisionsArray = record['decisions'];
+
+  // If decisions array exists, return identifiers directly
+  if (Array.isArray(decisionsArray) && decisionsArray.length > 0) {
+    return decisionsArray
+      .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+      .map(id => id.trim());
+  }
+
+  // For legacy documents, map copDecision names back to identifiers
+  const nameToIdentifierMap = new Map(
+    copDecisionTerms.map(term => [term.name, term.identifier])
+  );
+
+  const labels = getDocDecisionLabels(doc);
+  const identifiers: string[] = [];
+
+  labels.forEach(label => {
+    const identifier = nameToIdentifierMap.get(label);
+
+    if (identifier) {
+      identifiers.push(identifier);
+    }
+  });
+
+  return identifiers;
 }
 
 /**

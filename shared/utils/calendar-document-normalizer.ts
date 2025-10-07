@@ -180,6 +180,7 @@ export function buildDocsFromActivities(records: SnapshotActivity[]): CalendarDo
       meetings: Array.isArray(record.meetings) ? record.meetings as string[] : [],
       activities: Array.isArray(record.activities) ? record.activities as string[] : [],
       notifications: Array.isArray(record.notifications) ? record.notifications as string[] : [],
+      decisions: Array.isArray(record.decisions) ? record.decisions as string[] : [],
     };
 
     const normalizedRecord = normalizeSolrDocument(baseRecord);

@@ -140,6 +140,7 @@ interface Props {
   preloadedCountryOptions?: FilterOption[];
   preloadedGlobalTargetOptions?: FilterOption[];
   initialStartDate?: string;
+  hideTypeFilter?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -151,6 +152,7 @@ const props = withDefaults(defineProps<Props>(), {
   preloadedCountryOptions: () => [],
   preloadedGlobalTargetOptions: () => [],
   initialStartDate: '',
+  hideTypeFilter: false,
 });
 
 // Define emits
@@ -279,14 +281,13 @@ const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
   return options.map(opt => ({ ...opt, group: 'subsidiaryBodies' }));
 });
 
-const copDecisionOptions = computed<FilterOption[]>(() => {
-  const options = props.availableCopDecisions.length > 0
-    ? props.availableCopDecisions.map(decision => ({ value: decision, label: decision }))
-    : copDecisionTerms
-      .map(term => mapLocalCalendarTermToOption(term))
-      .sort((a, b) => a.label.localeCompare(b.label));
 
-  return options.map(opt => ({ ...opt, group: 'copDecisions' }));
+const copDecisionOptions = computed<FilterOption[]>(() => {
+  // Use identifiers as values for exact matching in filter
+  // Display names as labels for user-friendly UI
+  return copDecisionTerms
+    .map(term => ({ value: term.identifier, label: term.name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 });
 
 const activityTypeOptions = computed<FilterOption[]>(() =>
@@ -304,7 +305,7 @@ const subjectOptionsWithGroup = computed<FilterOption[]>(() =>
 const filterOptions = computed<FilterGroup[]>(() => {
   const groups: FilterGroup[] = [];
 
-  if (schemaOptions.value.length > 0) {
+  if (!props.hideTypeFilter && schemaOptions.value.length > 0) {
     groups.push({
       groupLabel: t('calendar.filters.labels.schemas') as string,
       options: schemaOptions.value,

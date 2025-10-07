@@ -132,7 +132,7 @@
       "submission": "Представление информации",
       "peerReview": "Рецензирование",
       "report": "Доклад",
-      "forum": "Форум",
+      "forum": "Онлайн-форум",
       "activity": "Мероприятие",
       "webinar": "Вебинар",
       "workshop": "Семинар",
@@ -193,8 +193,9 @@
       "HRA": "Human Resources and Administration"
     },
     "views": {
-      "grid": "Вид аккордеон",
-      "list": "Вид списка"
+      "grid": "Вид сетки",
+      "list": "Вид списка",
+      "tabView": "Вид вкладок по типу записи"
     }
   },
   "nav": {

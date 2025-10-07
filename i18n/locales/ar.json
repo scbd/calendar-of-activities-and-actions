@@ -132,7 +132,7 @@
       "submission": "تقديم المعلومات",
       "peerReview": "مراجعة الأقران",
       "report": "تقرير",
-      "forum": "منتدى",
+      "forum": "منتدى عبر الإنترنت",
       "activity": "نشاط",
       "webinar": "ندوة عبر الإنترنت",
       "workshop": "ورشة عمل",
@@ -193,8 +193,9 @@
       "HRA": "Human Resources and Administration"
     },
     "views": {
-      "grid": "عرض الأكورديون",
-      "list": "عرض القائمة"
+      "grid": "عرض الشبكة",
+      "list": "عرض القائمة",
+      "tabView": "عرض علامات التبويب حسب نوع السجل"
     }
   },
   "nav": {
