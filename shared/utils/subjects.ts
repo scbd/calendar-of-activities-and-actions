@@ -4,6 +4,7 @@ import { loadDomainOptions } from '../services/thesaurus';
 import type { CalendarDoc } from '../types/calendar';
 import { getDocSubjects } from './document-processing';
 import { ref } from 'vue';
+import { subjectsUsed } from '../data/subjects-used';
 
 export interface SubjectOption {
   value: string;
@@ -69,9 +70,12 @@ export async function loadSubjectOptions(locale: string = 'en'): Promise<Subject
 
   try {
     const options = await promise;
+    
+    // Filter options to only include subjects that are actually used in the data
+    const filteredOptions = options.filter(option => subjectsUsed.has(option.value));
 
-    cachedSubjectOptions.set(locale, options);
-    return options;
+    cachedSubjectOptions.set(locale, filteredOptions);
+    return filteredOptions;
   } finally {
     inflightPromises.delete(locale);
   }

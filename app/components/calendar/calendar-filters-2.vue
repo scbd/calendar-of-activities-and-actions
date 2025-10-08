@@ -2,7 +2,7 @@
   <div class="calendar-filters-2">
     <div class="row g-3">
       <!-- Consolidated Mega Filter Dropdown -->
-      <div class="col-12 col-md-6">
+      <div class="col-12">
         <label for="mega-filter" class="form-label">{{ t('calendar.filters.labels.search') }}</label>
         <Multiselect
           id="mega-filter"
@@ -617,10 +617,16 @@ function loadFiltersFromUrl(): void {
   }
 
   if (sortOrder.length > 0) {
-    selectedSorts.value = sortOrder;
+    // Convert string values to FilterOption objects with labels
+    selectedSorts.value = sortOrder
+      .map(value => sortOptions.value.find(opt => opt.value === value))
+      .filter((opt): opt is FilterOption => Boolean(opt));
     hasUserInteracted.value = true;
   } else {
-    selectedSorts.value = [...DEFAULT_SORT_VALUES];
+    // Convert default sort values to FilterOption objects with labels
+    selectedSorts.value = DEFAULT_SORT_VALUES
+      .map(value => sortOptions.value.find(opt => opt.value === value))
+      .filter((opt): opt is FilterOption => Boolean(opt));
   }
 
   // Load date filters
@@ -742,7 +748,10 @@ function updateFilters(): void {
 
 function clearFilters(): void {
   selectedFilters.value = [];
-  selectedSorts.value = [...DEFAULT_SORT_VALUES];
+  // Convert default sort values to FilterOption objects with labels
+  selectedSorts.value = DEFAULT_SORT_VALUES
+    .map(value => sortOptions.value.find(opt => opt.value === value))
+    .filter((opt): opt is FilterOption => Boolean(opt));
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;

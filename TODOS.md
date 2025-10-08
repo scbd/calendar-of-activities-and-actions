@@ -38,3 +38,9 @@ Notes:
   - notification shows sept 27 and under notification notification sept 28, use published date for notification in always visible section
 
 
+- advanced search one line
+- sort in advance disapear through transition
+- display gbf targets https://www.cbd.int/app/images/gbf-targets/gbf-23-64.png
+- update actors from notifications
+- icons 
+- list all Subsidiary body(ies)
