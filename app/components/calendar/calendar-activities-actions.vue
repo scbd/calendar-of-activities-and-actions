@@ -25,6 +25,7 @@
             :preloaded-global-target-options="availableGlobalTargetOptions"
             :initial-start-date="initialStartDate"
             :hide-type-filter="hideTypeFilter"
+            :active-tab-type="activeTabType"
             @update:filters="handleFiltersUpdate"
           />
       </div>
@@ -77,6 +78,7 @@ const props = defineProps<{
   showAdvancedFilters?: boolean;
   hideTypeFilter?: boolean;
   hideFilterCard?: boolean;
+  activeTabType?: string;
 }>();
 
 // Emits

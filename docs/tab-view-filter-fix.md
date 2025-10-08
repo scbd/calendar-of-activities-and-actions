@@ -1,11 +1,58 @@
 # Tab View Filter Fix
 
-## Issue
-When the tab view was engaged, filtering was not being applied. Additionally, all filter selects showed mismatched labels and values.
+## Issue (Latest - Component Recreation Race Condition)
+When using the tab view mode, clicking on tabs (Meeting, Notification, Activity) would not properly filter the displayed records except on the first load. After the initial "Meeting" tab selection worked correctly, clicking other tabs would show all records instead of filtering by the selected type.
 
-## Root Causes
+### Root Cause
+The issue was caused by a race condition in the component lifecycle:
 
-### Issue 1: Filters Not Loading from URL
+1. The `calendar-tab-view.vue` component had a dynamic key that included `activeTab`:
+   ```vue
+   :key="`tab-${activeTab}-view-${currentView}`"
+   ```
+
+2. When a tab was clicked:
+   - `activeTab` was immediately updated
+   - This caused Vue to destroy and recreate the child component (CalendarTableView or CalendarActivitiesActions) due to the key change
+   - `router.push({ query: { types: newType } })` was called asynchronously
+   - The NEW component instance mounted and tried to load filters from the URL
+   - But `router.push()` is async, so `route.query` still had the OLD type value
+   - The new component loaded the wrong filters
+
+3. Even though the route.query watcher would eventually fire with the correct value, the component had already been destroyed and recreated with stale data.
+
+### Solution
+Removed `activeTab` from the component key in `calendar-tab-view.vue`:
+
+```vue
+<!-- Before -->
+:key="`tab-${activeTab}-view-${currentView}`"
+
+<!-- After -->
+:key="`view-${currentView}`"
+```
+
+#### Why This Works
+- The component now stays alive when tabs change
+- Only `currentView` (grid/list) changes cause component recreation, which is appropriate
+- When a tab is clicked:
+  1. `activeTab` updates (UI shows correct tab as active)
+  2. `router.push()` updates the URL asynchronously
+  3. The component's `route.query` watcher fires when the URL actually changes
+  4. Filters are loaded from the updated URL
+  5. The list is properly filtered
+
+### Testing
+The fix can be verified by:
+1. Enabling tab view mode
+2. Clicking through Meeting → Notification → Activity tabs
+3. Observing that each tab correctly filters the displayed records
+4. The URL should update to show `?types=meeting`, `?types=notification`, or `?types=activity`
+5. Each tab should show only records matching that type
+
+---
+
+## Previous Issue: Filters Not Loading from URL
 The `calendar-filters.vue` component had a function `_loadFiltersFromUrl()` that was defined but **never called**. This meant:
 - URL parameter changes from the tab view were ignored
 - Initial URL parameters on page load were not applied

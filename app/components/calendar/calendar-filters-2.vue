@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, watchEffect } from 'vue';
+import { ref, computed, watch, onMounted, watchEffect, nextTick } from 'vue';
 import Multiselect from 'vue-multiselect';
 import { loadDomainOptions } from 'shared/services/thesaurus';
 import { thesaurusDomains } from 'shared/constants/thesaurus';
@@ -141,6 +141,7 @@ interface Props {
   preloadedGlobalTargetOptions?: FilterOption[];
   initialStartDate?: string;
   hideTypeFilter?: boolean;
+  activeTabType?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -153,6 +154,7 @@ const props = withDefaults(defineProps<Props>(), {
   preloadedGlobalTargetOptions: () => [],
   initialStartDate: '',
   hideTypeFilter: false,
+  activeTabType: '',
 });
 
 // Define emits
@@ -192,6 +194,9 @@ const actionRequired = ref<boolean>(false);
 
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
+
+// Track if we're loading from URL to prevent circular updates
+const isLoadingFromUrl = ref<boolean>(false);
 
 // Options storage
 const subjectOptions = ref<FilterOption[]>([]);
@@ -275,7 +280,7 @@ const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
   const options = props.availableSubsidiaryBodies.length > 0
     ? props.availableSubsidiaryBodies.map(body => ({ value: body, label: body }))
     : subsidiaryBodyTerms
-      .map(term => mapLocalCalendarTermToOption(term))
+      .map(term => mapSubsidiaryBodyTermToOption(term))
       .sort((a, b) => a.label.localeCompare(b.label));
 
   return options.map(opt => ({ ...opt, group: 'subsidiaryBodies' }));
@@ -292,7 +297,7 @@ const copDecisionOptions = computed<FilterOption[]>(() => {
 
 const activityTypeOptions = computed<FilterOption[]>(() =>
   activityTypeTerms
-    .map(term => mapLocalCalendarTermToOption(term))
+    .map(term => mapActivityTypeTermToOption(term))
     .sort((a, b) => a.label.localeCompare(b.label))
     .map(opt => ({ ...opt, group: 'activityTypes' }))
 );
@@ -312,7 +317,10 @@ const filterOptions = computed<FilterGroup[]>(() => {
     });
   }
 
-  if (activityTypeOptions.value.length > 0) {
+  // Hide activity types filter in tab view unless Activities tab is selected
+  const hideActivityTypes = props.activeTabType !== '' && props.activeTabType !== 'activity';
+
+  if (!hideActivityTypes && activityTypeOptions.value.length > 0) {
     groups.push({
       groupLabel: t('calendar.filters.labels.activityTypes') as string,
       options: activityTypeOptions.value,
@@ -402,6 +410,9 @@ function parseQueryArray(param: string | string[] | undefined): string[] {
 
 // Function to update URL query string
 function updateUrlQuery(): void {
+  // Don't update URL if we're currently loading from URL
+  if (isLoadingFromUrl.value) return;
+
   const query: Record<string, string | undefined> = {};
 
   // Extract values by group
@@ -458,6 +469,8 @@ function extractFiltersByGroup(selection: FilterSelectionValue[]): {
   };
 
   for (const item of selection) {
+    console.log('[Filters-2] extractFiltersByGroup - item:', item);
+    
     if (typeof item === 'string') {
       // Handle string values
       if (item.startsWith('search:')) {
@@ -467,9 +480,12 @@ function extractFiltersByGroup(selection: FilterSelectionValue[]): {
       const group = item.group || '';
       const value = item.value;
 
+      console.log('[Filters-2] extractFiltersByGroup - group:', group, 'value:', value);
+
       if (value.startsWith('search:')) {
         result.searchTerms.push(value.replace('search:', ''));
       } else if (group === 'schemas') {
+        console.log('[Filters-2] extractFiltersByGroup - adding to types:', value);
         result.types.push(value);
       } else if (group === 'subjects') {
         result.subjects.push(value);
@@ -494,6 +510,11 @@ function extractFiltersByGroup(selection: FilterSelectionValue[]): {
 
 // Function to load filters from URL query string
 function loadFiltersFromUrl(): void {
+  console.log('[Filters-2] loadFiltersFromUrl called');
+  console.log('[Filters-2] route.query:', route.query);
+  
+  isLoadingFromUrl.value = true;
+
   const query = route.query;
 
   // Load filter selections from URL
@@ -514,9 +535,13 @@ function loadFiltersFromUrl(): void {
   const filters: FilterSelectionValue[] = [];
 
   // Add schemas
+  console.log('[Filters-2] types from URL:', types);
+  console.log('[Filters-2] schemaOptions.value:', schemaOptions.value);
+  
   for (const typeValue of types) {
     const option = schemaOptions.value.find(opt => opt.value === typeValue);
 
+    console.log('[Filters-2] Looking for type:', typeValue, 'found:', option);
     if (option) filters.push(option);
   }
 
@@ -582,8 +607,12 @@ function loadFiltersFromUrl(): void {
     }
   }
 
+  // Always update selectedFilters, even if empty (to clear previous filters)
+  selectedFilters.value = filters;
+  console.log('[Filters-2] Set selectedFilters to:', filters);
+  console.log('[Filters-2] selectedFilters.value is now:', selectedFilters.value);
+  
   if (filters.length > 0) {
-    selectedFilters.value = filters;
     hasUserInteracted.value = true;
   }
 
@@ -598,17 +627,29 @@ function loadFiltersFromUrl(): void {
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
+  } else {
+    startDate.value = props.initialStartDate ?? '';
   }
+  
   if (query.endDate && typeof query.endDate === 'string') {
     endDate.value = query.endDate;
     hasUserInteracted.value = true;
+  } else {
+    endDate.value = '';
   }
 
   // Load action required filter
   if (query.actionRequired === 'true') {
     actionRequired.value = true;
     hasUserInteracted.value = true;
+  } else {
+    actionRequired.value = false;
   }
+
+  // Allow updates again after a short delay to ensure all reactive updates complete
+  nextTick(() => {
+    isLoadingFromUrl.value = false;
+  });
 }
 
 onMounted(async () => {
@@ -651,6 +692,14 @@ watch(() => locale.value, async (newLocale) => {
   }
 });
 
+// Watch for URL query changes (e.g., when tab view changes the type filter)
+watch(() => route.query, (newQuery, oldQuery) => {
+  console.log('[Filters-2] route.query changed');
+  console.log('[Filters-2] oldQuery:', oldQuery);
+  console.log('[Filters-2] newQuery:', newQuery);
+  loadFiltersFromUrl();
+}, { deep: true });
+
 function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
   return selection
     .map(item => {
@@ -666,6 +715,9 @@ function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
 
 function updateFilters(): void {
   const filtersByGroup = extractFiltersByGroup(selectedFilters.value);
+
+  console.log('[Filters-2] updateFilters called');
+  console.log('[Filters-2] filtersByGroup:', filtersByGroup);
 
   const filters: FilterState = {
     types: filtersByGroup.types,
@@ -683,6 +735,7 @@ function updateFilters(): void {
     sort: extractSelectedValues(selectedSorts.value),
   };
 
+  console.log('[Filters-2] Emitting filters:', filters);
   emit('update:filters', filters);
   updateUrlQuery();
 }
@@ -698,7 +751,14 @@ function clearFilters(): void {
   updateFilters();
 }
 
-function mapLocalCalendarTermToOption(term: ThesaurusTerm): FilterOption {
+function mapActivityTypeTermToOption(term: ThesaurusTerm): FilterOption {
+  const label = (term.title && term.title['en']) || term.name || term.identifier;
+  const value = term.identifier;
+
+  return { value, label };
+}
+
+function mapSubsidiaryBodyTermToOption(term: ThesaurusTerm): FilterOption {
   const label = (term.title && term.title['en']) || term.name || term.identifier;
   const value = term.name || term.identifier;
 
@@ -761,6 +821,9 @@ watch(
 
 // Emit updates whenever relevant filter state changes
 watchEffect(() => {
+  console.log('[Filters-2] watchEffect triggered');
+  console.log('[Filters-2] isLoadingFromUrl:', isLoadingFromUrl.value);
+  
   void selectedFilters.value;
   void selectedSorts.value;
   void startDate.value;

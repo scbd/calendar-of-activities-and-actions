@@ -30,8 +30,8 @@
         />
       </div>
 
-      <!-- Activity Types Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <!-- Activity Types Filter (hidden in tab view unless Activities tab is active) -->
+      <div v-if="!hideActivityTypesFilter" class="col-12 col-md-6 col-lg-3">
         <label for="activity-types-filter" class="form-label">{{ t('calendar.filters.labels.activityTypes') }}</label>
         <Multiselect
           id="activity-types-filter"
@@ -134,7 +134,7 @@
 
       <!-- COP Decision Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="cop-decision-filter" class="form-label">{{copDecisionOptions.length}} {{ t('calendar.filters.labels.decisions') }}</label>
+        <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
           v-model="selectedCopDecisions"
@@ -252,6 +252,7 @@ interface Props {
   preloadedGlobalTargetOptions?: FilterOption[];
   initialStartDate?: string;
   hideTypeFilter?: boolean;
+  activeTabType?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -264,6 +265,7 @@ const props = withDefaults(defineProps<Props>(), {
   preloadedGlobalTargetOptions: () => [],
   initialStartDate: '',
   hideTypeFilter: false,
+  activeTabType: '',
 });
 
 // Define emits
@@ -334,6 +336,12 @@ const hasActiveFilters = computed<boolean>(() => {
     searchText.value.trim().length > 0 ||
     !areSortSelectionsDefault(activeSorts)
   );
+});
+
+// Hide activity types filter in tab view unless Activities tab is selected
+const hideActivityTypesFilter = computed<boolean>(() => {
+  // If activeTabType is provided (tab view mode) and it's not 'activity', hide the filter
+  return props.activeTabType !== '' && props.activeTabType !== 'activity';
 });
 
 const subjectOptions = ref<FilterOption[]>([]);
@@ -438,7 +446,7 @@ const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
     return props.availableSubsidiaryBodies.map(body => ({ value: body, label: body }));
   }
   return subsidiaryBodyTerms
-    .map(term => mapLocalCalendarTermToOption(term))
+    .map(term => mapSubsidiaryBodyTermToOption(term))
     .sort((a, b) => a.label.localeCompare(b.label));
 });
 
@@ -452,7 +460,7 @@ const copDecisionOptions = computed<FilterOption[]>(() => {
 
 const activityTypeOptions = computed<FilterOption[]>(() =>
   activityTypeTerms
-    .map(term => mapLocalCalendarTermToOption(term))
+    .map(term => mapActivityTypeTermToOption(term))
     .sort((a, b) => a.label.localeCompare(b.label))
 );
 
@@ -749,7 +757,14 @@ function clearFilters(): void {
   updateFilters();
 }
 
-function mapLocalCalendarTermToOption(term: LocalCalendarTerm): FilterOption {
+function mapActivityTypeTermToOption(term: LocalCalendarTerm): FilterOption {
+  const label = term.name || (term.title && term.title['en']) || term.identifier;
+  const value = term.identifier;
+
+  return { value, label };
+}
+
+function mapSubsidiaryBodyTermToOption(term: LocalCalendarTerm): FilterOption {
   const label = term.name || (term.title && term.title['en']) || term.identifier;
   const value = term.name || term.identifier;
 

@@ -22,9 +22,10 @@
     <div>
       <component
         :is="currentView === 'grid' ? CalendarTableView : CalendarActivitiesActions"
-        :key="`tab-${activeTab}-view-${currentView}`"
+        :key="`view-${currentView}`"
         :show-advanced-filters="showAdvancedFilters"
         :hide-type-filter="true"
+        :active-tab-type="activeTab"
         @toggle-filter-mode="$emit('toggle-filter-mode')"
       />
     </div>
