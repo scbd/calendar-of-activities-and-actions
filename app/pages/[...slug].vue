@@ -50,6 +50,7 @@
           v-if="tabViewEnabled"
           :show-advanced-filters="showAdvancedFilters"
           :current-view="currentView"
+          :show-tab-selector="true"
           @toggle-filter-mode="toggleFilterMode"
         />
 

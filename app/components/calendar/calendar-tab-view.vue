@@ -1,24 +1,6 @@
 <template>
   <section class="calendar-tab-view">
-    <!-- Record Type Tabs -->
-    <div class="mb-3">
-      <label class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
-      <ul class="nav nav-pills" role="tablist">
-        <li v-for="recordType in recordTypes" :key="recordType.value" class="nav-item" role="presentation">
-          <button
-            :class="['nav-link', { active: activeTab === recordType.value }]"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === recordType.value"
-            @click="setActiveTab(recordType.value)"
-          >
-            {{ recordType.label }}
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Content based on active tab and view (includes its own filter card) -->
+    <!-- Content based on active tab and view (includes its own filter card and tabs) -->
     <div>
       <component
         :is="currentView === 'grid' ? CalendarTableView : CalendarActivitiesActions"
@@ -26,6 +8,7 @@
         :show-advanced-filters="showAdvancedFilters"
         :hide-type-filter="true"
         :active-tab-type="activeTab"
+        :show-tab-selector="showTabSelector"
         @toggle-filter-mode="$emit('toggle-filter-mode')"
       />
     </div>
@@ -33,8 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useI18n } from '#imports';
+import { ref, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from '#app';
 import CalendarActivitiesActions from './calendar-activities-actions.vue';
 import CalendarTableView from './calendar-table-view.vue';
@@ -43,6 +25,7 @@ import CalendarTableView from './calendar-table-view.vue';
 defineProps<{
   showAdvancedFilters?: boolean;
   currentView: 'grid' | 'list';
+  showTabSelector?: boolean;
 }>();
 
 // Emits
@@ -50,22 +33,11 @@ defineEmits<{
   'toggle-filter-mode': [];
 }>();
 
-const { t, te } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
 // Record types based on SCHEMA_FILTER_KEYS from calendar-filters.vue
 const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
-
-const recordTypes = computed(() =>
-  SCHEMA_FILTER_KEYS.map((key) => {
-    const normalizedKey = key.toLowerCase();
-    const translationKey = `calendar.types.${normalizedKey}`;
-    const label = te(translationKey) ? (t(translationKey) as string) : key.charAt(0).toUpperCase() + key.slice(1);
-
-    return { value: normalizedKey, label };
-  }),
-);
 
 // Initialize active tab from URL or default to 'meeting'
 const getInitialTab = (): string => {
@@ -82,13 +54,6 @@ const getInitialTab = (): string => {
 
 // State
 const activeTab = ref<string>(getInitialTab());
-
-// Methods
-const setActiveTab = (tabValue: string) => {
-  console.log('[TabView] setActiveTab called with:', tabValue);
-  activeTab.value = tabValue;
-  updateTypeFilter(tabValue);
-};
 
 const updateTypeFilter = (type: string) => {
   console.log('[TabView] updateTypeFilter called with:', type);

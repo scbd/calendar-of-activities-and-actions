@@ -28,8 +28,26 @@
             :active-tab-type="activeTabType"
             @update:filters="handleFiltersUpdate"
           />
+        </div>
       </div>
-    </div>
+
+      <!-- Record Type Tabs -->
+      <div v-if="showTabSelector" class="mb-3">
+        <label class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
+        <ul class="nav nav-tabs" role="tablist">
+          <li v-for="recordType in recordTypes" :key="recordType.value" class="nav-item" role="presentation">
+            <button
+              :class="['nav-link', { active: activeTabType === recordType.value }]"
+              type="button"
+              role="tab"
+              :aria-selected="activeTabType === recordType.value"
+              @click="setActiveTab(recordType.value)"
+            >
+              {{ recordType.label }}
+            </button>
+          </li>
+        </ul>
+      </div>
 
       <div v-if="loading" class="loading-container">
         <div class="spinner-border spinner-large" role="status">
@@ -63,7 +81,7 @@
 import { ref, watch, computed, nextTick } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
-import { useRoute } from '#app';
+import { useRoute, useRouter } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarFilters2 from './calendar-filters-2.vue';
 import CalendarAccordionItem from './calendar-accordion-item.vue';
@@ -79,6 +97,7 @@ const props = defineProps<{
   hideTypeFilter?: boolean;
   hideFilterCard?: boolean;
   activeTabType?: string;
+  showTabSelector?: boolean;
 }>();
 
 // Emits
@@ -88,9 +107,42 @@ defineEmits<{
 
 const { t, te, locale } = useI18n();
 const route = useRoute();
+const router = useRouter();
 
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
+
+// Record types based on SCHEMA_FILTER_KEYS
+const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
+
+const recordTypes = computed(() =>
+  SCHEMA_FILTER_KEYS.map((key) => {
+    const normalizedKey = key.toLowerCase();
+    const translationKey = `calendar.types.${normalizedKey}`;
+    const label = te(translationKey) ? (t(translationKey) as string) : key.charAt(0).toUpperCase() + key.slice(1);
+
+    return { value: normalizedKey, label };
+  }),
+);
+
+// Tab selection handler
+const setActiveTab = (tabValue: string) => {
+  console.log('[TabView] setActiveTab called with:', tabValue);
+  
+  // Preserve other query params but update types
+  const query: Record<string, string | string[]> = {
+    ...route.query,
+    types: tabValue
+  };
+
+  console.log('[TabView] Setting query to:', query);
+
+  // Use push to navigate
+  router.push({ query }).then(() => {
+    console.log('[TabView] Navigation complete');
+    console.log('[TabView] New route.query.types:', route.query.types);
+  });
+};
 
 // Computed property for current filter component
 const currentFilterComponent = computed(() => {
