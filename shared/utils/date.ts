@@ -101,6 +101,25 @@ export function formatNotificationDate(iso?: string | null): string | null {
 }
 
 /**
+ * Format an ISO string for display in grid view (yyyy-MM-dd format).
+ * @param iso - ISO date string to format.
+ * @returns Formatted date (e.g., "2024-01-15") or null when invalid.
+ */
+export function formatGridDate(iso?: string | null): string | null {
+  if (!iso) {
+    return null;
+  }
+
+  const dt = DateTime.fromISO(String(iso));
+
+  if (!dt.isValid) {
+    return null;
+  }
+
+  return dt.toUTC().toFormat('yyyy-MM-dd');
+}
+
+/**
  * Safely parse an ISO-like value to a Luxon DateTime.
  * @param value - Candidate ISO value.
  * @returns DateTime instance when valid, otherwise null.
@@ -147,5 +166,37 @@ export function formatDateRange(doc: CalendarDoc): string {
   }
   if (start) return start.toFormat('d LLLL yyyy');
   if (end) return end.toFormat('d LLLL yyyy');
+  return '';
+}
+
+/**
+ * Format a calendar document date range for grid view (yyyy-MM-dd format).
+ * @param doc - Calendar document.
+ * @returns Date range string in yyyy-MM-dd format.
+ */
+export function formatGridDateRange(doc: CalendarDoc): string {
+  const schema = getDocStringValue(doc, 'schema')?.trim().toLowerCase();
+  const type = normalizeTypeKey(getDocStringValue(doc, 'type'));
+  const isNotification = schema === 'notification' || type === 'notification';
+
+  if (isNotification) {
+    const published = safeDate(
+      getDocStringValue(doc, 'publishedDate', 'date', 'createdDate'),
+    );
+
+    if (published) {
+      return published.toFormat('yyyy-MM-dd');
+    }
+  }
+
+  const start = safeDate(getDocStringValue(doc, 'startDate'));
+  const end = safeDate(getDocStringValue(doc, 'endDate'));
+
+  if (start && end) {
+    if (start.hasSame(end, 'day')) return start.toFormat('yyyy-MM-dd');
+    return `${start.toFormat('yyyy-MM-dd')} – ${end.toFormat('yyyy-MM-dd')}`;
+  }
+  if (start) return start.toFormat('yyyy-MM-dd');
+  if (end) return end.toFormat('yyyy-MM-dd');
   return '';
 }

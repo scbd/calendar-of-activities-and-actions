@@ -118,7 +118,7 @@
                       </button>
                     </td>
                     <td class="date-cell">
-                      <div class="date-range">{{ formatDateRange(doc) }}</div>
+                      <div class="date-range">{{ formatGridDateRange(doc) }}</div>
                     </td>
                     <td>
                       <span class="type-badge" :style="getTypeStyle(doc)">
@@ -176,7 +176,7 @@
                                 <tr v-for="entry in getNotificationEntries(doc)" :key="entry.key">
                                   <td>{{ entry.details?.symbol || entry.key }}</td>
                                   <td>{{ entry.details?.title || '' }}</td>
-                                  <td>{{ entry.details?.publishedDate || '' }}</td>
+                                  <td>{{ entry.details?.publishedOn ? formatGridDate(entry.details.publishedOn) : '' }}</td>
                                   <td>
                                     <a v-if="entry.details?.link" :href="entry.details.link" target="_blank" class="btn btn-sm btn-primary">
                                       View
@@ -202,7 +202,7 @@
                               </thead>
                               <tbody>
                                 <tr v-for="activity in getRelatedActivities(doc)" :key="activity.id">
-                                  <td>{{ formatDateRange(activity) }}</td>
+                                  <td>{{ formatGridDateRange(activity) }}</td>
                                   <td>
                                     <span class="type-badge-sm" :style="getTypeStyle(activity)">
                                       {{ getTypeLabel(activity) }}
@@ -234,40 +234,12 @@
                               </thead>
                               <tbody>
                                 <tr v-for="meeting in getRelatedMeetings(doc)" :key="meeting.id">
-                                  <td>{{ formatDateRange(meeting) }}</td>
+                                  <td>{{ formatGridDateRange(meeting) }}</td>
                                   <td>{{ getTitle(meeting) }}</td>
                                   <td>{{ getMeetingLocation(meeting) }}</td>
                                   <td>
                                     <span v-if="getStatusLabel(meeting)" class="badge badge-sm" :class="`bg-${getStatusColor(meeting)}`">
                                       {{ getStatusLabel(meeting) }}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
-                        <div v-if="getRelatedNotifications(doc).length" class="mt-3">
-                          <h6 class="fw-bold">{{ t('calendar.labels.relatedNotifications') }}</h6>
-                          <div class="table-responsive">
-                            <table class="table table-sm table-bordered nested-table">
-                              <thead class="table-secondary">
-                                <tr>
-                                  <th>Symbol</th>
-                                  <th>Title</th>
-                                  <th>Date</th>
-                                  <th>Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="notification in getRelatedNotifications(doc)" :key="notification.id">
-                                  <td>{{ getNotificationSymbol(notification) }}</td>
-                                  <td>{{ getTitle(notification) }}</td>
-                                  <td>{{ formatDateRange(notification) }}</td>
-                                  <td>
-                                    <span v-if="getStatusLabel(notification)" class="badge badge-sm" :class="`bg-${getStatusColor(notification)}`">
-                                      {{ getStatusLabel(notification) }}
                                     </span>
                                   </td>
                                 </tr>
@@ -315,7 +287,7 @@ import {
 import type { CalendarDoc, FilterState } from 'shared/types/calendar';
 import type { LocaleCode } from 'shared/services/solr';
 import { getTitleFieldForLocale } from 'shared/services/solr';
-import { formatDateRange } from 'shared/utils/date';
+import { formatDateRange, formatNotificationDate, formatGridDateRange, formatGridDate } from 'shared/utils/date';
 import {
   getDocBooleanValue,
   getDocStringValue,
@@ -326,7 +298,6 @@ import {
   notificationDisplayEntries,
   getRelatedActivities as getRelatedActivitiesUtil,
   getRelatedMeetings as getRelatedMeetingsUtil,
-  getRelatedNotificationsForMeeting,
   getRelatedActivitiesForMeeting,
 } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
@@ -683,14 +654,6 @@ const getRelatedMeetings = (doc: CalendarDoc): CalendarDoc[] => {
   return getRelatedMeetingsUtil(notificationKey, docs.value);
 };
 
-const getRelatedNotifications = (doc: CalendarDoc): CalendarDoc[] => {
-  if (!isMeetingDoc(doc)) {
-    return [];
-  }
-
-  return getRelatedNotificationsForMeeting(doc, docs.value);
-};
-
 const handleFiltersUpdate = (filters: FilterState) => {
   setFilters(filters);
 };
@@ -884,5 +847,20 @@ const handleFiltersUpdate = (filters: FilterState) => {
 .nested-table td {
   padding: 0.5rem;
   vertical-align: middle;
+}
+
+/* Prevent wrapping in date columns (always first column in Activities/Meetings tables) */
+.nested-table th:first-child,
+.nested-table td:first-child {
+  white-space: nowrap;
+}
+
+/* Prevent wrapping in Symbol and Date columns for Notifications table */
+/* Symbol is 1st column, Date is 3rd column */
+.nested-table th:nth-child(1),
+.nested-table td:nth-child(1),
+.nested-table th:nth-child(3),
+.nested-table td:nth-child(3) {
+  white-space: nowrap;
 }
 </style>
