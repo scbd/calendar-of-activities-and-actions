@@ -117,7 +117,10 @@
 
       <!-- Subsidiary Body Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="subsidiary-body-filter" class="form-label">{{ t('calendar.filters.labels.subsidiaryBodies') }}</label>
+        <label for="subsidiary-body-filter" class="form-label">
+          <span>Subsidiary</span><br>
+          <span>body(ies) / Protocol(s)</span>
+        </label>
         <Multiselect
           id="subsidiary-body-filter"
           v-model="selectedSubsidiaryBodies"
@@ -153,19 +156,21 @@
       <div class="col-12 col-md-6 col-lg-3">
         <label class="form-label">{{ t('calendar.filters.labels.dateRange') }}</label>
         <div class="row g-2">
-          <div class="col-6">
+          <div class="col-12">
             <input
               v-model="startDate"
               type="date"
               class="form-control form-control-sm"
+              :placeholder="t('calendar.filters.labels.startDate')"
               @input="updateFilters"
             >
           </div>
-          <div class="col-6">
+          <div class="col-12">
             <input
               v-model="endDate"
               type="date"
               class="form-control form-control-sm"
+              :placeholder="t('calendar.filters.labels.endDate')"
               @input="updateFilters"
             >
           </div>
@@ -290,6 +295,12 @@ interface FilterState {
   actionRequired: boolean;
   searchText: string;
   sort: string[];
+}
+
+interface LocalCalendarTerm {
+  identifier: string;
+  name?: string;
+  title?: Record<string, string>;
 }
 
 type FilterSelectionValue = FilterOption | string;

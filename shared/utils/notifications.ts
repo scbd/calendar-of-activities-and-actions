@@ -9,7 +9,7 @@ export const NOTIFICATION_BASE_URL = 'https://www.cbd.int';
 export type NotificationKey = string;
 
 export interface NotificationAttachment {
-  name?: string;
+  name: string;
   url: string;
   type?: string;
   language?: string;
@@ -37,6 +37,7 @@ export interface NotificationArticleRecord {
 
 export interface NotificationDetails {
   key: NotificationKey;
+  symbol?: string;
   title: string;
   excerpt?: string;
   fullText?: string;

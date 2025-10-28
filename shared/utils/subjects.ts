@@ -25,7 +25,10 @@ export function setSubjectLabelMap(map: Record<string, string>): void {
 }
 
 export function mapThesaurusTermToSubjectOption(term: ThesaurusTerm, locale: string = 'en'): SubjectOption {
-  const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title)[0]];
+  const titleObj = term.title || {};
+  const localeKey = locale.toLowerCase();
+  const firstKey = Object.keys(titleObj)[0];
+  const localizedTitle = titleObj[localeKey] || titleObj['en'] || (firstKey ? titleObj[firstKey] : undefined);
 
   return {
     value: term.identifier,

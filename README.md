@@ -115,3 +115,5 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 
  docker build --platform linux/amd64 -t scbd/calendar-of-activities-and-actions:proto-v9.
+
+ docker build --platform linux/amd64 -t scbd/calendar-of-activities-and-actions:stg-proto-14 .

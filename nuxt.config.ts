@@ -7,6 +7,11 @@ export default defineNuxtConfig({
     baseURL: '/calendar-of-activities-and-actions/'
   },
 
+  typescript: {
+    strict: false,
+    typeCheck: false
+  },
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/image',

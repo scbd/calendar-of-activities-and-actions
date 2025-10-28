@@ -161,13 +161,14 @@ const createRegionDisplayNames = (code: string) => {
   }
 };
 
-const defaultStartDateIso = DateTime.now().startOf('day').toISO();
+// Format date for <input type="date"> which requires YYYY-MM-DD format
+const defaultStartDate = DateTime.now().startOf('day').toISODate();
 
 // Check for startDate in query params - use it to override default
 const queryStartDate = route.query.startDate as string;
-const initialStartDate = queryStartDate || defaultStartDateIso;
+const initialStartDate = queryStartDate || defaultStartDate;
 
-console.log('[Filters] Default start date:', defaultStartDateIso);
+console.log('[Filters] Default start date:', defaultStartDate);
 console.log('[Filters] Query start date:', queryStartDate);
 console.log('[Filters] Using initial start date:', initialStartDate);
 

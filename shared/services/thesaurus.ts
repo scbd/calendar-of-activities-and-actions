@@ -51,7 +51,10 @@ export async function loadDomainOptions(
 
     return terms
       .map(term => {
-        const localizedTitle = term.title?.[locale.toLowerCase()] || term.title?.en || term.title?.[Object.keys(term.title || {})[0]];
+        const titleObj = term.title || {};
+        const localeKey = locale.toLowerCase();
+        const firstKey = Object.keys(titleObj)[0];
+        const localizedTitle = titleObj[localeKey] || titleObj['en'] || (firstKey ? titleObj[firstKey] : undefined);
 
         return {
           value: term.identifier,
