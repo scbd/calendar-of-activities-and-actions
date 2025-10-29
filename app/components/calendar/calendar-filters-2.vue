@@ -362,12 +362,12 @@ const filterOptions = computed<FilterGroup[]>(() => {
     });
   }
 
-  if (copDecisionOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.decisions') as string,
-      options: copDecisionOptions.value,
-    });
-  }
+  // if (copDecisionOptions.value.length > 0) {
+  //   groups.push({
+  //     groupLabel: t('calendar.filters.labels.decisions') as string,
+  //     options: copDecisionOptions.value,
+  //   });
+  // }
 
   return groups;
 });

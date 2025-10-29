@@ -136,7 +136,7 @@
       </div>
 
       <!-- COP Decision Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <!-- <div class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
@@ -150,7 +150,7 @@
           label="label"
           track-by="value"
         />
-      </div>
+      </div> -->
       
       <!-- Date Range Filter -->
       <div class="col-12 col-md-6 col-lg-3">
