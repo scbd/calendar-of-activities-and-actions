@@ -3,6 +3,18 @@
     <NuxtRouteAnnouncer />
     <section class="calendar-container">
       <div class="container py-3">
+        <!-- Page Title and Decision Quote -->
+        <h1 class="mb-3">Calendar of Activities and Actions</h1>
+        <blockquote class="border-start border-3 border-primary ps-3 mb-3">
+          <h5 class="mb-2">
+            <DecisionLink href="https://www.cbd.int/decisions/cop/16/25/13.03" label="COP 16/25/13.03" />
+          </h5>
+          <p class="mb-0">
+            To provide national focal points at the end of each year, starting in 2024, with a calendar of activities and actions expected in the course of the following year, so as to rationalize intersessional activities and facilitate workflow management;
+          </p>
+        </blockquote>
+        <hr class="mb-4">
+
         <!-- View Switcher and Tab View Toggle -->
         <div class="d-flex justify-content-between align-items-center mb-3">
           <!-- Tab View Toggle -->

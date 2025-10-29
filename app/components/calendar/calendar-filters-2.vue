@@ -20,6 +20,11 @@
           :placeholder="t('calendar.filters.placeholders.search')"
           @tag="addTag"
         >
+          <template #option="slotProps">
+            <span :style="{ paddingLeft: getOptionIndent(slotProps.option) + 'px' }">
+              {{ slotProps.option.label }}
+            </span>
+          </template>
           <template #noResult>
             {{ t('calendar.messages.noResults') }}
           </template>
@@ -111,7 +116,7 @@ import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-import { loadSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
+import { loadGroupedSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
 import type { ThesaurusTerm } from 'shared/types/thesaurus';
 
 // Nuxt router for URL query string management
@@ -123,6 +128,8 @@ interface FilterOption {
   value: string;
   label: string;
   group?: string;
+  children?: FilterOption[];
+  depth?: number;
 }
 
 interface FilterGroup {
@@ -302,9 +309,34 @@ const activityTypeOptions = computed<FilterOption[]>(() =>
     .map(opt => ({ ...opt, group: 'activityTypes' }))
 );
 
-const subjectOptionsWithGroup = computed<FilterOption[]>(() =>
-  subjectOptions.value.map(opt => ({ ...opt, group: 'subjects' }))
-);
+const subjectOptionsWithGroup = computed<FilterOption[]>(() => {
+  console.log('[Filters-2] Computing subjectOptionsWithGroup, subjectOptions.value length:', subjectOptions.value.length);
+  
+  // Flatten the hierarchical structure while preserving depth for visual indentation
+  const flattenWithDepth = (opts: FilterOption[], depth: number = 0): FilterOption[] => {
+    const result: FilterOption[] = [];
+
+    for (const opt of opts) {
+      result.push({
+        value: opt.value,
+        label: opt.label,
+        group: 'subjects',
+        depth,
+      });
+
+      if (opt.children && opt.children.length > 0) {
+        result.push(...flattenWithDepth(opt.children, depth + 1));
+      }
+    }
+
+    return result;
+  };
+
+  const result = flattenWithDepth(subjectOptions.value);
+
+  console.log('[Filters-2] Flattened subject options:', result.length);
+  return result;
+});
 
 // Consolidated filter options with groups
 const filterOptions = computed<FilterGroup[]>(() => {
@@ -659,10 +691,28 @@ function loadFiltersFromUrl(): void {
 }
 
 onMounted(async () => {
+  console.log('[Filters-2] onMounted - Loading subject options...');
   await Promise.all([
-    loadSubjectOptions(locale.value).then(options => {
+    loadGroupedSubjectOptions(locale.value).then(options => {
+      console.log('[Filters-2] Grouped subject options loaded:', options.length);
       subjectOptions.value = options;
-      const labelMap = buildSubjectLabelMap(options);
+      // Build a flat label map for all subjects (including nested ones)
+      const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
+        const result: FilterOption[] = [];
+
+        for (const opt of opts) {
+          result.push({ value: opt.value, label: opt.label });
+          if (opt.children) {
+            result.push(...flattenOptions(opt.children));
+          }
+        }
+
+        return result;
+      };
+      const flatOptions = flattenOptions(options);
+
+      console.log('[Filters-2] Flattened options:', flatOptions.length);
+      const labelMap = buildSubjectLabelMap(flatOptions);
 
       setSubjectLabelMap(labelMap);
     }),
@@ -681,10 +731,24 @@ onMounted(async () => {
 // Watch for locale changes and reload options
 watch(() => locale.value, async (newLocale) => {
   try {
-    const options = await loadSubjectOptions(newLocale);
+    const options = await loadGroupedSubjectOptions(newLocale);
 
     subjectOptions.value = options;
-    const labelMap = buildSubjectLabelMap(options);
+    // Build a flat label map for all subjects (including nested ones)
+    const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
+      const result: FilterOption[] = [];
+
+      for (const opt of opts) {
+        result.push({ value: opt.value, label: opt.label });
+        if (opt.children) {
+          result.push(...flattenOptions(opt.children));
+        }
+      }
+
+      return result;
+    };
+    const flatOptions = flattenOptions(options);
+    const labelMap = buildSubjectLabelMap(flatOptions);
 
     setSubjectLabelMap(labelMap);
     
@@ -804,6 +868,13 @@ function formatSchemaLabel(key: string): string {
     .filter(Boolean)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function getOptionIndent(option: FilterOption): number {
+  // Calculate indent based on depth (stored in a custom property if available)
+  const depth = (option as FilterOption & { depth?: number }).depth || 0;
+
+  return depth * 20; // 20px per level
 }
 
 // Watch for first user interaction with any filter

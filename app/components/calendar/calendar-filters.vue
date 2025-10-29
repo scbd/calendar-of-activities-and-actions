@@ -92,6 +92,9 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :group-select="true"
+          group-values="children"
+          group-label="label"
           :placeholder="t('calendar.filters.placeholders.subjects')"
           label="label"
           track-by="value"
@@ -234,7 +237,7 @@ import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
 import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-import { loadSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
+import { loadGroupedSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
 
 // Nuxt router for URL query string management
 const route = useRoute();
@@ -244,6 +247,8 @@ const router = useRouter();
 interface FilterOption {
   value: string;
   label: string;
+  children?: FilterOption[];
+  depth?: number;
 }
 
 // Define props
@@ -668,10 +673,23 @@ function _loadFiltersFromUrl(): void {
 
 onMounted(async () => {
   await Promise.all([
-    loadSubjectOptions(locale.value).then(options => {
+    loadGroupedSubjectOptions(locale.value).then(options => {
       subjectOptions.value = options;
-      // Update the shared label map used by accordion rows
-      const labelMap = buildSubjectLabelMap(options);
+      // Build a flat label map for all subjects (including nested ones)
+      const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
+        const result: FilterOption[] = [];
+
+        for (const opt of opts) {
+          result.push({ value: opt.value, label: opt.label });
+          if (opt.children) {
+            result.push(...flattenOptions(opt.children));
+          }
+        }
+
+        return result;
+      };
+      const flatOptions = flattenOptions(options);
+      const labelMap = buildSubjectLabelMap(flatOptions);
 
       setSubjectLabelMap(labelMap);
     }),
@@ -690,11 +708,24 @@ onMounted(async () => {
 // Watch for locale changes and reload subject options
 watch(() => locale.value, async (newLocale) => {
   try {
-    const options = await loadSubjectOptions(newLocale);
+    const options = await loadGroupedSubjectOptions(newLocale);
 
     subjectOptions.value = options;
-    // Update the shared label map for the new locale
-    const labelMap = buildSubjectLabelMap(options);
+    // Build a flat label map for all subjects (including nested ones)
+    const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
+      const result: FilterOption[] = [];
+
+      for (const opt of opts) {
+        result.push({ value: opt.value, label: opt.label });
+        if (opt.children) {
+          result.push(...flattenOptions(opt.children));
+        }
+      }
+
+      return result;
+    };
+    const flatOptions = flattenOptions(options);
+    const labelMap = buildSubjectLabelMap(flatOptions);
 
     setSubjectLabelMap(labelMap);
     
@@ -817,7 +848,18 @@ function formatSchemaLabel(key: string): string {
 function findOptionsFromValues(values: string[], availableOptions: FilterOption[]): FilterOption[] {
   if (!values.length || !availableOptions.length) return [];
   
-  const optionMap = new Map(availableOptions.map(opt => [opt.value, opt]));
+  // Build a flat map that includes options from nested children
+  const buildOptionMap = (opts: FilterOption[], map: Map<string, FilterOption> = new Map()): Map<string, FilterOption> => {
+    for (const opt of opts) {
+      map.set(opt.value, opt);
+      if (opt.children && opt.children.length > 0) {
+        buildOptionMap(opt.children, map);
+      }
+    }
+    return map;
+  };
+  
+  const optionMap = buildOptionMap(availableOptions);
   
   return values
     .map(value => optionMap.get(value))
@@ -831,7 +873,18 @@ function syncSelectionWithOptions(
   watch(
     options,
     (newOptions) => {
-      const optionMap = new Map(newOptions.map(option => [option.value, option]));
+      // Build a flat map that includes options from nested children
+      const buildOptionMap = (opts: FilterOption[], map: Map<string, FilterOption> = new Map()): Map<string, FilterOption> => {
+        for (const opt of opts) {
+          map.set(opt.value, opt);
+          if (opt.children && opt.children.length > 0) {
+            buildOptionMap(opt.children, map);
+          }
+        }
+        return map;
+      };
+      
+      const optionMap = buildOptionMap(newOptions);
       const filtered = selection.value
         .map(item => optionMap.get(typeof item === 'string' ? item : item.value))
         .filter((option): option is FilterOption => Boolean(option));
