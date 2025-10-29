@@ -1,6 +1,6 @@
 <template>
   <section class="activities-explorer">
-    <div class="container py-3">
+    <div class="container-fluid py-3">
       <div class="card mb-3">
         <div class="card-body">
           <CalendarFilters2

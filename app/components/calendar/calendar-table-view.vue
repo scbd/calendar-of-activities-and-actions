@@ -1,6 +1,6 @@
 <template>
   <section class="activities-table">
-    <div class="container py-3">
+    <div class="container-fluid py-3">
       <div v-if="!hideFilterCard" class="card mb-3">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">

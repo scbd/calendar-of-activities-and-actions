@@ -38,7 +38,8 @@ export default defineNuxtConfig({
     }
   },
   css: [
-    'vue-multiselect/dist/vue-multiselect.css'
+    'vue-multiselect/dist/vue-multiselect.css',
+    '@/assets/styles/main.scss'
   ],
 
   runtimeConfig: {
