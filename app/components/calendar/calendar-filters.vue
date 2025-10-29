@@ -121,8 +121,8 @@
       <!-- Subsidiary Body Filter -->
       <div class="col-12 col-md-6 col-lg-3">
         <label for="subsidiary-body-filter" class="form-label">
-          <span>Subsidiary</span><br>
-          <span>body(ies) / Protocol(s)</span>
+          <span>{{ t('calendar.filters.labels.subsidiaryBodies') }}</span><br>
+
         </label>
         <Multiselect
           id="subsidiary-body-filter"
@@ -458,7 +458,9 @@ const statusOptions = computed<FilterOption[]>(() =>
     .filter(statusKey => {
       const normalized = statusKey.toLowerCase().trim();
 
-      return normalized !== 'not set' && normalized !== 'published';
+      return normalized !== 'not set' && 
+             normalized !== 'not_set' && 
+             normalized !== 'published';
     })
     .map(statusKey => ({ value: statusKey, label: statusKeyToLabel(statusKey) }))
 );

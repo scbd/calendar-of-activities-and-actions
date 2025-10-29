@@ -238,8 +238,10 @@ export async function loadSubsidiaryBodyOptions(locale: string = 'en'): Promise<
       }
 
       // Get the child terms (subsidiary bodies)
+      // Filter out CBD-SUBJECT-CBD as it represents the CBD itself, not a subsidiary body
       const subsidiaryBodyTerms = terms.filter(term => 
-        legalStructTerm.narrowerTerms?.includes(term.identifier)
+        legalStructTerm.narrowerTerms?.includes(term.identifier) &&
+        term.identifier !== 'CBD-SUBJECT-CBD'
       );
 
       // Map to options with localized labels

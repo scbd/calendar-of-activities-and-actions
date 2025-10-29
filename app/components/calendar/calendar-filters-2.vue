@@ -280,7 +280,9 @@ const statusOptions = computed<FilterOption[]>(() =>
     .filter(statusKey => {
       const normalized = statusKey.toLowerCase().trim();
 
-      return normalized !== 'not set' && normalized !== 'published';
+      return normalized !== 'not set' && 
+             normalized !== 'not_set' && 
+             normalized !== 'published';
     })
     .map(statusKey => ({ 
       value: statusKey, 
