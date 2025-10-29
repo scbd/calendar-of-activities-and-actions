@@ -114,9 +114,8 @@ import Multiselect from 'vue-multiselect';
 import { loadDomainOptions } from 'shared/services/thesaurus';
 import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
-import { subsidiaryBodyTerms } from 'shared/data/subsidiary-body-terms.js';
 import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-import { loadGroupedSubjectOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
+import { loadGroupedSubjectOptions, loadSubsidiaryBodyOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
 import type { ThesaurusTerm } from 'shared/types/thesaurus';
 
 // Nuxt router for URL query string management
@@ -209,6 +208,7 @@ const isLoadingFromUrl = ref<boolean>(false);
 const subjectOptions = ref<FilterOption[]>([]);
 const remoteCountryOptions = ref<FilterOption[]>([]);
 const remoteGlobalTargetOptions = ref<FilterOption[]>([]);
+const remoteSubsidiaryBodyOptions = ref<FilterOption[]>([]);
 
 const providedCountryOptions = computed(() => props.preloadedCountryOptions);
 const providedGlobalTargetOptions = computed(() => props.preloadedGlobalTargetOptions);
@@ -284,11 +284,10 @@ const statusOptions = computed<FilterOption[]>(() =>
 );
 
 const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
-  const options = props.availableSubsidiaryBodies.length > 0
-    ? props.availableSubsidiaryBodies.map(body => ({ value: body, label: body }))
-    : subsidiaryBodyTerms
-      .map(term => mapSubsidiaryBodyTermToOption(term))
-      .sort((a, b) => a.label.localeCompare(b.label));
+  // Always use the remote options loaded from CBD-SUBJECT-LEGAL-STRUCT children
+  // Ignore props.availableSubsidiaryBodies as we want to show all available options
+  // from the thesaurus, not just those in the current filtered data
+  const options = remoteSubsidiaryBodyOptions.value;
 
   return options.map(opt => ({ ...opt, group: 'subsidiaryBodies' }));
 });
@@ -722,6 +721,9 @@ onMounted(async () => {
     loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
       remoteGlobalTargetOptions.value = options;
     }),
+    loadSubsidiaryBodyOptions(locale.value).then(options => {
+      remoteSubsidiaryBodyOptions.value = options;
+    }),
   ]);
 
   // Load filters from URL after options are loaded
@@ -754,11 +756,13 @@ watch(() => locale.value, async (newLocale) => {
     
     remoteCountryOptions.value = await loadDomainOptions(thesaurusDomains.COUNTRIES, newLocale);
     remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, newLocale);
+    remoteSubsidiaryBodyOptions.value = await loadSubsidiaryBodyOptions(newLocale);
   } catch (error) {
     console.error('Failed to reload options for locale', newLocale, error);
     subjectOptions.value = [];
     remoteCountryOptions.value = [];
     remoteGlobalTargetOptions.value = [];
+    remoteSubsidiaryBodyOptions.value = [];
   }
 });
 
@@ -827,13 +831,6 @@ function clearFilters(): void {
 function mapActivityTypeTermToOption(term: ThesaurusTerm): FilterOption {
   const label = (term.title && term.title['en']) || term.name || term.identifier;
   const value = term.identifier;
-
-  return { value, label };
-}
-
-function mapSubsidiaryBodyTermToOption(term: ThesaurusTerm): FilterOption {
-  const label = (term.title && term.title['en']) || term.name || term.identifier;
-  const value = term.name || term.identifier;
 
   return { value, label };
 }

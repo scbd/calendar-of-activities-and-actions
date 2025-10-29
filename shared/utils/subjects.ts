@@ -14,8 +14,10 @@ export interface SubjectOption {
 
 const cachedSubjectOptions: Map<string, SubjectOption[]> = new Map();
 const cachedGroupedSubjectOptions: Map<string, SubjectOption[]> = new Map();
+const cachedSubsidiaryBodyOptions: Map<string, SubjectOption[]> = new Map();
 const inflightPromises: Map<string, Promise<SubjectOption[]>> = new Map();
 const inflightGroupedPromises: Map<string, Promise<SubjectOption[]>> = new Map();
+const inflightSubsidiaryBodyPromises: Map<string, Promise<SubjectOption[]>> = new Map();
 
 export const subjectLabelMap = ref<Record<string, string>>({});
 
@@ -91,6 +93,10 @@ export async function loadSubjectOptions(locale: string = 'en'): Promise<Subject
  * Load subject options organized into hierarchical groups.
  * Top-level subjects (without narrower terms) become group headers,
  * and their narrower terms become children.
+ * 
+ * Special handling: CBD-SUBJECT-LEGAL-STRUCT is excluded from the hierarchy,
+ * and its children are promoted to top-level to avoid nested grouping for
+ * subsidiary bodies/protocols (they have their own dedicated filter).
  */
 export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<SubjectOption[]> {
   const cached = cachedGroupedSubjectOptions.get(locale);
@@ -120,13 +126,30 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
       // Create a map of all terms for easy lookup
       const termMap = new Map(usedTerms.map(term => [term.identifier, term]));
       
+      // Find CBD-SUBJECT-LEGAL-STRUCT to handle its children specially
+      const legalStructTerm = usedTerms.find(term => term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT');
+      const legalStructChildren = new Set(legalStructTerm?.narrowerTerms || []);
+      
       // Find top-level subjects (those without broader terms or whose broader terms are not in the used set)
+      // Exclude CBD-SUBJECT-LEGAL-STRUCT itself, but include its children as top-level
       const topLevelTerms = usedTerms.filter(term => {
+        // Exclude CBD-SUBJECT-LEGAL-STRUCT itself
+        if (term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT') {
+          return false;
+        }
+        
+        // Include children of CBD-SUBJECT-LEGAL-STRUCT as top-level
+        if (legalStructChildren.has(term.identifier)) {
+          return true;
+        }
+        
         if (!term.broaderTerms || term.broaderTerms.length === 0) {
           return true;
         }
-        // Check if any broader term exists in our used set
-        return !term.broaderTerms.some(broaderId => termMap.has(broaderId));
+        // Check if any broader term exists in our used set (excluding CBD-SUBJECT-LEGAL-STRUCT)
+        return !term.broaderTerms.some(broaderId => 
+          broaderId !== 'CBD-SUBJECT-LEGAL-STRUCT' && termMap.has(broaderId)
+        );
       });
       
       console.log('[loadGroupedSubjectOptions] Top-level terms:', topLevelTerms.length);
@@ -143,8 +166,9 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
           label: localizedTitle || fallbackSubjectLabel(term.identifier),
         };
         
-        // Add children if this term has narrower terms
-        if (term.narrowerTerms && term.narrowerTerms.length > 0) {
+        // Add children if this term has narrower terms (but skip if this is a child of CBD-SUBJECT-LEGAL-STRUCT)
+        // Children of CBD-SUBJECT-LEGAL-STRUCT should not have nested children in the subject filter
+        if (term.narrowerTerms && term.narrowerTerms.length > 0 && !legalStructChildren.has(term.identifier)) {
           const children = term.narrowerTerms
             .map(narrowerId => termMap.get(narrowerId))
             .filter((childTerm): childTerm is ThesaurusTerm => Boolean(childTerm))
@@ -180,6 +204,73 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
     return await promise;
   } finally {
     inflightGroupedPromises.delete(locale);
+  }
+}
+
+/**
+ * Load subsidiary body options from the children of CBD-SUBJECT-LEGAL-STRUCT.
+ * These represent the various subsidiary bodies and protocols (SBI, SBSTTA, CPB, NPABS, etc.)
+ * without the hierarchical grouping structure.
+ */
+export async function loadSubsidiaryBodyOptions(locale: string = 'en'): Promise<SubjectOption[]> {
+  const cached = cachedSubsidiaryBodyOptions.get(locale);
+
+  if (cached) {
+    return cached;
+  }
+
+  const inflight = inflightSubsidiaryBodyPromises.get(locale);
+
+  if (inflight) {
+    return inflight;
+  }
+
+  const promise = (async () => {
+    try {
+      const terms = await getDomainTerms(thesaurusDomains.CBD_SUBJECTS);
+      
+      // Find the CBD-SUBJECT-LEGAL-STRUCT term
+      const legalStructTerm = terms.find(term => term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT');
+      
+      if (!legalStructTerm || !legalStructTerm.narrowerTerms || legalStructTerm.narrowerTerms.length === 0) {
+        console.warn('[loadSubsidiaryBodyOptions] CBD-SUBJECT-LEGAL-STRUCT not found or has no children');
+        return [];
+      }
+
+      // Get the child terms (subsidiary bodies)
+      const subsidiaryBodyTerms = terms.filter(term => 
+        legalStructTerm.narrowerTerms?.includes(term.identifier)
+      );
+
+      // Map to options with localized labels
+      const options = subsidiaryBodyTerms
+        .map(term => {
+          const titleObj = term.title || {};
+          const localeKey = locale.toLowerCase();
+          const firstKey = Object.keys(titleObj)[0];
+          const localizedTitle = titleObj[localeKey] || titleObj['en'] || (firstKey ? titleObj[firstKey] : undefined);
+
+          return {
+            value: term.identifier,
+            label: localizedTitle || fallbackSubjectLabel(term.identifier),
+          };
+        })
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+      cachedSubsidiaryBodyOptions.set(locale, options);
+      return options;
+    } catch (error) {
+      console.error('[loadSubsidiaryBodyOptions] Error loading subsidiary body options:', error);
+      return [];
+    }
+  })();
+
+  inflightSubsidiaryBodyPromises.set(locale, promise);
+
+  try {
+    return await promise;
+  } finally {
+    inflightSubsidiaryBodyPromises.delete(locale);
   }
 }
 
