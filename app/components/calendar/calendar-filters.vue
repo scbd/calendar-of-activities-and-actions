@@ -332,6 +332,9 @@ const hasUserInteracted = ref<boolean>(false);
 // Track if we're loading from URL to prevent circular updates
 const isLoadingFromUrl = ref<boolean>(false);
 
+// Track if we've completed the initial mount (to only apply initialStartDate once)
+const hasCompletedInitialMount = ref<boolean>(false);
+
 // Computed property to check if any filters are active
 const hasActiveFilters = computed<boolean>(() => {
   const activeSorts = extractSelectedValues(selectedSorts.value);
@@ -654,7 +657,8 @@ function _loadFiltersFromUrl(): void {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
   } else {
-    startDate.value = props.initialStartDate ?? '';
+    // Only use initialStartDate on the very first load, not after clearing filters
+    startDate.value = (!hasCompletedInitialMount.value && props.initialStartDate) ? props.initialStartDate : '';
   }
   if (query.endDate && typeof query.endDate === 'string') {
     endDate.value = query.endDate;
@@ -712,6 +716,9 @@ onMounted(async () => {
 
   // Load filters from URL after options are loaded
   _loadFiltersFromUrl();
+  
+  // Mark that initial mount is complete
+  hasCompletedInitialMount.value = true;
 });
 
 // Watch for locale changes and reload subject options

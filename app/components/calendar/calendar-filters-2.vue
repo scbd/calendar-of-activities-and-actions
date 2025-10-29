@@ -204,6 +204,9 @@ const hasUserInteracted = ref<boolean>(false);
 // Track if we're loading from URL to prevent circular updates
 const isLoadingFromUrl = ref<boolean>(false);
 
+// Track if we've completed the initial mount (to only apply initialStartDate once)
+const hasCompletedInitialMount = ref<boolean>(false);
+
 // Options storage
 const subjectOptions = ref<FilterOption[]>([]);
 const remoteCountryOptions = ref<FilterOption[]>([]);
@@ -673,7 +676,8 @@ function loadFiltersFromUrl(): void {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
   } else {
-    startDate.value = props.initialStartDate ?? '';
+    // Only use initialStartDate on the very first load, not after clearing filters
+    startDate.value = (!hasCompletedInitialMount.value && props.initialStartDate) ? props.initialStartDate : '';
   }
   
   if (query.endDate && typeof query.endDate === 'string') {
@@ -736,6 +740,9 @@ onMounted(async () => {
 
   // Load filters from URL after options are loaded
   loadFiltersFromUrl();
+  
+  // Mark that initial mount is complete
+  hasCompletedInitialMount.value = true;
 });
 
 // Watch for locale changes and reload options
