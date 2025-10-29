@@ -166,7 +166,7 @@ const statusLabel = computed(() => {
   // Always normalize the status key to ensure consistent format
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  if (normalizedStatusKey === 'NOT_SET') {
+  if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED') {
     return '';
   }
 

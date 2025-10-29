@@ -276,11 +276,17 @@ function statusKeyToLabel(status: string): string {
 }
 
 const statusOptions = computed<FilterOption[]>(() =>
-  props.availableStatuses.map(statusKey => ({ 
-    value: statusKey, 
-    label: statusKeyToLabel(statusKey),
-    group: 'statuses',
-  }))
+  props.availableStatuses
+    .filter(statusKey => {
+      const normalized = statusKey.toLowerCase().trim();
+
+      return normalized !== 'not set' && normalized !== 'published';
+    })
+    .map(statusKey => ({ 
+      value: statusKey, 
+      label: statusKeyToLabel(statusKey),
+      group: 'statuses',
+    }))
 );
 
 const subsidiaryBodyOptions = computed<FilterOption[]>(() => {

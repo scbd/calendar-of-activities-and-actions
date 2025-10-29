@@ -454,7 +454,13 @@ function statusKeyToLabel(status: string): string {
 }
 
 const statusOptions = computed<FilterOption[]>(() =>
-  props.availableStatuses.map(statusKey => ({ value: statusKey, label: statusKeyToLabel(statusKey) }))
+  props.availableStatuses
+    .filter(statusKey => {
+      const normalized = statusKey.toLowerCase().trim();
+
+      return normalized !== 'not set' && normalized !== 'published';
+    })
+    .map(statusKey => ({ value: statusKey, label: statusKeyToLabel(statusKey) }))
 );
 
 const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
