@@ -1,5 +1,5 @@
 <template>
-
+<div>
 <h1>CBD Calendar Search Component Documentation</h1>
 
 <p>
@@ -164,7 +164,7 @@
   easily find the events that matter to you.
 </p>
 
-
+</div>
 </template>
 
 <style>
