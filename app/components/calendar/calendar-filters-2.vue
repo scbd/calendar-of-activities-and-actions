@@ -22,7 +22,7 @@
         >
           <template #option="slotProps">
             <span :style="{ paddingLeft: getOptionIndent(slotProps.option) + 'px' }">
-              {{ slotProps.option.label }}
+              {{ slotProps?.option?.$groupLabel || slotProps?.option?.label }}
             </span>
           </template>
           <template #noResult>
@@ -109,6 +109,7 @@
 </template>
 
 <script setup lang="ts">
+import consola from 'consola';
 import { ref, computed, watch, onMounted, watchEffect, nextTick } from 'vue';
 import Multiselect from 'vue-multiselect';
 import { loadDomainOptions } from 'shared/services/thesaurus';
@@ -352,6 +353,7 @@ const subjectOptionsWithGroup = computed<FilterOption[]>(() => {
 const filterOptions = computed<FilterGroup[]>(() => {
   const groups: FilterGroup[] = [];
 
+  consola.error('----------------------', schemaOptions.value);
   if (!props.hideTypeFilter && schemaOptions.value.length > 0) {
     groups.push({
       groupLabel: t('calendar.filters.labels.schemas') as string,
