@@ -46,7 +46,7 @@ async function fetchNotificationsWithFulltext() {
     fq: [
       'schema_s:notification',
       '_state_s:public',
-      'date_dt:[2024-01-01T00:00:00Z TO *]'
+      'date_dt:[2026-01-01T00:00:00Z TO *]'
     ],
     fl: 'identifier_s,symbol_s,fulltext_s,fulltext_EN_s,fulltext_ES_s,fulltext_FR_s,fulltext_AR_s,fulltext_RU_s,fulltext_ZH_s',
     rows: 1000,
@@ -109,7 +109,7 @@ function createFulltextMap(docs) {
 /**
  * Update notifications.js file
  */
-async function updateNotificationsFile(fulltextMap) {
+async function updateNotificationsFile(fulltextMap, allDocs) {
   console.log('Reading current notifications.js file...');
   
   // Read current file
@@ -126,18 +126,48 @@ async function updateNotificationsFile(fulltextMap) {
 
   console.log(`Found ${notifications.length} notifications in file`);
   
-  // Update notifications with fulltext data
+  // Create a map of existing notifications by identifier
+  const existingNotificationsMap = new Map(
+    notifications.map(n => [n.identifier, n])
+  );
+  
+  // Update existing notifications with fulltext data and add new ones
   let updatedCount = 0;
-  notifications.forEach(notification => {
-    const fulltextData = fulltextMap.get(notification.identifier);
+  let addedCount = 0;
+  
+  allDocs.forEach(doc => {
+    const identifier = doc.identifier_s;
 
-    if (fulltextData) {
-      Object.assign(notification, fulltextData);
+    if (!identifier) return;
+    
+    const fulltextData = fulltextMap.get(identifier);
+    const existingNotification = existingNotificationsMap.get(identifier);
+    
+    if (existingNotification && fulltextData) {
+      // Update existing notification with fulltext data
+      Object.assign(existingNotification, fulltextData);
       updatedCount++;
+    } else if (!existingNotification) {
+      // Add new notification
+      const newNotification = {
+        identifier: doc.identifier_s,
+        symbol: doc.symbol_s || ''
+      };
+      
+      if (fulltextData) {
+        Object.assign(newNotification, fulltextData);
+      }
+      
+      notifications.push(newNotification);
+      addedCount++;
     }
   });
   
   console.log(`Updated ${updatedCount} notifications with fulltext data`);
+  console.log(`Added ${addedCount} new notifications`);
+  
+  // Sort notifications by identifier (newest first)
+  notifications.sort((a, b) => b.identifier.localeCompare(a.identifier));
   
   // Generate new file content
   const header = `// Auto-generated snapshot of notification index results for issue dates from 2024 onwards
@@ -155,7 +185,7 @@ export default notifications;
   await fs.writeFile(NOTIFICATIONS_FILE, newContent, 'utf-8');
   console.log('✅ Successfully updated notifications.js');
   
-  return { total: notifications.length, updated: updatedCount };
+  return { total: notifications.length, updated: updatedCount, added: addedCount };
 }
 
 /**
@@ -172,12 +202,13 @@ async function main() {
     const fulltextMap = createFulltextMap(docs);
     
     // Update notifications file
-    const stats = await updateNotificationsFile(fulltextMap);
+    const stats = await updateNotificationsFile(fulltextMap, docs);
     
     console.log('\n📊 Summary:');
     console.log(`   Total notifications: ${stats.total}`);
     console.log(`   Updated with fulltext: ${stats.updated}`);
-    console.log(`   Missing fulltext: ${stats.total - stats.updated}`);
+    console.log(`   Added new: ${stats.added}`);
+    console.log(`   Missing fulltext: ${stats.total - stats.updated - stats.added}`);
     
   } catch (error) {
     console.error('\n❌ Error:', error.message);
