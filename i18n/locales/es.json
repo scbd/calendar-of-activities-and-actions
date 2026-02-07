@@ -3,29 +3,29 @@
     "headings": {
       "activitiesExplorer": "Explorador de actividades y acciones",
       "activitiesExplorerAccordion": "Explorador de actividades y acciones - Vista en acordeón",
-      "activitiesExplorerDetailed": "Explorador de actividades y acciones - Vista detallada",
-      "activitiesExplorerGrouped": "Explorador de actividades y acciones - Actividades agrupadas en reuniones"
+      "activitiesExplorerDetailed": "Explorador de actividades y acciones: vista detallada de filas",
+      "activitiesExplorerGrouped": "Explorador de actividades y acciones: actividades agrupadas en reuniones"
     },
     "messages": {
-      "loadingMeetings": "Cargando reuniones…",
-      "noResults": "Sin resultados"
+      "loadingMeetings": "Cargando reuniones...",
+      "noResults": "No hay resultados"
     },
     "labels": {
       "decision": "Decisión",
-      "paragraph": "Párrafo",
-      "subjects": "Temas",
-      "associatedBody": "Órgano asociado",
+      "paragraph": "Para",
+      "subjects": "Asignaturas",
+      "associatedBody": "Organismo asociado",
       "responsibleUnit": "Unidad responsable",
-      "responsibleOfficer": "Responsable",
+      "responsibleOfficer": "Funcionario responsable",
       "relatedDocuments": "Documentos relacionados",
       "actionRequired": "Acción requerida",
-      "actionRequiredByParties": "Acción requerida por las Partes",
+      "actionRequiredByParties": "Acción requerida",
       "status": "Estado",
       "type": "Tipo",
-      "typeStripAria": "Elemento {type}",
-      "cop": "CdP",
+      "typeStripAria": "artículo {type}",
+      "cop": "COP",
       "description": "Descripción",
-      "statusNarrative": "Narrativa del estado",
+      "statusNarrative": "Descripción del estado",
       "symbol": "Símbolo",
       "date": "Fecha",
       "location": "Ubicación",
@@ -40,103 +40,103 @@
       "unknownDate": "Fecha desconocida"
     },
     "links": {
-      "documents": "Documentos »"
+      "documents": "Documentos»"
     },
     "actions": {
       "viewDocuments": "Ver documentos",
-      "viewDocumentsAria": "Ver documentos para {title}"
+      "viewDocumentsAria": "Ver los documentos de {title}"
     },
     "debug": {
-      "collectedFieldNames": "Depuración: Nombres de campos recopilados ({count})",
-      "locale": "Idioma: {locale}"
+      "collectedFieldNames": "Depuración: nombres de campo recopilados ({count})",
+      "locale": "Ubicación: {locale}"
     },
     "filters": {
       "title": "Filtros",
       "showBasic": "Mostrar búsqueda avanzada",
       "showAdvanced": "Mostrar búsqueda básica",
       "labels": {
-        "typeActivity": "Tipo",
-        "activityTypes": "Tipos de actividad",
-        "globalTargets": "Objetivo(s) mundial(es)",
-        "countries": "Parte(s)",
-        "subjects": "Temas",
-        "statuses": "Estado(s)",
-        "subsidiaryBodies": "Órgano(s) subsidiario(s)",
-        "decisions": "Decisión(es)",
-        "dateRange": "Rango de fechas",
+        "typeActivity": "Tipo (s) de registro",
+        "activityTypes": "Tipo (s) de actividad",
+        "globalTargets": "Objetivo (s) de GBF",
+        "countries": "Partido (s)",
+        "subjects": "Asunto (s)",
+        "statuses": "Estado (es)",
+        "subsidiaryBodies": "Órganos subsidiarios y rectores",
+        "decisions": "Decisión (s)",
+        "dateRange": "Intervalo de fechas",
         "startDate": "Fecha de inicio",
         "endDate": "Fecha de finalización",
         "actionRequired": "Acción requerida",
-        "schemas": "Esquema(s)",
-    "sort": "Ordenar resultados",
-    "search": "Búsqueda"
-  },
+        "schemas": "Tipo (s) de registro",
+        "sort": "Ordenar los resultados",
+        "search": "Buscar"
+      },
       "placeholders": {
-        "typeActivity": "Seleccionar tipos",
-        "activityTypes": "Seleccionar tipos de actividad",
-        "globalTargets": "Seleccionar objetivos mundiales",
-        "countries": "Seleccionar partes",
-        "subjects": "Seleccionar temas",
-        "statuses": "Seleccionar estados",
-        "subsidiaryBodies": "Seleccionar órganos subsidiarios",
-        "decisions": "Seleccionar decisiones",
-        "schemas": "Seleccionar esquemas",
-    "sort": "Selecciona el orden de clasificación",
-    "search": "Introduce palabras clave"
-  },
+        "typeActivity": "Seleccione los tipos",
+        "activityTypes": "Seleccione los tipos de actividad",
+        "globalTargets": "Seleccione los objetivos de GBF",
+        "countries": "Selecciona partidos",
+        "subjects": "Selecciona asignaturas",
+        "statuses": "Seleccione los estados",
+        "subsidiaryBodies": "Selección de órganos subsidiarios",
+        "decisions": "Decisiones selectas",
+        "schemas": "Seleccione los tipos de registro",
+        "sort": "Seleccione el orden de clasificación",
+        "search": "Introducir palabras clave"
+      },
       "toggles": {
         "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
       },
       "actions": {
-        "clearAll": "Limpiar todos los filtros"
+        "clearAll": "Borrar todos los filtros"
       },
       "sortOptions": {
-        "startDateAsc": "Fecha de inicio (más antiguas primero)",
-        "startDateDesc": "Fecha de inicio (más recientes primero)",
-        "endDateAsc": "Fecha de finalización (más antiguas primero)",
-        "endDateDesc": "Fecha de finalización (más recientes primero)",
-        "statusAsc": "Estado (A a Z)",
-        "schemaAsc": "Esquema (A a Z)",
-        "actionRequired": "Elementos con acción requerida primero"
+        "startDateAsc": "Fecha de inicio (la más antigua primero)",
+        "startDateDesc": "Fecha de inicio (la más reciente primero)",
+        "endDateAsc": "Fecha de finalización (la más antigua primero)",
+        "endDateDesc": "Fecha de finalización (la más reciente primero)",
+        "titleAsc": "Título (de la A a la Z)",
+        "schemaAsc": "Tipo de registro (de la A a la Z)",
+        "actionRequired": "La acción requiere primero los elementos"
       },
       "typeLabel": "Tipo",
-      "typePlaceholder": "Seleccionar tipos",
+      "typePlaceholder": "Seleccione los tipos",
       "activityLabel": "Tipos de actividad",
-      "activityPlaceholder": "Seleccionar tipos de actividad",
-      "globalTargetLabel": "Objetivos mundiales",
-      "globalTargetPlaceholder": "Seleccionar objetivos mundiales",
-      "countryLabel": "Partes",
-      "countryPlaceholder": "Seleccionar partes",
-      "subjectLabel": "Tema",
-      "subjectPlaceholder": "Seleccionar temas",
+      "activityPlaceholder": "Seleccione los tipos de actividad",
+      "globalTargetLabel": "Objetivos del GBF",
+      "globalTargetPlaceholder": "Seleccione objetivos de GBF",
+      "countryLabel": "Fiestas",
+      "countryPlaceholder": "Selecciona partidos",
+      "subjectLabel": "Sujeto",
+      "subjectPlaceholder": "Selecciona asignaturas",
       "statusLabel": "Estado",
-      "statusPlaceholder": "Seleccionar estados",
+      "statusPlaceholder": "Seleccione los estados",
       "subsidiaryBodyLabel": "Órgano subsidiario",
-      "subsidiaryBodyPlaceholder": "Seleccionar órganos subsidiarios",
+      "subsidiaryBodyPlaceholder": "Selección de órganos subsidiarios",
       "decisionLabel": "Decisión",
-      "decisionPlaceholder": "Seleccionar decisiones",
-      "dateRangeLabel": "Rango de fechas",
+      "decisionPlaceholder": "Decisiones selectas",
+      "dateRangeLabel": "Intervalo de fechas",
       "startDateLabel": "Fecha de inicio",
       "endDateLabel": "Fecha de finalización",
       "actionRequiredLabel": "Acción requerida",
       "actionRequiredHint": "Mostrar solo los elementos que requieren acción",
-      "clearAll": "Limpiar todos los filtros"
+      "clearAll": "Borrar todos los filtros"
     },
     "types": {
       "cop": "Reuniones de la COP",
-      "sbstta": "Reuniones del SBSTTA",
+      "sbstta": "Reuniones del OSACTT",
       "sbi": "Reuniones del SBI",
       "meeting": "Reuniones",
       "notification": "Notificaciones",
       "nominations": "Nominaciones",
-      "submission": "Presentaciones de información",
+      "submission": "Presentaciones",
       "peerReview": "Revisiones por pares",
       "report": "Informes",
       "forum": "Foros en línea",
       "activity": "Actividades",
       "webinar": "Seminarios web",
       "workshop": "Talleres",
-      "training": "Capacitaciones",
+      "training": "Entrenamientos",
       "consultation": "Consultas",
       "campaign": "Campañas",
       "other": "Otro",
@@ -150,23 +150,23 @@
       "confirmed": "Confirmado",
       "tentat": "Tentativo",
       "tentative": "Tentativo",
-      "not_set": "Not Set",
+      "not_set": "No establecido",
       "completed": "Completado",
       "ongoing": "En curso",
-      "to_be_confirmed": "Por confirmar"
+      "to_be_confirmed": "Pendiente de confirmación"
     },
     "notifications": {
       "notificationLabel": "Notificación {id}",
-      "deadline": "antes de {date}",
+      "deadline": "antes del {date}",
       "publishedOnDate": "Publicado el {date}",
       "fromSource": "De {source}",
-      "loadingDetails": "Cargando los detalles de la notificación…",
-      "recipients": "Destinatarios",
+      "loadingDetails": "Cargando los detalles de la notificación...",
+      "recipients": "Beneficiarios",
       "themes": "Temas",
-      "attachments": "Adjuntos",
+      "attachments": "Archivos adjuntos",
       "viewNotification": "Ver notificación",
-      "notFound": "Notificación no encontrada",
-      "loadFailed": "No se pudieron cargar los detalles de la notificación."
+      "notFound": "No se encontró la notificación",
+      "loadFailed": "No se pueden cargar los detalles de la notificación."
     },
     "common": {
       "yes": "Sí"
@@ -174,23 +174,23 @@
   },
   "scbd": {
     "unitsDivisions": {
-      "SSSFD": "Science, Society and Sustainable Futures Division",
-      "ISD": "Implementation Support Division",
-      "AD": "Administration Division",
-      "LIA": "Legal and Intergovernmental Affairs",
-      "SS": "Secretariat Support",
-      "CA": "Communication and Awareness",
-      "CS": "Conference Services",
-      "BSPG": "Biodiversity Science, Policy and Governance",
-      "MRNR": "Monitoring, Review and National Reporting",
-      "FB": "Finance and Budget",
-      "ABS": "ABS",
-      "BS": "Biosafety",
-      "BETI": "Biodiversity Economy Transformation and Innovation",
-      "PB": "Peoples and Biodiversity",
-      "SEC": "Stakeholder Engagement and Cooperation",
-      "CBKM": "Capacity Building and Knowledge Management",
-      "HRA": "Human Resources and Administration"
+      "SSSFD": "División de Ciencia, Sociedad y Futuros Sostenibles",
+      "ISD": "División de Apoyo a la Implementación",
+      "AD": "División de Administración",
+      "LIA": "Asuntos jurídicos e intergubernamentales",
+      "SS": "Apoyo de secretaría",
+      "CA": "Comunicación y conciencia",
+      "CS": "Servicios de conferencias",
+      "BSPG": "Ciencia, política y gobernanza de la biodiversidad",
+      "MRNR": "Supervisión, revisión y presentación de informes nacionales",
+      "FB": "Finanzas y presupuesto",
+      "ABS": "Protocolo de Nagoya sobre acceso y distribución de beneficios",
+      "BS": "Bioseguridad",
+      "BETI": "Biodiversidad, economía, transformación e innovación",
+      "PB": "Los pueblos y la biodiversidad",
+      "SEC": "Participación y cooperación de las partes interesadas",
+      "CBKM": "Creación de capacidades y gestión del conocimiento",
+      "HRA": "Recursos humanos y administración"
     },
     "views": {
       "grid": "Vista de cuadrícula",
@@ -199,13 +199,13 @@
     }
   },
   "nav": {
-    "home": "Inicio",
+    "home": "Hogar",
     "suggestion1": "Sugerencia 1",
     "suggestion2": "Sugerencia 2"
   },
   "home": {
-    "title": "Calendario de actividades y acciones del CDB",
-    "lead": "Explore las propuestas de diseño usando la navegación superior.",
-    "description": "Utilice las páginas de Sugerencia para previsualizar diferentes diseños del explorador de actividades y acciones y brindar comentarios sobre la opción que prefiera."
+    "title": "Calendario de actividades y acciones del CBD",
+    "lead": "Explore las sugerencias de diseño usando la navegación de arriba.",
+    "description": "Usa las páginas de sugerencias para obtener una vista previa de los diferentes diseños del explorador de actividades y acciones y proporcionar comentarios sobre la dirección que prefieras."
   }
 }

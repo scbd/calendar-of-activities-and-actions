@@ -1,147 +1,147 @@
 {
   "calendar": {
     "headings": {
-      "activitiesExplorer": "活动与行动浏览器",
-      "activitiesExplorerAccordion": "活动与行动浏览器 - 手风琴视图",
-      "activitiesExplorerDetailed": "活动与行动浏览器 - 详细视图",
-      "activitiesExplorerGrouped": "活动与行动浏览器 - 会议中分组的活动"
+      "activitiesExplorer": "活动和操作浏览器",
+      "activitiesExplorerAccordion": "活动和操作浏览器-手风琴视图",
+      "activitiesExplorerDetailed": "活动和操作浏览器-详细行视图",
+      "activitiesExplorerGrouped": "活动和操作浏览器-在会议中分组的活动"
     },
     "messages": {
-      "loadingMeetings": "正在加载会议…",
-      "noResults": "无结果"
+      "loadingMeetings": "正在加载会议...",
+      "noResults": "没有结果"
     },
     "labels": {
       "decision": "决定",
-      "paragraph": "段落",
-      "subjects": "主题",
-      "associatedBody": "相关机构",
-      "responsibleUnit": "负责部门",
-      "responsibleOfficer": "负责人",
+      "paragraph": "帕拉",
+      "subjects": "科目",
+      "associatedBody": "关联机构",
+      "responsibleUnit": "责任单位",
+      "responsibleOfficer": "负责官员",
       "relatedDocuments": "相关文件",
       "actionRequired": "需要采取行动",
-      "actionRequiredByParties": "缔约方需采取的行动",
+      "actionRequiredByParties": "需要采取行动",
       "status": "状态",
       "type": "类型",
-      "typeStripAria": "项目 {type}",
-      "cop": "缔约方大会",
+      "typeStripAria": "{type} 项目",
+      "cop": "COP",
       "description": "描述",
-      "statusNarrative": "状态说明",
+      "statusNarrative": "状态叙述",
       "symbol": "符号",
       "date": "日期",
       "location": "地点",
-      "responsible": "责任",
+      "responsible": "负责任的",
       "unit": "单位",
-      "officer": "负责人",
+      "officer": "警官",
       "notifications": "通知",
       "relatedActivities": "相关活动",
       "relatedMeetings": "相关会议",
       "relatedNotifications": "相关通知",
       "untitled": "无标题",
-      "unknownDate": "日期未知"
+      "unknownDate": "未知日期"
     },
     "links": {
-      "documents": "文件 »"
+      "documents": "文件”"
     },
     "actions": {
-      "viewDocuments": "查看文件",
-      "viewDocumentsAria": "查看 {title} 的文件"
+      "viewDocuments": "查看文档",
+      "viewDocumentsAria": "查看 {title} 的文档"
     },
     "debug": {
       "collectedFieldNames": "调试：收集的字段名称 ({count})",
-      "locale": "语言：{locale}"
+      "locale": "区域：{locale}"
     },
     "filters": {
-      "title": "筛选器",
+      "title": "过滤器",
       "showBasic": "显示高级搜索",
       "showAdvanced": "显示基本搜索",
       "labels": {
-        "typeActivity": "类型",
+        "typeActivity": "记录类型",
         "activityTypes": "活动类型",
-        "globalTargets": "全球目标",
-        "countries": "缔约方",
+        "globalTargets": "GBF 目标",
+        "countries": "派对",
         "subjects": "主题",
-        "statuses": "状态",
-        "subsidiaryBodies": "附属机构",
+        "statuses": "状态（es）",
+        "subsidiaryBodies": "附属机构和理事机构",
         "decisions": "决定",
         "dateRange": "日期范围",
         "startDate": "开始日期",
         "endDate": "结束日期",
         "actionRequired": "需要采取行动",
-        "schemas": "架构",
-    "sort": "排序结果",
-    "search": "搜索"
-  },
+        "schemas": "记录类型",
+        "sort": "对结果进行排序",
+        "search": "搜索"
+      },
       "placeholders": {
         "typeActivity": "选择类型",
         "activityTypes": "选择活动类型",
-        "globalTargets": "选择全球目标",
-        "countries": "选择缔约方",
-        "subjects": "选择主题",
+        "globalTargets": "选择 GBF 目标",
+        "countries": "选择派对",
+        "subjects": "选择科目",
         "statuses": "选择状态",
         "subsidiaryBodies": "选择附属机构",
-        "decisions": "选择决定",
-        "schemas": "选择架构",
-    "sort": "选择排序方式",
-    "search": "输入关键词"
-  },
+        "decisions": "选择决策",
+        "schemas": "选择记录类型",
+        "sort": "选择排序顺序",
+        "search": "输入关键词"
+      },
       "toggles": {
-        "actionRequiredOnly": "仅显示需要采取行动的事项"
+        "actionRequiredOnly": "仅显示需要操作的项目"
       },
       "actions": {
         "clearAll": "清除所有筛选条件"
       },
       "sortOptions": {
-        "startDateAsc": "开始日期（最旧优先）",
-        "startDateDesc": "开始日期（最新优先）",
-        "endDateAsc": "结束日期（最旧优先）",
-        "endDateDesc": "结束日期（最新优先）",
-        "statusAsc": "状态（A-Z）",
-        "schemaAsc": "架构（A-Z）",
-        "actionRequired": "优先显示需采取行动的条目"
+        "startDateAsc": "开始日期（最早的在前）",
+        "startDateDesc": "开始日期（最新的优先）",
+        "endDateAsc": "结束日期（最早的在前）",
+        "endDateDesc": "结束日期（最新的优先）",
+        "titleAsc": "标题（从A到Z）",
+        "schemaAsc": "记录类型（A 到 Z）",
+        "actionRequired": "首先是需要采取行动的物品"
       },
       "typeLabel": "类型",
       "typePlaceholder": "选择类型",
       "activityLabel": "活动类型",
       "activityPlaceholder": "选择活动类型",
-      "globalTargetLabel": "全球目标",
-      "globalTargetPlaceholder": "选择全球目标",
-      "countryLabel": "缔约方",
-      "countryPlaceholder": "选择缔约方",
+      "globalTargetLabel": "GBF目标",
+      "globalTargetPlaceholder": "选择 GBF 目标",
+      "countryLabel": "各方",
+      "countryPlaceholder": "选择派对",
       "subjectLabel": "主题",
-      "subjectPlaceholder": "选择主题",
+      "subjectPlaceholder": "选择科目",
       "statusLabel": "状态",
       "statusPlaceholder": "选择状态",
       "subsidiaryBodyLabel": "附属机构",
       "subsidiaryBodyPlaceholder": "选择附属机构",
       "decisionLabel": "决定",
-      "decisionPlaceholder": "选择决定",
+      "decisionPlaceholder": "选择决策",
       "dateRangeLabel": "日期范围",
       "startDateLabel": "开始日期",
       "endDateLabel": "结束日期",
       "actionRequiredLabel": "需要采取行动",
-      "actionRequiredHint": "仅显示需要采取行动的事项",
+      "actionRequiredHint": "仅显示需要操作的项目",
       "clearAll": "清除所有筛选条件"
     },
     "types": {
-      "cop": "缔约方大会会议",
+      "cop": "缔约方会议会议",
       "sbstta": "SBSTTA 会议",
       "sbi": "SBI 会议",
       "meeting": "会议",
       "notification": "通知",
       "nominations": "提名",
-      "submission": "提交信息",
+      "submission": "提交的内容",
       "peerReview": "同行评审",
       "report": "报告",
       "forum": "在线论坛",
       "activity": "活动",
       "webinar": "网络研讨会",
-      "workshop": "研讨班",
-      "training": "培训",
-      "consultation": "磋商",
-      "campaign": "宣传活动",
+      "workshop": "研讨会",
+      "training": "训练",
+      "consultation": "协商",
+      "campaign": "竞选活动",
       "other": "其他",
-      "conference": "大会",
-      "side-event": "边会",
+      "conference": "会议",
+      "side-event": "会外活动",
       "default": "活动",
       "unknown": "活动"
     },
@@ -150,17 +150,17 @@
       "confirmed": "已确认",
       "tentat": "暂定",
       "tentative": "暂定",
-      "not_set": "Not Set",
+      "not_set": "未设置",
       "completed": "已完成",
-      "ongoing": "进行中",
+      "ongoing": "正在进行中",
       "to_be_confirmed": "待确认"
     },
     "notifications": {
       "notificationLabel": "通知 {id}",
-      "deadline": "在 {date} 前",
-      "publishedOnDate": "发布于 {date}",
+      "deadline": "截至 {date}",
+      "publishedOnDate": "已发布 {date}",
       "fromSource": "来自 {source}",
-      "loadingDetails": "正在加载通知详情…",
+      "loadingDetails": "正在加载通知详情...",
       "recipients": "收件人",
       "themes": "主题",
       "attachments": "附件",
@@ -169,43 +169,43 @@
       "loadFailed": "无法加载通知详情。"
     },
     "common": {
-      "yes": "是"
+      "yes": "是的"
     }
   },
   "scbd": {
     "unitsDivisions": {
-      "SSSFD": "Science, Society and Sustainable Futures Division",
-      "ISD": "Implementation Support Division",
-      "AD": "Administration Division",
-      "LIA": "Legal and Intergovernmental Affairs",
-      "SS": "Secretariat Support",
-      "CA": "Communication and Awareness",
-      "CS": "Conference Services",
-      "BSPG": "Biodiversity Science, Policy and Governance",
-      "MRNR": "Monitoring, Review and National Reporting",
-      "FB": "Finance and Budget",
-      "ABS": "ABS",
-      "BS": "Biosafety",
-      "BETI": "Biodiversity Economy Transformation and Innovation",
-      "PB": "Peoples and Biodiversity",
-      "SEC": "Stakeholder Engagement and Cooperation",
-      "CBKM": "Capacity Building and Knowledge Management",
-      "HRA": "Human Resources and Administration"
+      "SSSFD": "科学、社会和可持续未来司",
+      "ISD": "执行支持司",
+      "AD": "行政部",
+      "LIA": "法律和政府间事务",
+      "SS": "秘书处支持",
+      "CA": "沟通和意识",
+      "CS": "会议服务",
+      "BSPG": "生物多样性科学、政策与治理",
+      "MRNR": "监测、审查和国家报告",
+      "FB": "财务和预算",
+      "ABS": "《关于获取和惠益分享的名古屋议定书》",
+      "BS": "生物安全",
+      "BETI": "生物多样性经济转型与创新",
+      "PB": "人类与生物多样性",
+      "SEC": "利益相关者的参与与合作",
+      "CBKM": "能力建设和知识管理",
+      "HRA": "人力资源和行政"
     },
     "views": {
       "grid": "网格视图",
       "list": "列表视图",
-      "tabView": "按记录类型的标签视图"
+      "tabView": "按记录类型查看选项卡"
     }
   },
   "nav": {
-    "home": "首页",
-    "suggestion1": "方案一",
-    "suggestion2": "方案二"
+    "home": "主页",
+    "suggestion1": "建议 1",
+    "suggestion2": "建议 2"
   },
   "home": {
-    "title": "生物多样性公约活动与行动日历",
-    "lead": "使用上方导航探索设计方案。",
-    "description": "请使用方案页面预览活动与行动浏览器的不同布局，并就您偏好的方向提供反馈。"
+    "title": "CBD 活动与行动日历",
+    "lead": "使用上面的导航浏览设计建议。",
+    "description": "使用建议页面预览活动和操作浏览器的不同布局，并提供有关您偏好的方向的反馈。"
   }
 }
