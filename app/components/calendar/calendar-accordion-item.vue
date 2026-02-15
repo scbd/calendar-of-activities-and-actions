@@ -77,6 +77,9 @@
           :description="description"
           :subject-labels="subjectLabels"
           :subsidiary-bodies="subsidiaryBodies"
+          :governing-bodies="governingBodies"
+          :gbf-sections="gbfSections"
+          :global-targets="globalTargets"
           :decision-entries="decisionEntriesValue"
           :responsible-unit="responsibleUnit"
           :responsible-officer="responsibleOfficer"
@@ -144,6 +147,9 @@ import CalendarActivityCard from './calendar-activity-card.vue';
 import { formatDateRange } from 'shared/utils/date';
 import {
   getDocBooleanValue,
+  getDocGbfSections,
+  getDocGlobalTargets,
+  getDocGoverningBodies,
   getDocRaw,
   getDocStringValue,
   getDocSubsidiaryBodies,
@@ -360,6 +366,9 @@ const statusLabel = computed(() => {
 const statusColorValue = computed(() => statusColor(props.doc));
 
 const subsidiaryBodies = computed(() => getDocSubsidiaryBodies(props.doc));
+const governingBodies = computed(() => getDocGoverningBodies(props.doc));
+const gbfSections = computed(() => getDocGbfSections(props.doc));
+const globalTargets = computed(() => getDocGlobalTargets(props.doc));
 
 const description = computed(() => getDocStringValue(props.doc, 'description', 'descriptionTxt', 'descriptionText'));
 

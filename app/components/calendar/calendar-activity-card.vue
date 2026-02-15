@@ -91,8 +91,8 @@ const typeLabel = computed(() => {
     return t('calendar.types.default') as string;
   }
 
-  if (!raw && te('calendar.types.activity')) {
-    return t('calendar.types.activity') as string;
+  if (!raw && te('calendar.types.calendarActivity')) {
+    return t('calendar.types.calendarActivity') as string;
   }
 
   return raw ?? '';
@@ -194,8 +194,6 @@ const activityLink = computed(() => {
     path: '/',
     query,
   };
-  
-  console.log('[ActivityCard] Generated link for:', props.doc.title || props.doc.titleEn, 'ID:', docId, 'Link:', link);
   
   return link;
 });

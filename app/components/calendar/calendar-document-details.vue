@@ -24,6 +24,30 @@
       <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
     </div>
 
+    <!-- Governing bodies -->
+    <div v-if="governingBodies.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.governingBodies') }}</span>
+      <div class="calendar-detail-content">{{ governingBodies.join(', ') }}</div>
+    </div>
+
+    <!-- GBF Sections -->
+    <div v-if="gbfSections.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.labels.gbfSections') }}</span>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="gbfSections"
+      />
+    </div>
+
+    <!-- Global Targets -->
+    <div v-if="globalTargets.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ t('calendar.filters.labels.globalTargets') }}</span>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="globalTargets"
+      />
+    </div>
+
     <!-- Decisions -->
     <div v-if="decisionEntries.length" class="calendar-detail-section">
       <span class="calendar-detail-label">{{ t('calendar.labels.decision') }}</span>
@@ -36,18 +60,6 @@
           <span v-if="index < decisionEntries.length - 1">, </span>
         </template>
       </div>
-    </div>
-
-    <!-- Responsible Unit -->
-    <div v-if="false && showResponsible && responsibleUnit" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.responsibleUnit') }}</span>
-      <div class="calendar-detail-content">{{ responsibleUnit }}</div>
-    </div>
-
-    <!-- Responsible Officer -->
-    <div v-if="false && showResponsible && responsibleOfficer" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.responsibleOfficer') }}</span>
-      <div class="calendar-detail-content">{{ responsibleOfficer }}</div>
     </div>
 
     <!-- Subjects -->
@@ -73,6 +85,9 @@ const _props = defineProps<{
   description?: string;
   subjectLabels: string[];
   subsidiaryBodies: string[];
+  governingBodies: string[];
+  gbfSections: string[];
+  globalTargets: string[];
   decisionEntries: DecisionEntry[];
   responsibleUnit?: string;
   responsibleOfficer?: string;

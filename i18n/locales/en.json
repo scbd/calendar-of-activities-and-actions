@@ -19,6 +19,8 @@
       "paragraph": "Para",
       "subjects": "Subjects",
       "associatedBody": "Associated body",
+      "governingBodies": "Governing bodies",
+      "gbfSections": "GBF sections",
       "responsibleUnit": "Responsible unit",
       "responsibleOfficer": "Responsible officer",
       "relatedDocuments": "Related documents",
