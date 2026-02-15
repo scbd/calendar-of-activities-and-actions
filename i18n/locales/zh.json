@@ -8,7 +8,11 @@
     },
     "messages": {
       "loadingMeetings": "正在加载会议...",
-      "noResults": "没有结果"
+      "loadingMore": "正在加载更多结果…",
+      "noResults": "未找到与您的筛选条件匹配的结果。",
+      "loadError": "无法加载数据，请重试。",
+      "retry": "重试",
+      "showingResults": "显示 {count} / {total} 条结果"
     },
     "labels": {
       "decision": "决定",
@@ -61,7 +65,9 @@
         "countries": "派对",
         "subjects": "主题",
         "statuses": "状态（es）",
-        "subsidiaryBodies": "附属机构和理事机构",
+        "subsidiaryBodies": "附属机构",
+        "governingBodies": "理事机构",
+        "gbfSections": "GBF 章节",
         "decisions": "决定",
         "dateRange": "日期范围",
         "startDate": "开始日期",
@@ -79,6 +85,8 @@
         "subjects": "选择科目",
         "statuses": "选择状态",
         "subsidiaryBodies": "选择附属机构",
+        "governingBodies": "选择理事机构",
+        "gbfSections": "选择 GBF 章节",
         "decisions": "选择决策",
         "schemas": "选择记录类型",
         "sort": "选择排序顺序",
@@ -134,6 +142,7 @@
       "report": "报告",
       "forum": "在线论坛",
       "activity": "活动",
+      "calendarActivity": "活动",
       "webinar": "网络研讨会",
       "workshop": "研讨会",
       "training": "训练",

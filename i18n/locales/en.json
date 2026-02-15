@@ -8,7 +8,11 @@
     },
     "messages": {
       "loadingMeetings": "Loading meetings…",
-      "noResults": "No results"
+      "loadingMore": "Loading more results…",
+      "noResults": "No results found for your filters.",
+      "loadError": "Could not load data. Please try again.",
+      "retry": "Retry",
+      "showingResults": "Showing {count} of {total} results"
     },
     "labels": {
       "decision": "Decision",

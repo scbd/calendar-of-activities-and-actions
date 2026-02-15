@@ -8,7 +8,11 @@
     },
     "messages": {
       "loadingMeetings": "Chargement des réunions...",
-      "noResults": "Aucun résultat"
+      "loadingMore": "Chargement de résultats supplémentaires…",
+      "noResults": "Aucun résultat trouvé pour vos filtres.",
+      "loadError": "Impossible de charger les données. Veuillez réessayer.",
+      "retry": "Réessayer",
+      "showingResults": "{count} sur {total} résultats affichés"
     },
     "labels": {
       "decision": "Décision",
@@ -61,7 +65,9 @@
         "countries": "Partie (s)",
         "subjects": "Sujet (s)",
         "statuses": "Statut (s)",
-        "subsidiaryBodies": "Organes subsidiaires et directeurs",
+        "subsidiaryBodies": "Organe(s) subsidiaire(s)",
+        "governingBodies": "Organe(s) directeur(s)",
+        "gbfSections": "Section(s) du CMB",
         "decisions": "Décision (s)",
         "dateRange": "Plage de dates",
         "startDate": "Date de début",
@@ -78,7 +84,9 @@
         "countries": "Sélectionnez les fêtes",
         "subjects": "Sélectionnez des sujets",
         "statuses": "Sélectionnez les statuts",
-        "subsidiaryBodies": "Certains organes subsidiaires",
+        "subsidiaryBodies": "Sélectionnez les organes subsidiaires",
+        "governingBodies": "Sélectionnez les organes directeurs",
+        "gbfSections": "Sélectionnez les sections du CMB",
         "decisions": "Sélectionnez les décisions",
         "schemas": "Sélectionnez les types d'enregistrement",
         "sort": "Sélectionnez l'ordre de tri",
@@ -134,6 +142,7 @@
       "report": "Rapports",
       "forum": "Forums en ligne",
       "activity": "Activités",
+      "calendarActivity": "Activités",
       "webinar": "Webinaires",
       "workshop": "Ateliers",
       "training": "Formations",

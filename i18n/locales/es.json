@@ -8,7 +8,11 @@
     },
     "messages": {
       "loadingMeetings": "Cargando reuniones...",
-      "noResults": "No hay resultados"
+      "loadingMore": "Cargando más resultados…",
+      "noResults": "No se encontraron resultados para sus filtros.",
+      "loadError": "No se pudieron cargar los datos. Inténtelo de nuevo.",
+      "retry": "Reintentar",
+      "showingResults": "Mostrando {count} de {total} resultados"
     },
     "labels": {
       "decision": "Decisión",
@@ -61,7 +65,9 @@
         "countries": "Partido (s)",
         "subjects": "Asunto (s)",
         "statuses": "Estado (es)",
-        "subsidiaryBodies": "Órganos subsidiarios y rectores",
+        "subsidiaryBodies": "Órgano(s) subsidiario(s)",
+        "governingBodies": "Órgano(s) rector(es)",
+        "gbfSections": "Sección(es) del MMBI",
         "decisions": "Decisión (s)",
         "dateRange": "Intervalo de fechas",
         "startDate": "Fecha de inicio",
@@ -78,7 +84,9 @@
         "countries": "Selecciona partidos",
         "subjects": "Selecciona asignaturas",
         "statuses": "Seleccione los estados",
-        "subsidiaryBodies": "Selección de órganos subsidiarios",
+        "subsidiaryBodies": "Seleccione los órganos subsidiarios",
+        "governingBodies": "Seleccione los órganos rectores",
+        "gbfSections": "Seleccione las secciones del MMBI",
         "decisions": "Decisiones selectas",
         "schemas": "Seleccione los tipos de registro",
         "sort": "Seleccione el orden de clasificación",
@@ -134,6 +142,7 @@
       "report": "Informes",
       "forum": "Foros en línea",
       "activity": "Actividades",
+      "calendarActivity": "Actividades",
       "webinar": "Seminarios web",
       "workshop": "Talleres",
       "training": "Entrenamientos",
