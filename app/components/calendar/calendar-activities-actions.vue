@@ -17,13 +17,6 @@
           <component
             :is="currentFilterComponent"
             :facets="facets"
-            :available-types="availableTypes"
-            :available-subjects="availableSubjects"
-            :available-statuses="availableStatuses"
-            :available-subsidiary-bodies="availableSubsidiaryBodies"
-            :available-cop-decisions="availableCopDecisions"
-            :preloaded-country-options="availableCountryOptions"
-            :preloaded-global-target-options="availableGlobalTargetOptions"
             :initial-start-date="initialStartDate"
             :hide-type-filter="hideTypeFilter"
             :active-tab-type="activeTabType"
