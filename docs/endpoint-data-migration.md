@@ -18,7 +18,7 @@ The Calendar of Activities and Actions was migrated from **static JSON data file
 
 ### After (SOLR Endpoint)
 
-- All data fetched from `https://api.cbddev.xyz/api/v2013/index`
+- All data fetched from the SOLR index endpoint (configured via `NUXT_PUBLIC_SCBD_API_BASE`)
 - Server-side filtering via SOLR `fq` (filter query) parameters
 - Server-side pagination via `rows`/`start` with infinite scroll (50 records per page)
 - Filter options from thesaurus domain endpoints merged with SOLR facet counts
@@ -36,7 +36,7 @@ useCalendarData composable (debounced 300ms)
         ↓
 buildCalendarQuery() → SOLR POST body
         ↓
-$fetch('https://api.cbddev.xyz/api/v2013/index') 
+$fetch(getSolrSelectUrl()) // derived from NUXT_PUBLIC_SCBD_API_BASE
         ↓
 parseFacets() + normalizeCalendarDoc()
         ↓
@@ -99,9 +99,28 @@ export const SOLR_FACET_FIELDS = [
 
 ### Environment Configuration
 
-The SOLR API base URL is currently **hardcoded** to `https://api.cbddev.xyz`.
+The SOLR API base URL is controlled by a **single environment variable**:
 
-**Future:** Move to Nuxt runtime config (`useRuntimeConfig().public.apiBaseUrl`) for environment-specific endpoints (dev/staging/production).
+```
+NUXT_PUBLIC_SCBD_API_BASE=https://api.cbddev.xyz
+```
+
+| Environment | Value |
+|-------------|-------|
+| Development | `https://api.cbddev.xyz` (default when env var is unset) |
+| Staging | `https://api.cbdstg.xyz` |
+| Production | `https://api.cbd.int` |
+
+All endpoints are derived from this base URL via `shared/utils/api-config.ts`:
+
+| Helper | Derived URL |
+|--------|-------------|
+| `getSolrSelectUrl()` | `{base}/api/v2013/index/select` |
+| `getSolrIndexUrl()` | `{base}/api/v2013/index` |
+| `getThesaurusBaseUrl()` | `{base}/api/v2013/thesaurus` |
+| `getArticlesBaseUrl()` | `{base}/api/v2017/articles` |
+
+In Nuxt context (composables, components), `useRuntimeConfig().public.scbdApiBase` is the canonical source. Shared services that run outside the Nuxt lifecycle resolve from `import.meta.env` / `process.env` with a static default fallback.
 
 ## New Filters Added
 

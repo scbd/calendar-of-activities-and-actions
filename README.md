@@ -4,7 +4,7 @@ A searchable calendar application for CBD (Convention on Biological Diversity) a
 
 ## Data Source
 
-All calendar data (meetings, notifications, calendar activities) is fetched live from the **SOLR index API** at `https://api.cbddev.xyz/api/v2013/index`. Filter options are loaded from CBD thesaurus domain endpoints and merged with SOLR facet counts.
+All calendar data (meetings, notifications, calendar activities) is fetched live from the **SOLR index API**. The API base URL is controlled by a single environment variable `NUXT_PUBLIC_SCBD_API_BASE` (defaults to `https://api.cbddev.xyz`). Filter options are loaded from CBD thesaurus domain endpoints and merged with SOLR facet counts.
 
 See [docs/endpoint-data-migration.md](docs/endpoint-data-migration.md) for full architecture details.
 

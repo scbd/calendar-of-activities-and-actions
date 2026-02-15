@@ -12,9 +12,7 @@ import type {
   NotificationKey,
   NotificationSolrDoc,
 } from '../utils/notifications';
-
-const DEFAULT_SOLR_INDEX_URL = 'https://api.cbddev.xyz/api/v2013/index';
-const DEFAULT_ARTICLE_URL = 'https://api.cbddev.xyz/api/v2017/articles';
+import { getSolrIndexUrl, getArticlesBaseUrl } from '../utils/api-config';
 
 /**
  * Generic record describing SOLR query parameters.
@@ -109,7 +107,7 @@ export async function fetchNotificationArticle(key: NotificationKey): Promise<No
   params.set('s', JSON.stringify({ 'meta.updatedOn': -1 }));
   params.set('fo', '1');
 
-  const url = new URL(DEFAULT_ARTICLE_URL);
+  const url = new URL(getArticlesBaseUrl());
 
   params.forEach((value, param) => {
     url.searchParams.set(param, value);
@@ -154,7 +152,7 @@ export async function fetchNotificationDetails(key: NotificationKey): Promise<No
     return null;
   }
 
-  const url = buildSolrSelectUrl(DEFAULT_SOLR_INDEX_URL, {
+  const url = buildSolrSelectUrl(getSolrIndexUrl(), {
     wt: 'json',
     rows: 1,
     q: `schema_s:notification AND symbol_s:"${trimmedKey}"`,

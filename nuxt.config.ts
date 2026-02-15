@@ -44,8 +44,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      scbdIndexEndpoint: process.env.NUXT_PUBLIC_SCBD_INDEX_ENDPOINT,
-      scbdApiBase: process.env.NUXT_PUBLIC_SCBD_API_BASE
+      scbdApiBase: process.env.NUXT_PUBLIC_SCBD_API_BASE || 'https://api.cbddev.xyz'
     }
   },
 

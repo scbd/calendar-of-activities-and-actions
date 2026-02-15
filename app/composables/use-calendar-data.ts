@@ -26,6 +26,7 @@ import type {
   ParsedFacets,
 } from 'shared/types/calendar';
 import type { SolrResponse } from 'shared/types/solr';
+import { getSolrSelectUrl } from 'shared/utils/api-config';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -130,9 +131,17 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
   // --- SOLR endpoint -------------------------------------------------------
   function getSolrEndpoint(): string {
-    const config = useRuntimeConfig();
+    try {
+      const config = useRuntimeConfig();
 
-    return (config.public.scbdIndexEndpoint as string) || 'https://api.cbddev.xyz/api/v2013/index/select';
+      if (config.public.scbdApiBase) {
+        return `${(config.public.scbdApiBase as string).replace(/\/$/, '')}/api/v2013/index/select`;
+      }
+    } catch {
+      // useRuntimeConfig unavailable outside Nuxt context — fall through
+    }
+
+    return getSolrSelectUrl();
   }
 
   // --- Sort helpers --------------------------------------------------------

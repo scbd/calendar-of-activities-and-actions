@@ -51,7 +51,7 @@ Notes:
   - [x] Rewrote calendar-activities-actions.test.ts — mocks useCalendarData composable (15 pass)
   - [x] Rewrote calendar-table-view.test.ts — mocks useCalendarData composable (18 pass)
   - [x] 1 E2E failure remains (net::ERR_CONNECTION_REFUSED — needs running dev server)
-- [ ] move API base URL to Nuxt runtime config (currently hardcoded to api.cbddev.xyz)
+- [x] move API base URL to Nuxt runtime config (single NUXT_PUBLIC_SCBD_API_BASE env var)
 - [ ] advanced search one line
 - [ ] sort in advance disappear through transition
 - [ ] display gbf targets https://www.cbd.int/app/images/gbf-targets/gbf-23-64.png
