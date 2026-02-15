@@ -2,11 +2,208 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vites
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
-import CalendarTableView from '../../app/components/calendar/calendar-table-view.vue';
+import type { CalendarDoc, FilterState } from 'shared/types/calendar';
 import CalendarFilters from '../../app/components/calendar/calendar-filters.vue';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
+// ---------------------------------------------------------------------------
+// Mock: useCalendarData composable (replaces old static-data mocks)
+// ---------------------------------------------------------------------------
+vi.mock('../../app/composables/use-calendar-data', async () => {
+  const { ref, computed } = await import('vue');
+  const { DateTime } = await import('luxon');
+
+  const ALL_DOCS = [
+    {
+      id: 'test-1',
+      schema: 'meeting',
+      identifier: 'test-1',
+      titleEn: 'Test Meeting 1',
+      type: 'Meeting',
+      startDate: '2025-01-01T00:00:00Z',
+      endDate: '2025-01-02T00:00:00Z',
+      copDecision: '15/3',
+      status: 'Confirmed',
+      url: ['https://www.cbd.int/meetings/test-1'],
+      city: 'Montreal',
+      hostCountry: 'CA',
+    },
+    {
+      id: 'test-2',
+      schema: 'meeting',
+      identifier: 'test-2',
+      titleEn: 'Test Meeting 2',
+      type: 'Meeting',
+      startDate: '2025-02-01T00:00:00Z',
+      endDate: '2025-02-02T00:00:00Z',
+      copDecision: 'NP-1',
+      status: 'Confirmed',
+      url: ['https://www.cbd.int/meetings/test-2'],
+      city: 'Geneva',
+      hostCountry: 'CH',
+    },
+    {
+      id: 'activity-1',
+      schema: 'calendarActivity',
+      identifier: 'activity-1',
+      titleEn: 'Sample Activity',
+      type: 'Activity',
+      startDate: '2025-01-05T00:00:00Z',
+      endDate: '2025-01-06T00:00:00Z',
+      status: 'Confirmed',
+      actionRequired: true,
+      actionRequiredByParties: true,
+    },
+    {
+      id: 'activity-2',
+      schema: 'calendarActivity',
+      identifier: 'activity-2',
+      titleEn: 'Second Activity',
+      type: 'Nominations',
+      startDate: '2025-02-05T00:00:00Z',
+      endDate: '2025-02-06T00:00:00Z',
+      status: 'Completed',
+    },
+    {
+      id: 'notification-1',
+      schema: 'notification',
+      identifier: 'notification-1',
+      titleEn: 'Test Notification',
+      type: 'Notification',
+      symbol: '2025-001',
+      startDate: '2025-01-15T00:00:00Z',
+      date: '2025-01-15T00:00:00Z',
+      url: ['https://www.cbd.int/notifications/2025-001'],
+    },
+  ] as unknown as CalendarDoc[];
+
+  return {
+    useCalendarData: () => {
+      const docs = ref<CalendarDoc[]>([...ALL_DOCS]);
+      const currentFilters = ref<FilterState>({
+        types: [],
+        subjects: [],
+        statuses: [],
+        subsidiaryBodies: [],
+        governingBodies: [],
+        copDecisions: [],
+        activityTypes: [],
+        globalTargets: [],
+        gbfSections: [],
+        countries: [],
+        startDate: '',
+        endDate: '',
+        actionRequired: false,
+        searchText: '',
+        sort: ['startDate:asc'],
+      });
+
+      const setFilters = (filters: FilterState) => {
+        currentFilters.value = { ...filters };
+        let result = [...ALL_DOCS];
+
+        if (filters.types?.length) {
+          result = result.filter((d) => filters.types.includes(d.schema));
+        }
+
+        if (filters.startDate) {
+          const cutoff = DateTime.fromISO(filters.startDate);
+
+          result = result.filter((d) => {
+            const dt = DateTime.fromISO(String(d.startDate ?? ''));
+
+            return dt.isValid && dt >= cutoff;
+          });
+        }
+
+        docs.value = result;
+      };
+
+      const groupedItems = computed(() => {
+        const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
+
+        for (const d of docs.value) {
+          const iso = (d.startDate || d.endDate) as string | undefined;
+          const dt = iso ? DateTime.fromISO(String(iso)) : null;
+          const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
+          const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';
+
+          if (!buckets.has(key)) {
+            buckets.set(key, { label, items: [] });
+          }
+          buckets.get(key)!.items.push(d);
+        }
+
+        return Array.from(buckets.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, v]) => ({ key, label: v.label, items: v.items }));
+      });
+
+      return {
+        docs,
+        loading: ref(false),
+        loadingMore: ref(false),
+        initialLoading: ref(false),
+        total: computed(() => docs.value.length),
+        hasMore: ref(false),
+        loadMore: vi.fn(),
+        retry: vi.fn(),
+        error: ref<string | null>(null),
+        isEmpty: computed(() => docs.value.length === 0),
+        facets: ref({
+          schema: [
+            { value: 'meeting', count: 2 },
+            { value: 'notification', count: 1 },
+            { value: 'calendarActivity', count: 2 },
+          ],
+        }),
+        locale: ref('en'),
+        subjectOptions: ref([]),
+        subjectLabelMap: computed(() => new Map<string, string>()),
+        ensureSubjectLabels: vi.fn(),
+        notificationDetailsMap: ref({}),
+        notificationErrors: ref({}),
+        notificationLoadingMap: ref({}),
+        notificationDisplayEntries: () => [],
+        currentFilters,
+        setFilters,
+        resetFilters: vi.fn(() => {
+          docs.value = [...ALL_DOCS];
+        }),
+        groupedItems,
+      };
+    },
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Mock: thesaurus service (prevents HTTP calls from CalendarFilters)
+// ---------------------------------------------------------------------------
+vi.mock('../../shared/services/thesaurus', () => ({
+  getDomainTerms: vi.fn().mockResolvedValue([]),
+  loadDomainOptions: vi.fn().mockResolvedValue([]),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock: subjects utility (prevents HTTP calls, safe displaySubjectLabels)
+// ---------------------------------------------------------------------------
+vi.mock('../../shared/utils/subjects', () => ({
+  loadSubjectOptions: vi.fn().mockResolvedValue([]),
+  buildSubjectLabelMap: () => new Map<string, string>(),
+  resolveSubjectLabel: (value: string) => value,
+  setSubjectLabelMap: vi.fn(),
+  displaySubjectLabels: () => [],
+}));
+
+// ---------------------------------------------------------------------------
+// Component import (after mock declarations — Vitest hoists vi.mock)
+// ---------------------------------------------------------------------------
+import CalendarTableView from '../../app/components/calendar/calendar-table-view.vue';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 function createI18nPlugin(locale: string = 'en') {
   return createI18n({
     legacy: false,
@@ -24,156 +221,23 @@ async function mountComponent(locale: string = 'en') {
   });
 }
 
-// Mock the useQueryIndex composable to prevent actual API calls
-vi.mock('../../app/composables/use-query-index', () => ({
-  useQueryIndex: () => ({
-    data: { value: null },
-    error: { value: null },
-    pending: { value: false },
-  }),
-}));
-
-vi.mock('../../shared/utils/subjects', () => ({
-  loadSubjectOptions: vi.fn().mockResolvedValue([]),
-  buildSubjectLabelMap: () => new Map<string, string>(),
-  resolveSubjectLabel: (value: string) => value,
-  setSubjectLabelMap: vi.fn(),
-  displaySubjectLabels: (values: string[]) => values,
-}));
-
-vi.mock('../../shared/services/thesaurus', () => ({
-  loadDomainOptions: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock('../../shared/data/notifications.js', () => ({
-  default: [
-    {
-      id: 'notification-1',
-      identifier: 'notification-1',
-      symbol: '2025-001',
-      titleEn: 'Test Notification',
-      date: '2025-01-15T00:00:00Z',
-      actionDate: '2025-01-20T00:00:00Z',
-      sender: 'Executive Secretary',
-      recipients: ['CBD national focal points'],
-      themes: ['CBD-SUBJECT-TEST'],
-      urls: ['https://www.cbd.int/notifications/2025-001'],
-      files: [],
-      source: 'index:notification',
-    },
-  ],
-}));
-
-vi.mock('../../shared/data/25-26-activities.js', () => ({
-  default: [
-    {
-      title: 'Sample Activity',
-      description: '',
-      type: 'Activity',
-      actionRequiredByParties: 'Y',
-      subject: 'Sample Subject',
-      status: 'Confirmed',
-      statusNarrative: '',
-      startDate: '1-Jan-2025',
-      endDate: '2-Jan-2025',
-      associatedBody: 'SBSTTA',
-      agendaItem: '',
-      copDecision: '15/3',
-      copParagraphNo: '',
-      copParagraphType: '',
-      responsibleUnit: 'UNIT',
-      responsibleOfficer: 'Officer',
-      fundingSource: '',
-      fundingAllocated: '',
-      actors: '',
-      actorsComments: '',
-      gbfTargets: '',
-      relatedDocuments: '',
-      outcome: '',
-    },
-    {
-      title: 'Second Activity',
-      description: '',
-      type: 'Nominations',
-      actionRequiredByParties: 'N',
-      subject: 'Another Subject',
-      status: 'Completed',
-      statusNarrative: '',
-      startDate: '5-Feb-2025',
-      endDate: '6-Feb-2025',
-      associatedBody: 'SBSTTA',
-      agendaItem: '',
-      copDecision: '15/4',
-      copParagraphNo: '',
-      copParagraphType: '',
-      responsibleUnit: 'UNIT',
-      responsibleOfficer: 'Officer',
-      fundingSource: '',
-      fundingAllocated: '',
-      actors: '',
-      actorsComments: '',
-      gbfTargets: '',
-      relatedDocuments: '',
-      outcome: '',
-    },
-  ],
-}));
-
-vi.mock('../../shared/data/meetings.js', () => ({
-  meetings: [
-    {
-      _id: 'test-1',
-      id: 'test-1',
-      titleEn: 'Test Meeting 1',
-      type: 'Meeting',
-      subjectEn: 'Subject',
-      startDate: '2025-01-01T00:00:00Z',
-      endDate: '2025-01-02T00:00:00Z',
-      copDecision: '15/3',
-      status: 'Confirmed',
-      links: ['https://www.cbd.int/meetings/test-1'],
-      city: 'Montreal',
-      hostCountry: 'CA',
-    },
-    {
-      _id: 'test-2',
-      id: 'test-2',
-      titleEn: 'Test Meeting 2',
-      type: 'Meeting',
-      subjectEn: 'Subject',
-      startDate: '2025-02-01T00:00:00Z',
-      endDate: '2025-02-02T00:00:00Z',
-      copDecision: 'NP-1',
-      status: 'Confirmed',
-      links: ['https://www.cbd.int/meetings/test-2'],
-      city: 'Geneva',
-      hostCountry: 'CH',
-    },
-  ],
-}));
-
 const DEFAULT_SYSTEM_TIME = new Date('2024-12-31T12:00:00Z');
-const fetchMock = vi.fn();
 
 beforeAll(() => {
   vi.useFakeTimers();
-  vi.stubGlobal('fetch', fetchMock);
 });
 
 beforeEach(() => {
-  fetchMock.mockReset();
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => ({ response: { docs: [] } }),
-  });
   vi.setSystemTime(DEFAULT_SYSTEM_TIME);
 });
 
 afterAll(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
 });
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 describe('CalendarTableView Component', () => {
   it('should mount successfully', async () => {
     const component = await mountComponent();
@@ -435,9 +499,11 @@ describe('CalendarTableView Component', () => {
       subjects: [],
       statuses: [],
       subsidiaryBodies: [],
+      governingBodies: [],
       copDecisions: [],
       activityTypes: [],
       globalTargets: [],
+      gbfSections: [],
       countries: [],
       startDate: '',
       endDate: '',

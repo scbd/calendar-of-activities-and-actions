@@ -47,7 +47,10 @@ Notes:
   - [x] Removed 37 static data files, scripts, and dead code (Phase 05)
   - [x] i18n for all 6 locales (Phase 03)
 
-- [ ] fix 30 pre-existing nuxt component test failures (mocks need updating for SOLR composable)
+- [x] fix 30 pre-existing nuxt component test failures (mocks need updating for SOLR composable)
+  - [x] Rewrote calendar-activities-actions.test.ts — mocks useCalendarData composable (15 pass)
+  - [x] Rewrote calendar-table-view.test.ts — mocks useCalendarData composable (18 pass)
+  - [x] 1 E2E failure remains (net::ERR_CONNECTION_REFUSED — needs running dev server)
 - [ ] move API base URL to Nuxt runtime config (currently hardcoded to api.cbddev.xyz)
 - [ ] advanced search one line
 - [ ] sort in advance disappear through transition

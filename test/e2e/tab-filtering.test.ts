@@ -49,8 +49,8 @@ describe('Tab View Filtering', async () => {
     console.log('Notifications count:', notificationRows);
     expect(notificationRows).toBeGreaterThan(0);
 
-    // Click on "Activity" tab
-    const activityTab = page.locator('button.nav-link:has-text("Activity")');
+    // Click on "Activities" tab (calendarActivity schema)
+    const activityTab = page.locator('button.nav-link:has-text("Activities")');
 
     await activityTab.click();
     await page.waitForTimeout(500); // Wait for filter to apply
@@ -59,7 +59,7 @@ describe('Tab View Filtering', async () => {
     await expect(activityTab).toHaveClass(/active/);
     
     // Wait for the URL to update
-    await page.waitForURL(/types=activity/);
+    await page.waitForURL(/types=calendarActivity/);
 
     // Check that we have results (activities)
     const activityRows = await page.locator('table tbody tr.main-row').count();

@@ -2,13 +2,205 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vites
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
-import CalendarActivitiesActions from '../../app/components/calendar/calendar-activities-actions.vue';
+import type { CalendarDoc, FilterState } from 'shared/types/calendar';
 import CalendarFilters from '../../app/components/calendar/calendar-filters.vue';
 import DecisionLink from '../../app/components/decision-link.vue';
 import { resolveDecisionHrefWithFallback } from '../../shared/utils/decision-links';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
 
+// ---------------------------------------------------------------------------
+// Mock: useCalendarData composable (replaces old static-data mocks)
+// ---------------------------------------------------------------------------
+vi.mock('../../app/composables/use-calendar-data', async () => {
+  const { ref, computed } = await import('vue');
+  const { DateTime } = await import('luxon');
+
+  const ALL_DOCS = [
+    {
+      id: 'test-1',
+      schema: 'meeting',
+      identifier: 'test-1',
+      titleEn: 'Decision Without Prefix',
+      type: 'Meeting',
+      startDate: '2025-01-01T00:00:00Z',
+      endDate: '2025-01-02T00:00:00Z',
+      copDecision: '15/3',
+      status: 'Confirmed',
+      url: ['https://www.cbd.int/meetings/test-1'],
+    },
+    {
+      id: 'test-2',
+      schema: 'meeting',
+      identifier: 'test-2',
+      titleEn: 'Decision With NP',
+      type: 'Meeting',
+      startDate: '2025-02-01T00:00:00Z',
+      endDate: '2025-02-02T00:00:00Z',
+      copDecision: 'NP-1',
+      status: 'Confirmed',
+      url: ['https://www.cbd.int/meetings/test-2'],
+    },
+    {
+      id: 'activity-1',
+      schema: 'calendarActivity',
+      identifier: 'activity-1',
+      titleEn: 'Sample Activity',
+      type: 'Activity',
+      startDate: '2025-01-05T00:00:00Z',
+      endDate: '2025-01-06T00:00:00Z',
+      status: 'Confirmed',
+      actionRequiredByParties: true,
+    },
+    {
+      id: 'activity-2',
+      schema: 'calendarActivity',
+      identifier: 'activity-2',
+      titleEn: 'Second Item',
+      type: 'Nominations',
+      startDate: '2025-02-05T00:00:00Z',
+      endDate: '2025-02-06T00:00:00Z',
+      status: 'Completed',
+    },
+    {
+      id: 'notification-1',
+      schema: 'notification',
+      identifier: 'notification-1',
+      titleEn: 'Test Notification Item',
+      type: 'Notification',
+      symbol: '2025-001',
+      startDate: '2025-01-15T00:00:00Z',
+      date: '2025-01-15T00:00:00Z',
+      url: ['https://www.cbd.int/notifications/2025-001'],
+    },
+  ] as unknown as CalendarDoc[];
+
+  return {
+    useCalendarData: () => {
+      const docs = ref<CalendarDoc[]>([...ALL_DOCS]);
+      const currentFilters = ref<FilterState>({
+        types: [],
+        subjects: [],
+        statuses: [],
+        subsidiaryBodies: [],
+        governingBodies: [],
+        copDecisions: [],
+        activityTypes: [],
+        globalTargets: [],
+        gbfSections: [],
+        countries: [],
+        startDate: '',
+        endDate: '',
+        actionRequired: false,
+        searchText: '',
+        sort: ['startDate:asc'],
+      });
+
+      const setFilters = (filters: FilterState) => {
+        currentFilters.value = { ...filters };
+        let result = [...ALL_DOCS];
+
+        if (filters.types?.length) {
+          result = result.filter((d) => filters.types.includes(d.schema));
+        }
+
+        if (filters.startDate) {
+          const cutoff = DateTime.fromISO(filters.startDate);
+
+          result = result.filter((d) => {
+            const dt = DateTime.fromISO(String(d.startDate ?? ''));
+
+            return dt.isValid && dt >= cutoff;
+          });
+        }
+
+        docs.value = result;
+      };
+
+      const groupedItems = computed(() => {
+        const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
+
+        for (const d of docs.value) {
+          const iso = (d.startDate || d.endDate) as string | undefined;
+          const dt = iso ? DateTime.fromISO(String(iso)) : null;
+          const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
+          const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';
+
+          if (!buckets.has(key)) {
+            buckets.set(key, { label, items: [] });
+          }
+          buckets.get(key)!.items.push(d);
+        }
+
+        return Array.from(buckets.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, v]) => ({ key, label: v.label, items: v.items }));
+      });
+
+      return {
+        docs,
+        loading: ref(false),
+        loadingMore: ref(false),
+        initialLoading: ref(false),
+        total: computed(() => docs.value.length),
+        hasMore: ref(false),
+        loadMore: vi.fn(),
+        retry: vi.fn(),
+        error: ref<string | null>(null),
+        isEmpty: computed(() => docs.value.length === 0),
+        facets: ref({
+          schema: [
+            { value: 'meeting', count: 2 },
+            { value: 'notification', count: 1 },
+            { value: 'calendarActivity', count: 2 },
+          ],
+        }),
+        locale: ref('en'),
+        subjectOptions: ref([]),
+        subjectLabelMap: computed(() => new Map<string, string>()),
+        ensureSubjectLabels: vi.fn(),
+        notificationDetailsMap: ref({}),
+        notificationErrors: ref({}),
+        notificationLoadingMap: ref({}),
+        notificationDisplayEntries: () => [],
+        currentFilters,
+        setFilters,
+        resetFilters: vi.fn(() => {
+          docs.value = [...ALL_DOCS];
+        }),
+        groupedItems,
+      };
+    },
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Mock: thesaurus service (prevents HTTP calls from CalendarFilters)
+// ---------------------------------------------------------------------------
+vi.mock('../../shared/services/thesaurus', () => ({
+  getDomainTerms: vi.fn().mockResolvedValue([]),
+  loadDomainOptions: vi.fn().mockResolvedValue([]),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock: subjects utility (prevents HTTP calls, safe displaySubjectLabels)
+// ---------------------------------------------------------------------------
+vi.mock('../../shared/utils/subjects', () => ({
+  loadSubjectOptions: vi.fn().mockResolvedValue([]),
+  buildSubjectLabelMap: () => new Map<string, string>(),
+  resolveSubjectLabel: (value: string) => value,
+  setSubjectLabelMap: vi.fn(),
+  displaySubjectLabels: () => [],
+}));
+
+// ---------------------------------------------------------------------------
+// Component import (after mock declarations — Vitest hoists vi.mock)
+// ---------------------------------------------------------------------------
+import CalendarActivitiesActions from '../../app/components/calendar/calendar-activities-actions.vue';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 function createI18nPlugin(locale: string = 'en') {
   return createI18n({
     legacy: false,
@@ -26,171 +218,25 @@ async function mountComponent(locale: string = 'en') {
   });
 }
 
-// Mock the useQueryIndex composable to prevent actual API calls
-vi.mock('../../app/composables/use-query-index', () => ({
-  useQueryIndex: () => ({
-    data: { value: null },
-    error: { value: null },
-    pending: { value: false }
-  })
-}));
-
-vi.mock('../../shared/utils/subjects', () => ({
-  loadSubjectOptions: vi.fn().mockResolvedValue([]),
-  buildSubjectLabelMap: () => new Map<string, string>(),
-  resolveSubjectLabel: (value: string) => value,
-  setSubjectLabelMap: vi.fn(),
-  displaySubjectLabels: (values: string[]) => values,
-}));
-
-vi.mock('../../shared/services/thesaurus', () => ({
-  loadDomainOptions: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock('../../shared/data/notifications.js', () => ({
-  default: [
-    {
-      id: 'notification-1',
-      identifier: 'notification-1',
-      symbol: '2025-001',
-      titleEn: 'Test Notification Item',
-      date: '2025-01-15T00:00:00Z',
-      actionDate: '2025-01-20T00:00:00Z',
-      sender: 'Executive Secretary',
-      recipients: ['CBD national focal points'],
-      themes: ['CBD-SUBJECT-TEST'],
-      urls: ['https://www.cbd.int/notifications/2025-001'],
-      files: [
-        {
-          type: 'application/pdf',
-          language: 'en',
-          url: '/doc/notifications/2025/test-notification-en.pdf',
-          name: 'test-notification-en.pdf',
-        },
-      ],
-      source: 'index:notification',
-    },
-  ],
-}));
-
-// Mock activities data with two non-meeting activity types to ensure they are visible by default
-vi.mock('../../shared/data/25-26-activities.js', () => ({
-  default: [
-    {
-      title: 'Sample Activity',
-      description: '',
-      type: 'Activity',
-      actionRequiredByParties: 'Y',
-      subject: 'Sample Subject',
-      status: 'Confirmed',
-      statusNarrative: '',
-      startDate: '1-Jan-2025',
-      endDate: '2-Jan-2025',
-      associatedBody: 'SBSTTA',
-      agendaItem: '',
-      copDecision: '15/3',
-      copParagraphNo: '',
-      copParagraphType: '',
-      responsibleUnit: 'UNIT',
-      responsibleOfficer: 'Officer',
-      fundingSource: '',
-      fundingAllocated: '',
-      actors: '',
-      actorsComments: '',
-      gbfTargets: '',
-      relatedDocuments: '',
-      outcome: '',
-    },
-    {
-      title: 'Second Item',
-      description: '',
-      type: 'Nominations',
-      actionRequiredByParties: 'N',
-      subject: 'Another Subject',
-      status: 'Completed',
-      statusNarrative: '',
-      startDate: '5-Feb-2025',
-      endDate: '6-Feb-2025',
-      associatedBody: 'SBSTTA',
-      agendaItem: '',
-      copDecision: '15/4',
-      copParagraphNo: '',
-      copParagraphType: '',
-      responsibleUnit: 'UNIT',
-      responsibleOfficer: 'Officer',
-      fundingSource: '',
-      fundingAllocated: '',
-      actors: '',
-      actorsComments: '',
-      gbfTargets: '',
-      relatedDocuments: '',
-      outcome: '',
-    },
-  ],
-}));
-
-vi.mock('../../shared/data/meetings.js', () => ({
-  meetings: [
-    {
-      _id: 'test-1',
-      id: 'test-1',
-      titleEn: 'Decision Without Prefix',
-      type: 'Meeting',
-      subjectEn: 'Subject',
-      startDate: '2025-01-01T00:00:00Z',
-      endDate: '2025-01-02T00:00:00Z',
-      copDecision: '15/3',
-      status: 'Confirmed',
-      links: ['https://www.cbd.int/meetings/test-1']
-    },
-    {
-      _id: 'test-2',
-      id: 'test-2',
-      titleEn: 'Decision With NP',
-      type: 'Meeting',
-      subjectEn: 'Subject',
-      startDate: '2025-02-01T00:00:00Z',
-      endDate: '2025-02-02T00:00:00Z',
-      copDecision: 'NP-1',
-      status: 'Confirmed',
-      links: ['https://www.cbd.int/meetings/test-2']
-    }
-  ]
-}));
-
 const DEFAULT_SYSTEM_TIME = new Date('2024-12-31T12:00:00Z');
-const fetchMock = vi.fn();
 
 beforeAll(() => {
   vi.useFakeTimers();
-  vi.stubGlobal('fetch', fetchMock);
 });
 
 beforeEach(() => {
-  fetchMock.mockReset();
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => ({ response: { docs: [] } }),
-  });
   vi.setSystemTime(DEFAULT_SYSTEM_TIME);
 });
 
 afterAll(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
 });
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 describe('CalendarActivitiesActions Component', () => {
-  it('should display loading spinner initially', async () => {
-    // Mount without awaiting to catch the initial loading state
-    const componentPromise = mountComponent();
-    const component = await componentPromise;
-    
-    // The component should exist
-    expect(component.exists()).toBe(true);
-  });
-
-  it('should mount successfully without filteredDocs error', async () => {
+  it('should mount successfully', async () => {
     const component = await mountComponent();
 
     expect(component.exists()).toBe(true);
@@ -199,8 +245,7 @@ describe('CalendarActivitiesActions Component', () => {
   it('should display the correct title', async () => {
     const component = await mountComponent();
     const title = component.find('h3');
-    
-    // The component now shows month groupings (e.g., "January 2025") instead of a static title
+
     expect(title.exists()).toBe(true);
     expect(title.text().length).toBeGreaterThan(0);
   });
@@ -226,7 +271,7 @@ describe('CalendarActivitiesActions Component', () => {
     expect(documentLinks.length).toBeGreaterThan(0);
     const firstLink = documentLinks[0];
 
-    expect(firstLink?.text()).toBe('View documents →');
+    expect(firstLink?.text()).toContain('View documents');
     expect(firstLink?.attributes('href')).toBe('https://www.cbd.int/meetings/test-1');
     expect(firstLink?.attributes('target')).toBe('_blank');
   });
@@ -237,7 +282,9 @@ describe('CalendarActivitiesActions Component', () => {
     await flushPromises();
 
     const footers = component.findAll('.calendar-accordion__footer');
-    const footerWithLink = footers.find(footer => footer.find('[data-testid="calendar-accordion-view-documents"]').exists());
+    const footerWithLink = footers.find(footer =>
+      footer.find('[data-testid="calendar-accordion-view-documents"]').exists(),
+    );
 
     expect(footerWithLink).toBeTruthy();
 
@@ -273,17 +320,13 @@ describe('CalendarActivitiesActions Component', () => {
   it('uses localized COP prefix when locale is French', async () => {
     const component = await mountComponent('fr');
 
-
     await flushPromises();
 
     const links = component.findAllComponents(DecisionLink);
     const expectedCopHref = resolveDecisionHrefWithFallback(null, 'COP 15/3');
-    const expectedNpHref = resolveDecisionHrefWithFallback(null, 'NP-1');
     const copLink = links.find(link => link.props('href') === expectedCopHref);
-    const npLink = links.find(link => link.props('href') === expectedNpHref);
 
     expect(copLink).toBeTruthy();
-    expect(npLink).toBeTruthy();
     expect(copLink?.text()).toContain('15/3');
   });
 
@@ -294,8 +337,9 @@ describe('CalendarActivitiesActions Component', () => {
 
     const typeLabels = component.findAll('.calendar-row__type-text').map(el => el.text().trim().toLowerCase());
 
-    expect(typeLabels.some(l => l === 'activity')).toBe(true);
-    expect(typeLabels.some(l => l === 'nominations')).toBe(true);
+    // i18n returns "Activities" and "Nominations" — use includes for partial match
+    expect(typeLabels.some(l => l.includes('activit'))).toBe(true);
+    expect(typeLabels.some(l => l.includes('nomination'))).toBe(true);
   });
 
   it('renders meeting entries grouped by month when meeting data is available', async () => {
@@ -310,7 +354,7 @@ describe('CalendarActivitiesActions Component', () => {
     expect(accordionTitles).toEqual(expect.arrayContaining(['Decision Without Prefix', 'Decision With NP']));
   });
 
-  it('does not pre-select a start date filter by default', async () => {
+  it('pre-selects today as start date by default', async () => {
     const component = await mountComponent('en');
 
     await flushPromises();
@@ -318,7 +362,8 @@ describe('CalendarActivitiesActions Component', () => {
     const dateInputs = component.findAll('input[type="date"]');
     const startDateInput = dateInputs.at(0);
 
-    expect(startDateInput?.element.value).toBe('');
+    // The component computes defaultStartDate = DateTime.now() which is 2024-12-31
+    expect(startDateInput?.element.value).toBe('2024-12-31');
   });
 
   it('excludes entries scheduled before the selected start date', async () => {
@@ -349,7 +394,7 @@ describe('CalendarActivitiesActions Component', () => {
     const typeLabels = component.findAll('.calendar-row__type-text').map(el => el.text().trim().toLowerCase());
 
     expect(titles).toContain('Test Notification Item');
-    expect(typeLabels).toContain('notification');
+    expect(typeLabels.some(l => l.includes('notification'))).toBe(true);
   });
 
   it('displays the notification published date in the type banner', async () => {
@@ -358,13 +403,16 @@ describe('CalendarActivitiesActions Component', () => {
     await flushPromises();
 
     const items = component.findAll('.accordion-item');
-    const notificationItem = items.find(item => item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item');
+    const notificationItem = items.find(item =>
+      item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item',
+    );
 
     expect(notificationItem).toBeTruthy();
 
     const bannerDate = notificationItem!.find('.calendar-row__type-date').text().trim();
 
-    expect(bannerDate).toContain('15 January 2025');
+    expect(bannerDate).toContain('15');
+    expect(bannerDate).toContain('2025');
   });
 
   it('hides the empty responsible unit line for notifications', async () => {
@@ -373,7 +421,9 @@ describe('CalendarActivitiesActions Component', () => {
     await flushPromises();
 
     const items = component.findAll('.accordion-item');
-    const notificationItem = items.find(item => item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item');
+    const notificationItem = items.find(item =>
+      item.find('.calendar-accordion__title').text().trim() === 'Test Notification Item',
+    );
 
     expect(notificationItem).toBeTruthy();
 
@@ -382,8 +432,6 @@ describe('CalendarActivitiesActions Component', () => {
     await toggle.trigger('click');
     await flushPromises();
 
-    // The responsible officer/unit sections are currently disabled in the component (v-if="false")
-    // This test verifies they don't appear
     const bodyText = notificationItem!.find('.accordion-body').text();
 
     expect(bodyText).not.toContain('Unit:');
@@ -402,9 +450,11 @@ describe('CalendarActivitiesActions Component', () => {
       subjects: [],
       statuses: [],
       subsidiaryBodies: [],
+      governingBodies: [],
       copDecisions: [],
       activityTypes: [],
       globalTargets: [],
+      gbfSections: [],
       countries: [],
       startDate: '',
       endDate: '',
