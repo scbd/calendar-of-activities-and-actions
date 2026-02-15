@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import Multiselect from 'vue-multiselect';
@@ -6,14 +6,33 @@ import { createI18n } from 'vue-i18n';
 import CalendarFilters from '../../app/components/calendar/calendar-filters.vue';
 import en from '../../i18n/locales/en.json';
 import fr from '../../i18n/locales/fr.json';
+import type { ParsedFacets } from 'shared/types/calendar';
+
+// Mock thesaurus service to prevent HTTP calls in tests
+vi.mock('../../shared/services/thesaurus', () => ({
+  getDomainTerms: vi.fn().mockResolvedValue([]),
+  loadDomainOptions: vi.fn().mockResolvedValue([]),
+}));
+
+const defaultFacets: ParsedFacets = {
+  schema: [
+    { value: 'meeting', count: 10 },
+    { value: 'notification', count: 5 },
+    { value: 'calendarActivity', count: 3 },
+  ],
+  subjects: [],
+  status: [],
+  subsidiaryBody: [],
+  governingBody: [],
+  decisions: [],
+  type: [],
+  gbfTargets: [],
+  gbfSections: [],
+  eventCountry: [],
+};
 
 const defaultProps = {
-  // availableTypes now ignored by component logic; kept for compatibility
-  availableTypes: ['Meeting', 'Workshop'],
-  availableSubjects: ['Biodiversity', 'Climate'],
-  availableStatuses: ['Confirmed', 'Tentative'],
-  availableSubsidiaryBodies: ['SBSTTA', 'SBI'],
-  availableCopDecisions: ['COP-15', 'COP-16'],
+  facets: defaultFacets,
 };
 
 function createI18nPlugin() {
@@ -85,7 +104,9 @@ describe('CalendarFilters Component', () => {
     expect(latest?.subjects).toEqual([]);
     expect(latest?.statuses).toEqual([]);
     expect(latest?.subsidiaryBodies).toEqual([]);
+    expect(latest?.governingBodies).toEqual([]);
     expect(latest?.copDecisions).toEqual([]);
+    expect(latest?.gbfSections).toEqual([]);
     expect(latest?.activityTypes).toEqual([]);
     expect(latest?.globalTargets).toEqual([]);
     expect(latest?.countries).toEqual([]);
@@ -96,13 +117,13 @@ describe('CalendarFilters Component', () => {
     expect(latest?.sort).toEqual(['startDate:asc']);
   });
 
-  it('provides the canonical schema options', async () => {
+  it('provides the canonical schema options from SOLR facets', async () => {
     const wrapper = await mountFilters();
     const typeSelect = wrapper.findComponent(Multiselect);
-    const options = typeSelect.props('options') as Array<{ value: string; label: string }>;
+    const options = typeSelect.props('options') as Array<{ value: string; label: string; count?: number }>;
 
-    expect(options.map(option => option.value)).toEqual(['meeting', 'notification', 'activity']);
-    expect(options.map(option => option.label)).toEqual(['Meeting', 'Notification', 'Activity']);
+    expect(options.map(option => option.value)).toEqual(['meeting', 'notification', 'calendarActivity']);
+    expect(options.every(option => typeof option.count === 'number')).toBe(true);
   });
 
   it('emits search text updates when typing into the search field', async () => {

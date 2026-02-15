@@ -1,14 +1,6 @@
-import { normalizeSolrDocument, normalizeSolrFieldName } from '../services/solr';
+import { normalizeSolrFieldName } from '../services/solr';
 import type { CalendarDoc } from '../types/calendar';
 import { extractDecisionEntries } from './decision-links';
-import { rawDocMap } from './calendar-document-normalizer';
-import { splitValues } from './text';
-import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-
-// Create a mapping from decision identifiers to names
-const decisionIdentifierToNameMap = new Map(
-  copDecisionTerms.map(term => [term.identifier, term.name])
-);
 
 /**
  * Raw value/label association from multi-value fields.
@@ -19,54 +11,32 @@ export interface ValueLabelPair {
 }
 
 /**
- * Retrieve the original raw document stored alongside the normalized document.
- * @param doc - Calendar document reference.
- * @returns Raw record when available.
+ * @deprecated rawDocMap is no longer used — SOLR documents are pre-normalized.
+ * Returns null unconditionally.
  */
-export function getDocRaw(doc: CalendarDoc): Record<string, unknown> | null {
-  return rawDocMap.get(doc) ?? null;
+export function getDocRaw(_doc: CalendarDoc): Record<string, unknown> | null {
+  return null;
 }
 
 /**
  * Resolve the first non-empty string value for any of the provided keys.
+ * Documents are pre-normalized so only the normalized doc is searched.
  * @param doc - Calendar document.
- * @param keys - Candidate field names.
+ * @param keys - Candidate field names (SOLR-style or camelCase).
  * @returns Normalized string or undefined.
  */
 export function getDocStringValue(doc: CalendarDoc, ...keys: string[]): string | undefined {
   const anyDoc = doc as Record<string, unknown>;
 
-  const toTrimmedString = (value: unknown): string | undefined => {
+  for (const key of keys) {
+    const normalizedKey = normalizeSolrFieldName(key);
+    const value = anyDoc[normalizedKey];
+
     if (typeof value === 'string') {
       const trimmed = value.trim();
 
       if (trimmed) {
         return trimmed;
-      }
-    }
-    return undefined;
-  };
-
-  for (const key of keys) {
-    const normalizedKey = normalizeSolrFieldName(key);
-    const value = toTrimmedString(anyDoc[normalizedKey]);
-
-    if (value) {
-      return value;
-    }
-  }
-
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
-
-    for (const key of keys) {
-      const normalizedKey = normalizeSolrFieldName(key);
-      const value = toTrimmedString(normalizedRaw[normalizedKey] ?? raw[key]);
-
-      if (value) {
-        return value;
       }
     }
   }
@@ -109,22 +79,33 @@ export function getDocBooleanValue(doc: CalendarDoc, ...keys: string[]): boolean
     }
   }
 
-  const raw = getDocRaw(doc);
+  return undefined;
+}
 
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
+// ---------------------------------------------------------------------------
+// Array field accessors
+// ---------------------------------------------------------------------------
 
-    for (const key of keys) {
-      const normalizedKey = normalizeSolrFieldName(key);
-      const value = coerce(normalizedRaw[normalizedKey] ?? raw[key]);
+/**
+ * Safely extract an array of strings from a document field.
+ * Handles fields that may be a string, array, or undefined.
+ */
+function readStringArray(doc: CalendarDoc, ...keys: string[]): string[] {
+  const anyDoc = doc as Record<string, unknown>;
 
-      if (value !== undefined) {
-        return value;
-      }
+  for (const key of keys) {
+    const normalizedKey = normalizeSolrFieldName(key);
+    const value = anyDoc[normalizedKey];
+
+    if (Array.isArray(value)) {
+      return value.map(String).filter(Boolean);
+    }
+    if (typeof value === 'string' && value.trim()) {
+      return value.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
     }
   }
 
-  return undefined;
+  return [];
 }
 
 /**
@@ -133,144 +114,52 @@ export function getDocBooleanValue(doc: CalendarDoc, ...keys: string[]): boolean
  * @returns Array of subject identifiers.
  */
 export function getDocSubjects(doc: CalendarDoc): string[] {
-  if (Array.isArray(doc.subjects)) {
-    return doc.subjects.map(String).filter(Boolean);
-  }
-  const anyDoc = doc as Record<string, unknown>;
-
-  if (Array.isArray(anyDoc.subjectIdentifiers)) {
-    return (anyDoc.subjectIdentifiers as unknown[]).map(String).filter(Boolean);
-  }
-  const subjectField = anyDoc.subjectEn ?? anyDoc.subject ?? anyDoc.subjects;
-
-  if (typeof subjectField === 'string') {
-    const split = splitValues(subjectField);
-
-    if (split.length > 0) {
-      return split;
-    }
-  }
-
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
-    const rawSubjects = normalizedRaw['subjects']
-      ?? normalizedRaw['subjectIdentifiers']
-      ?? normalizedRaw['subject']
-      ?? normalizedRaw['subjectEn'];
-
-    if (Array.isArray(rawSubjects)) {
-      return (rawSubjects as unknown[]).map(String).filter(Boolean);
-    }
-
-    if (typeof rawSubjects === 'string') {
-      return splitValues(rawSubjects);
-    }
-  }
-
-  return [];
+  return readStringArray(doc, 'subjects', 'subjectIdentifiers', 'subjectEn', 'subject');
 }
 
 /**
  * Extract subsidiary bodies from a document.
  * @param doc - Calendar document.
- * @returns Array of body names.
+ * @returns Array of subsidiary body identifiers.
  */
 export function getDocSubsidiaryBodies(doc: CalendarDoc): string[] {
-  if (Array.isArray(doc.subsidiaryBodies)) {
-    return doc.subsidiaryBodies.map(String).filter(Boolean);
-  }
-  const anyDoc = doc as Record<string, unknown>;
-  const bodyField = anyDoc.subsidiaryBodies ?? anyDoc.subsidiaryBody;
-
-  if (Array.isArray(bodyField)) {
-    return (bodyField as unknown[]).map(String).filter(Boolean);
-  }
-
-  if (typeof bodyField === 'string') {
-    const split = splitValues(bodyField);
-
-    if (split.length > 0) {
-      return split;
-    }
-  }
-
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
-    const rawBodies = normalizedRaw['subsidiaryBodies'] ?? normalizedRaw['subsidiaryBody'];
-
-    if (Array.isArray(rawBodies)) {
-      return (rawBodies as unknown[]).map(String).filter(Boolean);
-    }
-
-    if (typeof rawBodies === 'string') {
-      return splitValues(rawBodies);
-    }
-  }
-
-  return [];
+  return readStringArray(doc, 'subsidiaryBody', 'subsidiaryBodies');
 }
 
 /**
- * Retrieve normalized decision labels from the document.
+ * Extract governing bodies from a document.
  * @param doc - Calendar document.
- * @returns Decision labels list.
+ * @returns Array of governing body identifiers.
  */
-export function getDocDecisionLabels(doc: CalendarDoc): string[] {
-  const seen = new Set<string>();
-  const results: string[] = [];
+export function getDocGoverningBodies(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'governingBody', 'governingBodies');
+}
 
-  const pushBase = (label: string | null | undefined) => {
-    if (!label) return;
+/**
+ * Extract GBF sections from a document.
+ * @param doc - Calendar document.
+ * @returns Array of GBF section identifiers.
+ */
+export function getDocGbfSections(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'gbfSections');
+}
 
-    const trimmed = label.trim();
+/**
+ * Retrieve the list of unique GBF target identifiers.
+ * @param doc - Calendar document.
+ * @returns Array of unique target identifiers.
+ */
+export function getDocGlobalTargets(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'gbfTargets', 'globalTargets');
+}
 
-    if (!trimmed) return;
-
-    // Strip any paragraph suffix patterns like "P. ..." or "PARA ..." but preserve the base format
-    const stripped = trimmed.replace(/\s+P(?:\.|\s*(?:ARAS?|ARAGRAPH))\.?\s*.*$/i, '').trim();
-
-    if (stripped && !seen.has(stripped)) {
-      seen.add(stripped);
-      results.push(stripped);
-    }
-  };
-
-  // First, check for the new decisions property (array of identifiers)
-  const record = doc as Record<string, unknown>;
-  const decisionsArray = record['decisions'];
-
-  if (Array.isArray(decisionsArray) && decisionsArray.length > 0) {
-    decisionsArray.forEach(identifier => {
-      if (typeof identifier === 'string') {
-        const name = decisionIdentifierToNameMap.get(identifier);
-
-        if (name) {
-          pushBase(name);
-        }
-      }
-    });
-    
-    // If decisions array exists and has entries, don't use fallback
-    // to avoid duplicates and incorrect prefix handling for CP/NP decisions
-    return results;
-  }
-
-  // Fallback to legacy copDecision fields (only for documents without decisions array)
-  const entries = extractDecisionEntries(record);
-
-  entries.forEach(entry => {
-    // Strip "COP " prefix to match term.name format (e.g., "COP 15/6" → "15/6")
-    // This ensures consistency with the identifier-to-name mapping above
-    const label = entry.label.replace(/^COP\s+/i, '');
-    
-    pushBase(label);
-  });
-
-  return results;
+/**
+ * Retrieve the list of unique country identifiers.
+ * @param doc - Calendar document.
+ * @returns Array of unique country codes or names.
+ */
+export function getDocCountries(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'eventCountry', 'countries', 'country', 'hostCountry', 'hostCountries');
 }
 
 /**
@@ -279,33 +168,113 @@ export function getDocDecisionLabels(doc: CalendarDoc): string[] {
  * @returns Array of decision identifiers (e.g., ["CAL-DECISION-CP-11-7"]).
  */
 export function getDocDecisionIdentifiers(doc: CalendarDoc): string[] {
-  const record = doc as Record<string, unknown>;
-  const decisionsArray = record['decisions'];
+  return readStringArray(doc, 'decisions');
+}
 
-  // If decisions array exists, return identifiers directly
-  if (Array.isArray(decisionsArray) && decisionsArray.length > 0) {
-    return decisionsArray
-      .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
-      .map(id => id.trim());
+// ---------------------------------------------------------------------------
+// Decision label helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive a human-readable label from a decision identifier.
+ * E.g. "CAL-DECISION-CP-15-6" → "CP-15/6", "CAL-DECISION-COP-15-4" → "COP 15/4",
+ * "CAL-DECISION-15-6" → "15/6", "CAL-DECISION-CP11-7" → "CP-11/7".
+ * @param identifier - Decision thesaurus identifier.
+ * @returns Human-readable label.
+ */
+function humanizeDecisionIdentifier(identifier: string): string {
+  // Strip common prefixes
+  const stripped = identifier
+    .replace(/^CAL-DECISION-/i, '')
+    .replace(/^CBD-DECISION-/i, '');
+
+  // COP-15-6, CP-11-7, NP-4-1 (with hyphen between type and number)
+  const typeDashMatch = stripped.match(/^(COP|CP|NP)-(\d+)-(\d+)$/i);
+
+  if (typeDashMatch) {
+    const type = typeDashMatch[1]!.toUpperCase();
+    const meetingNum = typeDashMatch[2]!;
+    const decisionNum = typeDashMatch[3]!;
+
+    return type === 'COP'
+      ? `${type} ${meetingNum}/${decisionNum}`
+      : `${type}-${meetingNum}/${decisionNum}`;
   }
 
-  // For legacy documents, map copDecision names back to identifiers
-  const nameToIdentifierMap = new Map(
-    copDecisionTerms.map(term => [term.name, term.identifier])
-  );
+  // COP15-6, CP11-7, NP4-1 (no hyphen between type and number)
+  const typeNoHyphenMatch = stripped.match(/^(COP|CP|NP)(\d+)-(\d+)$/i);
 
-  const labels = getDocDecisionLabels(doc);
-  const identifiers: string[] = [];
+  if (typeNoHyphenMatch) {
+    const type = typeNoHyphenMatch[1]!.toUpperCase();
+    const meetingNum = typeNoHyphenMatch[2]!;
+    const decisionNum = typeNoHyphenMatch[3]!;
 
-  labels.forEach(label => {
-    const identifier = nameToIdentifierMap.get(label);
+    return type === 'COP'
+      ? `${type} ${meetingNum}/${decisionNum}`
+      : `${type}-${meetingNum}/${decisionNum}`;
+  }
 
-    if (identifier) {
-      identifiers.push(identifier);
+  // Bare number-number (implied COP): 15-6 → 15/6
+  const bareMatch = stripped.match(/^(\d+)-(\d+)$/);
+
+  if (bareMatch) {
+    return `${bareMatch[1]}/${bareMatch[2]}`;
+  }
+
+  return stripped || identifier;
+}
+
+/**
+ * Retrieve readable decision labels from the document.
+ * @param doc - Calendar document.
+ * @param labelMap - Optional map of identifier → display label (e.g., from thesaurus).
+ *                   When not provided, labels are derived from identifiers.
+ * @returns Decision labels list.
+ */
+export function getDocDecisionLabels(
+  doc: CalendarDoc,
+  labelMap?: Map<string, string>,
+): string[] {
+  const seen = new Set<string>();
+  const results: string[] = [];
+
+  const push = (label: string) => {
+    const trimmed = label.trim();
+
+    if (trimmed && !seen.has(trimmed)) {
+      seen.add(trimmed);
+      results.push(trimmed);
+    }
+  };
+
+  // Primary: decisions array (identifiers)
+  const identifiers = getDocDecisionIdentifiers(doc);
+
+  if (identifiers.length > 0) {
+    identifiers.forEach(id => {
+      const label = labelMap?.get(id) ?? humanizeDecisionIdentifier(id);
+
+      push(label);
+    });
+    return results;
+  }
+
+  // Fallback: legacy copDecision fields
+  const record = doc as Record<string, unknown>;
+  const entries = extractDecisionEntries(record);
+
+  entries.forEach(entry => {
+    // Strip "COP " prefix for filtering consistency (e.g., "COP 15/6" → "15/6")
+    const withoutPrefix = entry.label.replace(/^COP\s+/i, '');
+    // Strip paragraph suffix patterns (e.g., "16/22 P. 12" → "16/22")
+    const base = withoutPrefix.replace(/\s+P(?:\.|\s*(?:ARAS?|ARAGRAPH))\.?\s*.*$/i, '').trim();
+
+    if (base) {
+      push(base);
     }
   });
 
-  return identifiers;
+  return results;
 }
 
 /**
@@ -315,8 +284,18 @@ export function getDocDecisionIdentifiers(doc: CalendarDoc): string[] {
  * @returns Array of value-label mappings.
  */
 export function collectValueLabelPairs(value: unknown, label?: unknown): ValueLabelPair[] {
-  const values = splitValues(value);
-  const labels = splitValues(label);
+  const toArray = (v: unknown): string[] => {
+    if (Array.isArray(v)) {
+      return v.map(String).filter(Boolean);
+    }
+    if (typeof v === 'string' && v.trim()) {
+      return v.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  };
+
+  const values = toArray(value);
+  const labels = toArray(label);
 
   if (values.length === 0 && labels.length > 0) {
     const fallback = labels[0];
@@ -347,21 +326,11 @@ export function collectGlobalTargetEntries(doc: CalendarDoc): ValueLabelPair[] {
   push(record['globalTargets'], record['globalTargetsEn']);
   push(record['gbfTarget'], record['gbfTargetEn']);
 
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
-
-    push(normalizedRaw['gbfTargets'], normalizedRaw['gbfTargetsEn']);
-    push(normalizedRaw['globalTargets'], normalizedRaw['globalTargetsEn']);
-    push(normalizedRaw['gbfTarget'], normalizedRaw['gbfTargetEn']);
-  }
-
   return entries;
 }
 
 /**
- * Collect country entries from a document, including raw fallbacks.
+ * Collect country entries from a document.
  * @param doc - Calendar document.
  * @returns Array of value-label pairs.
  */
@@ -373,6 +342,7 @@ export function collectCountryEntries(doc: CalendarDoc): ValueLabelPair[] {
     entries.push(...collectValueLabelPairs(value, label));
   };
 
+  push(record['eventCountry'], record['eventCountryEn']);
   push(record['country'], record['countryEn']);
   push(record['countries'], record['countriesEn']);
   push(record['countryCode'], record['countryName']);
@@ -380,51 +350,5 @@ export function collectCountryEntries(doc: CalendarDoc): ValueLabelPair[] {
   push(record['hostCountry'], record['hostCountryEn']);
   push(record['hostCountries'], record['hostCountriesEn']);
 
-  const raw = getDocRaw(doc);
-
-  if (raw) {
-    const normalizedRaw = normalizeSolrDocument(raw);
-
-    push(normalizedRaw['country'], normalizedRaw['countryEn']);
-    push(normalizedRaw['countryCode'], normalizedRaw['countryName']);
-    push(normalizedRaw['countries'], normalizedRaw['countriesEn']);
-    push(normalizedRaw['countryCodes'], normalizedRaw['countryNames']);
-    push(normalizedRaw['countryIso2'], normalizedRaw['countryNames']);
-    push(normalizedRaw['hostCountry'], normalizedRaw['hostCountryEn']);
-    push(normalizedRaw['hostCountries'], normalizedRaw['hostCountriesEn']);
-  }
-
   return entries;
-}
-
-/**
- * Retrieve the list of unique GBF target identifiers.
- * @param doc - Calendar document.
- * @returns Array of unique target identifiers.
- */
-export function getDocGlobalTargets(doc: CalendarDoc): string[] {
-  const values = new Set<string>();
-
-  collectGlobalTargetEntries(doc).forEach(entry => {
-    if (entry.value) {
-      values.add(entry.value);
-    }
-  });
-  return Array.from(values);
-}
-
-/**
- * Retrieve the list of unique country identifiers.
- * @param doc - Calendar document.
- * @returns Array of unique country codes or names.
- */
-export function getDocCountries(doc: CalendarDoc): string[] {
-  const values = new Set<string>();
-
-  collectCountryEntries(doc).forEach(entry => {
-    if (entry.value) {
-      values.add(entry.value);
-    }
-  });
-  return Array.from(values);
 }

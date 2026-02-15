@@ -1,39 +1,39 @@
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { DateTime } from 'luxon';
-import { collectAllFieldNames, type LocaleCode } from 'shared/services/solr';
-import { meetings as meetingSnapshot } from 'shared/data/meetings.js';
-import activitiesSnapshot from 'shared/data/25-26-activities.js';
-import notificationsSnapshot from 'shared/data/notifications.js';
-import { loadSubjectOptions, buildSubjectLabelMap, type SubjectOption, setSubjectLabelMap as setSubjectLabelMapSubjects } from 'shared/utils/subjects';
 import {
-  buildDocsFromActivities,
-  normalizeMeetingDoc,
-  type SnapshotMeeting,
-} from 'shared/utils/calendar-document-normalizer';
-import { buildDocsFromNotifications, getNotificationKeys, notificationDisplayEntries, setNotificationStores } from 'shared/utils/notifications';
+  buildCalendarQuery,
+  normalizeCalendarDoc,
+  parseFacets,
+  type LocaleCode,
+} from 'shared/services/solr';
+import {
+  loadSubjectOptions,
+  buildSubjectLabelMap,
+  type SubjectOption,
+  setSubjectLabelMap as setSubjectLabelMapSubjects,
+} from 'shared/utils/subjects';
+import {
+  getNotificationKeys,
+  notificationDisplayEntries,
+  setNotificationStores,
+} from 'shared/utils/notifications';
 import type { NotificationDetails, NotificationKey } from 'shared/utils/notifications';
-import {
-  collectCountryEntries,
-  collectGlobalTargetEntries,
-  getDocBooleanValue,
-  getDocCountries,
-  getDocDecisionIdentifiers,
-  getDocGlobalTargets,
-  getDocStringValue,
-  getDocSubjects,
-  getDocSubsidiaryBodies,
-} from 'shared/utils/document-processing';
-import { normalizeStatusKey } from 'shared/utils/status';
-import { normalizeTypeKey } from 'shared/utils/type-colors';
-import { resolveCountryLabel } from 'shared/utils/labels';
-import { safeDate } from 'shared/utils/date';
 import { fetchNotificationDetails } from 'shared/services/solr-index';
-import type { CalendarDoc, FilterState, GroupedItem } from 'shared/types/calendar';
+import type {
+  CalendarDoc,
+  FilterState,
+  FilterOption,
+  GroupedItem,
+  ParsedFacets,
+} from 'shared/types/calendar';
+import type { SolrResponse } from 'shared/types/solr';
 
-interface FilterOption {
-  value: string;
-  label: string;
-}
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const PAGE_SIZE = 50;
+const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
 
@@ -42,9 +42,11 @@ const defaultFilters: FilterState = {
   subjects: [],
   statuses: [],
   subsidiaryBodies: [],
+  governingBodies: [],
   copDecisions: [],
   activityTypes: [],
   globalTargets: [],
+  gbfSections: [],
   countries: [],
   startDate: '',
   endDate: '',
@@ -52,6 +54,10 @@ const defaultFilters: FilterState = {
   searchText: '',
   sort: [...DEFAULT_SORT_VALUES],
 };
+
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
 
 export interface UseCalendarDataOptions {
   initialStartDate?: string;
@@ -62,17 +68,34 @@ export interface UseCalendarDataOptions {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Composable
+// ---------------------------------------------------------------------------
+
 export function useCalendarData(options: UseCalendarDataOptions = {}) {
-  const loading = ref<boolean>(true);
+  // --- Core state ----------------------------------------------------------
   const docs = ref<CalendarDoc[]>([]);
-  const allFieldNames = ref<string[]>([]);
+  const loading = ref(false);
+  const initialLoading = ref(true);
+  const total = ref(0);
+  const start = ref(0);
+  const error = ref<string | null>(null);
+  const facets = ref<ParsedFacets>({});
+
   const locale = ref<LocaleCode>(options.locale ?? 'en');
   const subjectOptions = ref<SubjectOption[]>([]);
+
   const currentFilters = ref<FilterState>({
     ...defaultFilters,
     startDate: options.initialStartDate ?? '',
     sort: [...DEFAULT_SORT_VALUES],
   });
+
+  // --- Derived state -------------------------------------------------------
+  const hasMore = computed(() => start.value + PAGE_SIZE < total.value);
+  const isEmpty = computed(() => !loading.value && docs.value.length === 0 && !error.value);
+
+  // --- Notification enrichment stores --------------------------------------
   const notificationDetailsMap = ref<Record<NotificationKey, NotificationDetails>>({});
   const notificationErrors = ref<Record<NotificationKey, string>>({});
   const notificationLoadingMap = ref<Record<NotificationKey, boolean>>({});
@@ -85,25 +108,161 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     getErrors: () => notificationErrors.value,
   });
 
+  // --- Subject labels ------------------------------------------------------
   const subjectLabelMap = computed(() => buildSubjectLabelMap(subjectOptions.value));
 
   watch(subjectLabelMap, (map) => {
     setSubjectLabelMapSubjects(map);
   }, { immediate: true });
 
-  watchEffect(() => {
-    if (docs.value.length === 0) {
-      allFieldNames.value = [];
+  async function ensureSubjectLabels(): Promise<void> {
+    if (subjectOptions.value.length > 0) {
       return;
     }
-    allFieldNames.value = collectAllFieldNames(docs.value as Array<Record<string, unknown>>);
-  });
 
+    try {
+      subjectOptions.value = await loadSubjectOptions(locale.value);
+    } catch (err) {
+      console.error('Failed to load subject options', err);
+      subjectOptions.value = [];
+    }
+  }
+
+  // --- SOLR endpoint -------------------------------------------------------
+  function getSolrEndpoint(): string {
+    const config = useRuntimeConfig();
+
+    return (config.public.scbdIndexEndpoint as string) || 'https://api.cbddev.xyz/api/v2013/index/select';
+  }
+
+  // --- Sort helpers --------------------------------------------------------
+  function buildSolrSort(sortValues: string[]): string {
+    const mapped = sortValues
+      .map((v) => {
+        const [field, dir] = v.split(':');
+        const solrField = field === 'startDate' ? 'startDate_dt'
+          : field === 'endDate' ? 'endDate_dt'
+            : field === 'title' ? 'title_EN_t'
+              : field === 'schema' ? 'schema_s'
+                : field === 'actionRequired' ? 'actionRequiredByParties_b'
+                  : `${field}_s`;
+
+        return `${solrField} ${dir === 'desc' ? 'desc' : 'asc'}`;
+      })
+      .filter(Boolean);
+
+    return mapped.length > 0 ? mapped.join(', ') : 'startDate_dt asc';
+  }
+
+  // --- Fetch a single page from SOLR --------------------------------------
+  async function fetchPage(
+    pageStart: number,
+  ): Promise<{ docs: CalendarDoc[]; total: number; facets: ParsedFacets }> {
+    const filters = currentFilters.value;
+    const sort = buildSolrSort(filters.sort?.length ? filters.sort : [...DEFAULT_SORT_VALUES]);
+
+    const body = buildCalendarQuery({
+      filters,
+      locale: locale.value,
+      searchText: filters.searchText?.trim() || undefined,
+      start: pageStart,
+      rows: PAGE_SIZE,
+      sort,
+    });
+
+    const endpoint = getSolrEndpoint();
+
+    const response = await $fetch<SolrResponse>(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+
+    const rawDocs = response?.response?.docs ?? [];
+    const normalizedDocs = rawDocs.map((raw) => normalizeCalendarDoc(raw as Record<string, unknown>));
+    const parsedFacets = parseFacets(response?.facet_counts);
+
+    return {
+      docs: normalizedDocs,
+      total: response?.response?.numFound ?? 0,
+      facets: parsedFacets,
+    };
+  }
+
+  // --- Execute query (filter change → full reset) --------------------------
+  async function executeQuery(): Promise<void> {
+    loading.value = true;
+    error.value = null;
+    start.value = 0;
+    docs.value = [];
+
+    try {
+      const result = await fetchPage(0);
+
+      docs.value = result.docs;
+      total.value = result.total;
+      facets.value = result.facets;
+    } catch (err) {
+      console.error('SOLR query failed', err);
+      error.value = err instanceof Error ? err.message : 'Failed to load calendar data';
+      docs.value = [];
+      total.value = 0;
+    } finally {
+      loading.value = false;
+      initialLoading.value = false;
+    }
+  }
+
+  // --- Load more (infinite scroll) ----------------------------------------
+  async function loadMore(): Promise<void> {
+    if (!hasMore.value || loading.value) {
+      return;
+    }
+
+    loading.value = true;
+    const nextStart = start.value + PAGE_SIZE;
+
+    try {
+      const result = await fetchPage(nextStart);
+
+      docs.value = [...docs.value, ...result.docs];
+      start.value = nextStart;
+      facets.value = result.facets;
+
+      // If fewer docs than requested, we've reached the end
+      if (result.docs.length < PAGE_SIZE) {
+        total.value = docs.value.length;
+      }
+    } catch (err) {
+      console.error('Failed to load more results', err);
+      error.value = err instanceof Error ? err.message : 'Failed to load more results';
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  // --- Debounced filter watcher --------------------------------------------
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  watch(
+    currentFilters,
+    () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      debounceTimer = setTimeout(() => {
+        void executeQuery();
+      }, DEBOUNCE_MS);
+    },
+    { deep: true },
+  );
+
+  // --- Notification key enrichment -----------------------------------------
   const notificationKeys = computed<NotificationKey[]>(() => {
     const keys = new Set<NotificationKey>();
 
-    docs.value.forEach(doc => {
-      getNotificationKeys(doc).forEach(key => keys.add(key));
+    docs.value.forEach((doc) => {
+      getNotificationKeys(doc).forEach((key) => keys.add(key));
     });
 
     return Array.from(keys).sort();
@@ -114,7 +273,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       return;
     }
 
-    const missing = keys.filter(key => {
+    const missing = keys.filter((key) => {
       return !notificationDetailsMap.value[key]
         && !notificationLoadingMap.value[key]
         && !notificationErrors.value[key];
@@ -126,13 +285,13 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
     const nextLoading = { ...notificationLoadingMap.value };
 
-    missing.forEach(key => {
+    missing.forEach((key) => {
       nextLoading[key] = true;
     });
 
     notificationLoadingMap.value = nextLoading;
 
-    await Promise.all(missing.map(async key => {
+    await Promise.all(missing.map(async (key) => {
       try {
         const details = await fetchNotificationDetails(key);
 
@@ -153,10 +312,10 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
             [key]: notificationNotFound(),
           };
         }
-      } catch (error) {
+      } catch (err) {
         notificationErrors.value = {
           ...notificationErrors.value,
-          [key]: error instanceof Error ? error.message : notificationLoadFailed(),
+          [key]: err instanceof Error ? err.message : notificationLoadFailed(),
         };
       } finally {
         const { [key]: _removed, ...restLoading } = notificationLoadingMap.value;
@@ -166,512 +325,77 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     }));
   }, { immediate: true });
 
-  async function ensureSubjectLabels(): Promise<void> {
-    if (subjectOptions.value.length > 0) {
-      return;
-    }
-
-    try {
-      subjectOptions.value = await loadSubjectOptions(locale.value);
-    } catch (error) {
-      console.error('Failed to load subject options', error);
-      subjectOptions.value = [];
-    }
-  }
-
-  async function loadSnapshotData(): Promise<void> {
-    loading.value = true;
-    const normalizedMeetings = meetingSnapshot.map((meeting, index) => normalizeMeetingDoc(meeting as SnapshotMeeting, index));
-    const notificationSource = Array.isArray(notificationsSnapshot)
-      ? notificationsSnapshot
-      : [];
-    const { docs: notificationDocs, details: notificationDetails } = buildDocsFromNotifications(notificationSource);
-
-    if (Object.keys(notificationDetails).length > 0) {
-      const seededDetails = { ...notificationDetailsMap.value };
-
-      for (const [key, detail] of Object.entries(notificationDetails)) {
-        if (!seededDetails[key]) {
-          seededDetails[key as NotificationKey] = detail;
-        }
-      }
-
-      notificationDetailsMap.value = seededDetails;
-    }
-
-    const activitiesDocs = activitiesSnapshot.length > 0
-      ? buildDocsFromActivities(activitiesSnapshot)
-      : [];
-
-    docs.value = [...normalizedMeetings, ...activitiesDocs, ...notificationDocs];
-    loading.value = false;
-  }
-
-  onMounted(() => {
-    void loadSnapshotData();
-    void ensureSubjectLabels();
-  });
-
-  type SortField = 'startDate' | 'endDate' | 'title' | 'schema' | 'actionRequired';
-  type SortDirection = 'asc' | 'desc';
-
-  interface SortDirective {
-    field: SortField;
-    direction: SortDirection;
-  }
-
-  const SORT_FIELDS: SortField[] = ['startDate', 'endDate', 'title', 'schema', 'actionRequired'];
-  const FALLBACK_SORT_DIRECTIVE: SortDirective = { field: 'startDate', direction: 'asc' };
-
-  const filteredDocs = computed<CalendarDoc[]>(() => {
-    let filtered = docs.value;
-    const filters = currentFilters.value;
-
-    if (filters.types.length > 0) {
-      filtered = filtered.filter(doc => {
-        const candidates = new Set<string>();
-        const schema = getDocStringValue(doc, 'schema');
-        const rawType = getDocStringValue(doc, 'type');
-
-        if (schema) {
-          candidates.add(schema.trim().toLowerCase());
-        }
-
-        if (rawType) {
-          candidates.add(normalizeTypeKey(rawType));
-        }
-
-        if (candidates.size === 0) {
-          return false;
-        }
-
-        return Array.from(candidates).some(candidate => filters.types.includes(candidate));
-      });
-    }
-
-    if (filters.activityTypes.length > 0) {
-      filtered = filtered.filter(doc => {
-        const activityType = getDocStringValue(doc, 'activityType');
-
-        return activityType && filters.activityTypes.includes(activityType);
-      });
-    }
-
-    if (filters.subjects.length > 0) {
-      filtered = filtered.filter(doc => {
-        const subjects = getDocSubjects(doc);
-
-        return subjects.some(subject => filters.subjects.includes(subject));
-      });
-    }
-
-    if (filters.globalTargets.length > 0) {
-      filtered = filtered.filter(doc => {
-        const targets = getDocGlobalTargets(doc);
-
-        return targets.some(target => filters.globalTargets.includes(target));
-      });
-    }
-
-    if (filters.countries.length > 0) {
-      filtered = filtered.filter(doc => {
-        const countries = getDocCountries(doc);
-
-        return countries.some(country => filters.countries.includes(country));
-      });
-    }
-
-    if (filters.statuses.length > 0) {
-      filtered = filtered.filter(doc => {
-        const key = getDocStringValue(doc, 'statusKey')
-          ?? normalizeStatusKey(getDocStringValue(doc, 'status'));
-
-        return !!key && filters.statuses.includes(key);
-      });
-    }
-
-    if (filters.subsidiaryBodies.length > 0) {
-      filtered = filtered.filter(doc => {
-        const bodies = getDocSubsidiaryBodies(doc);
-
-        return bodies.some(body => filters.subsidiaryBodies.includes(body));
-      });
-    }
-
-    if (filters.copDecisions.length > 0) {
-      filtered = filtered.filter(doc => {
-        const identifiers = getDocDecisionIdentifiers(doc);
-
-        return identifiers.some(identifier => filters.copDecisions.includes(identifier));
-      });
-    }
-
-    if (filters.startDate || filters.endDate) {
-      filtered = filtered.filter(doc => {
-        const startDate = safeDate(getDocStringValue(doc, 'startDate'));
-        const endDate = safeDate(getDocStringValue(doc, 'endDate'));
-        const docDate = startDate || endDate;
-
-        if (!docDate) return false;
-        const docDateIso = docDate.toISODate();
-
-        if (!docDateIso) return false;
-
-        if (filters.startDate) {
-          const startFilter = DateTime.fromISO(filters.startDate, { zone: 'utc' }).toISODate();
-
-          if (startFilter && docDateIso < startFilter) return false;
-        }
-
-        if (filters.endDate) {
-          const endFilter = DateTime.fromISO(filters.endDate, { zone: 'utc' }).toISODate();
-
-          if (endFilter && docDateIso > endFilter) return false;
-        }
-
-        return true;
-      });
-    }
-
-    if (filters.actionRequired) {
-      filtered = filtered.filter(doc => {
-        const actionRequired = getDocBooleanValue(doc, 'actionRequired');
-
-        return actionRequired === true;
-      });
-    }
-
-    const normalizedSearch = filters.searchText.trim().toLowerCase();
-
-    if (normalizedSearch.length > 0) {
-      filtered = filtered.filter(doc => docMatchesSearch(doc, normalizedSearch));
-    }
-
-    const sortDirectives = normalizeSortDirectives(filters.sort);
-
-    return [...filtered].sort((a, b) => {
-      for (const directive of sortDirectives) {
-        const comparison = compareByDirective(a, b, directive);
-
-        if (comparison !== 0) {
-          return comparison;
-        }
-      }
-
-      // Final deterministic fallback by start date then ID
-      const fallbackComparison = compareByDirective(a, b, FALLBACK_SORT_DIRECTIVE);
-
-      if (fallbackComparison !== 0) {
-        return fallbackComparison;
-      }
-
-      return compareStringValues(String(a.id ?? ''), String(b.id ?? ''));
-    });
-  });
-
+  // --- Grouped items (by year-month) — operates on server-filtered docs ----
   const groupedItems = computed<GroupedItem[]>(() => {
     const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
 
-    for (const d of filteredDocs.value) {
-      const startDate = getDocStringValue(d, 'startDate');
-      const endDate = getDocStringValue(d, 'endDate');
-      const iso = startDate || endDate;
+    for (const d of docs.value) {
+      const iso = d.startDate || d.endDate;
       const dt = iso ? DateTime.fromISO(String(iso)) : null;
-      const key = dt ? dt.toFormat('yyyy-LL') : 'unknown';
-      const label = dt ? dt.toFormat('LLLL yyyy') : 'Unknown date';
+      const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
+      const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';
 
-      if (!buckets.has(key)) buckets.set(key, { label, items: [] as CalendarDoc[] });
+      if (!buckets.has(key)) {
+        buckets.set(key, { label, items: [] });
+      }
       buckets.get(key)!.items.push(d);
     }
+
     return Array.from(buckets.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([key, v]) => ({ key, label: v.label, items: v.items }));
   });
 
-  const availableTypes = computed(() => {
-    const types = new Set<string>();
+  // --- Backward-compatible filter-option computeds (from facets) -----------
+  // These derive from SOLR facets so consumers don't break until Phase 03/04
+  // migrates them to use `facets` directly.
 
-    docs.value.forEach(doc => {
-      const type = getDocStringValue(doc, 'type');
-
-      if (type) types.add(String(type).trim());
-    });
-    return Array.from(types).sort();
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
+  const availableTypes = computed<string[]>(() => {
+    return (facets.value.schema ?? []).map((f) => f.value).sort();
   });
 
-  const availableSubjects = computed(() => {
-    const subjects = new Set<string>();
-
-    docs.value.forEach(doc => {
-      getDocSubjects(doc).forEach(subject => subjects.add(subject));
-    });
-    return Array.from(subjects).sort();
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
+  const availableSubjects = computed<string[]>(() => {
+    return (facets.value.subjects ?? []).map((f) => f.value).sort();
   });
 
-  const availableStatuses = computed(() => {
-    const statuses = new Set<string>();
-
-    docs.value.forEach(doc => {
-      const key = getDocStringValue(doc, 'statusKey')
-        ?? normalizeStatusKey(getDocStringValue(doc, 'status'));
-
-      if (key) statuses.add(key);
-    });
-    return Array.from(statuses).sort();
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
+  const availableStatuses = computed<string[]>(() => {
+    return (facets.value.status ?? []).map((f) => f.value).sort();
   });
 
-  const availableSubsidiaryBodies = computed(() => {
-    const bodies = new Set<string>();
-
-    docs.value.forEach(doc => {
-      getDocSubsidiaryBodies(doc).forEach(body => bodies.add(body));
-    });
-    return Array.from(bodies).sort();
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
+  const availableSubsidiaryBodies = computed<string[]>(() => {
+    return (facets.value.subsidiaryBody ?? []).map((f) => f.value).sort();
   });
 
-  const availableCopDecisions = computed(() => {
-    const decisions = new Set<string>();
-
-    docs.value.forEach(doc => {
-      getDocDecisionIdentifiers(doc).forEach(identifier => {
-        if (identifier) {
-          decisions.add(identifier);
-        }
-      });
-    });
-    return Array.from(decisions).sort();
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
+  const availableCopDecisions = computed<string[]>(() => {
+    return (facets.value.decisions ?? []).map((f) => f.value).sort();
   });
 
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
   const availableCountryOptions = computed<FilterOption[]>(() => {
-    const map = new Map<string, string>();
-
-    docs.value.forEach(doc => {
-      collectCountryEntries(doc).forEach(({ value, label }) => {
-        if (!value) {
-          return;
-        }
-        const currentLabel = map.get(value);
-        const finalLabel = resolveCountryLabel(value, label ?? currentLabel);
-
-        if (!map.has(value) || (label && label.trim())) {
-          map.set(value, finalLabel);
-        }
-      });
-    });
-
-    return Array.from(map.entries())
-      .map(([value, label]) => ({ value, label }))
+    return (facets.value.countries ?? [])
+      .map((f) => ({ value: f.value, label: f.value, count: f.count }))
       .sort((a, b) => a.label.localeCompare(b.label));
   });
 
+  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
   const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
-    const map = new Map<string, string>();
-
-    docs.value.forEach(doc => {
-      collectGlobalTargetEntries(doc).forEach(({ value, label }) => {
-        if (!value) {
-          return;
-        }
-        if (!map.has(value) || (label && label.trim())) {
-          map.set(value, label?.trim() || value);
-        }
-      });
-    });
-
-    return Array.from(map.entries())
-      .map(([value, label]) => ({ value, label }))
+    return (facets.value.gbfTargets ?? [])
+      .map((f) => ({ value: f.value, label: f.value, count: f.count }))
       .sort((a, b) => a.label.localeCompare(b.label));
   });
 
-  function parseSortValue(value: string): SortDirective | null {
-    if (!value) {
-      return null;
-    }
+  // --- Backward-compatible alias -------------------------------------------
+  /** @deprecated Server handles filtering — alias for `docs`. Will be removed in Phase 04. */
+  const filteredDocs = computed<CalendarDoc[]>(() => docs.value);
 
-    const [rawField, rawDirection] = value.split(':', 2);
-
-    if (!rawField || !SORT_FIELDS.includes(rawField as SortField)) {
-      return null;
-    }
-
-    const direction: SortDirection = rawDirection === 'desc' ? 'desc' : 'asc';
-
-    return {
-      field: rawField as SortField,
-      direction,
-    };
-  }
-
-  function normalizeSortDirectives(sortValues: string[] | undefined): SortDirective[] {
-    const values = sortValues && sortValues.length > 0 ? sortValues : Array.from(DEFAULT_SORT_VALUES);
-    const directives = values
-      .map(parseSortValue)
-      .filter((value): value is SortDirective => value !== null);
-
-    if (directives.length === 0) {
-      return [{ ...FALLBACK_SORT_DIRECTIVE }];
-    }
-
-    return directives;
-  }
-
-  function compareByDirective(a: CalendarDoc, b: CalendarDoc, directive: SortDirective): number {
-    let comparison = 0;
-
-    switch (directive.field) {
-      case 'startDate':
-        comparison = compareDateValues(getStartDateForSort(a), getStartDateForSort(b));
-        break;
-      case 'endDate':
-        comparison = compareDateValues(getEndDateForSort(a), getEndDateForSort(b));
-        break;
-      case 'title':
-        comparison = compareStringValues(getTitleSortValue(a), getTitleSortValue(b));
-        break;
-      case 'schema':
-        comparison = compareStringValues(getSchemaSortValue(a), getSchemaSortValue(b));
-        break;
-      case 'actionRequired':
-        comparison = compareNumberValues(getActionRequiredSortValue(a), getActionRequiredSortValue(b));
-        break;
-      default:
-        comparison = 0;
-    }
-
-    return directive.direction === 'desc' ? -comparison : comparison;
-  }
-
-  function compareDateValues(aDate: DateTime | null, bDate: DateTime | null): number {
-    if (aDate && bDate) {
-      if (aDate.toMillis() < bDate.toMillis()) return -1;
-      if (aDate.toMillis() > bDate.toMillis()) return 1;
-      return 0;
-    }
-    if (aDate) return -1;
-    if (bDate) return 1;
-    return 0;
-  }
-
-  function compareStringValues(aValue: string, bValue: string): number {
-    const a = aValue?.trim().toLowerCase() ?? '';
-    const b = bValue?.trim().toLowerCase() ?? '';
-
-    if (a && b) {
-      const result = a.localeCompare(b);
-
-      if (result < 0) return -1;
-      if (result > 0) return 1;
-      return 0;
-    }
-
-    if (a) return -1;
-    if (b) return 1;
-    return 0;
-  }
-
-  function compareNumberValues(a: number, b: number): number {
-    if (a === b) return 0;
-    return a < b ? -1 : 1;
-  }
-
-  function docMatchesSearch(doc: CalendarDoc, normalizedTerm: string): boolean {
-    return collectSearchableValues(doc).some(value => value.includes(normalizedTerm));
-  }
-
-  function collectSearchableValues(doc: CalendarDoc): string[] {
-    const seen = new Set<string>();
-    const values: string[] = [];
-
-    const add = (raw?: string | null) => {
-      if (!raw) {
-        return;
-      }
-      const trimmed = raw.trim();
-
-      if (!trimmed) {
-        return;
-      }
-      const lower = trimmed.toLowerCase();
-
-      if (seen.has(lower)) {
-        return;
-      }
-      seen.add(lower);
-      values.push(lower);
-    };
-
-    const addMany = (collection?: Iterable<unknown> | null) => {
-      if (!collection) {
-        return;
-      }
-      for (const entry of collection) {
-        if (typeof entry === 'string') {
-          add(entry);
-        } else if (entry !== undefined && entry !== null) {
-          add(String(entry));
-        }
-      }
-    };
-
-    add(getDocStringValue(doc, 'title', 'titleEn', 'titleFr', 'titleEs', 'titleRu', 'titleZh', 'titleAr'));
-    add(getDocStringValue(doc, 'description', 'notesEn', 'statusNarrative'));
-    add(getDocStringValue(doc, 'status', 'statusKey'));
-    add(getDocStringValue(doc, 'meetingCode', 'meetingType', 'eventType', 'type', 'schema', 'activityType'));
-    add(getDocStringValue(doc, 'identifier', '_id', 'notificationKey', 'notificationSymbol'));
-    add(getDocStringValue(doc, 'city', 'cityEn'));
-    add(getDocStringValue(doc, 'country', 'countryEn'));
-    add(getDocStringValue(doc, 'responsibleUnit', 'responsibleOfficer'));
-    add(getDocStringValue(doc, 'outcome'));
-
-    addMany(getDocSubjects(doc));
-    addMany(getDocGlobalTargets(doc));
-    addMany(getDocCountries(doc));
-    addMany(getDocSubsidiaryBodies(doc));
-    addMany(getDocDecisionIdentifiers(doc));
-
-    if (Array.isArray(doc.actors)) addMany(doc.actors);
-    if (Array.isArray(doc.relatedDocuments)) addMany(doc.relatedDocuments);
-    if (Array.isArray(doc.links)) addMany(doc.links);
-    if (Array.isArray(doc.recipients)) addMany(doc.recipients);
-    if (Array.isArray(doc.notificationKeys)) addMany(doc.notificationKeys);
-    if (Array.isArray(doc.gbfTargets)) addMany(doc.gbfTargets);
-    if (Array.isArray(doc.countries)) addMany(doc.countries);
-
-    return values;
-  }
-
-  function getStartDateForSort(doc: CalendarDoc): DateTime | null {
-    return safeDate(getDocStringValue(doc, 'startDate'))
-      ?? safeDate(getDocStringValue(doc, 'endDate'));
-  }
-
-  function getEndDateForSort(doc: CalendarDoc): DateTime | null {
-    return safeDate(getDocStringValue(doc, 'endDate'))
-      ?? safeDate(getDocStringValue(doc, 'startDate'));
-  }
-
-  function getTitleSortValue(doc: CalendarDoc): string {
-    return getDocStringValue(doc, 'title', 'titleEn', 'titleFr', 'titleEs', 'titleRu', 'titleZh', 'titleAr') ?? '';
-  }
-
-  function getSchemaSortValue(doc: CalendarDoc): string {
-    const schema = getDocStringValue(doc, 'schema');
-
-    if (schema) {
-      return schema.toLowerCase();
-    }
-
-    const rawType = getDocStringValue(doc, 'type');
-
-    return rawType ? normalizeTypeKey(rawType) : '';
-  }
-
-  function getActionRequiredSortValue(doc: CalendarDoc): number {
-    return getDocBooleanValue(doc, 'actionRequired') ? 1 : 0;
-  }
-
+  // --- Filter mutators -----------------------------------------------------
   function setFilters(filters: FilterState): void {
-    const normalizedSort = filters.sort && filters.sort.length > 0
+    const normalizedSort = filters.sort?.length
       ? [...filters.sort]
       : Array.from(DEFAULT_SORT_VALUES);
 
@@ -686,24 +410,47 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     };
   }
 
+  // --- Init ----------------------------------------------------------------
+  onMounted(() => {
+    void executeQuery();
+    void ensureSubjectLabels();
+  });
+
+  // --- Public API ----------------------------------------------------------
   return {
-    loading,
+    // Core SOLR-driven state
     docs,
+    loading,
+    initialLoading,
+    total,
+    hasMore,
+    loadMore,
+    error,
+    isEmpty,
+    facets,
+
+    // Locale & subject labels
     locale,
-    allFieldNames,
     subjectOptions,
     subjectLabelMap,
+    ensureSubjectLabels,
+
+    // Notification enrichment
     notificationDetailsMap,
     notificationErrors,
     notificationLoadingMap,
     notificationDisplayEntries,
-    ensureSubjectLabels,
-    loadSnapshotData,
+
+    // Filters
     currentFilters,
     setFilters,
     resetFilters,
-    filteredDocs,
+
+    // Grouping
     groupedItems,
+
+    // Backward-compatible — deprecated; will be removed in Phase 04
+    filteredDocs,
     availableTypes,
     availableSubjects,
     availableStatuses,

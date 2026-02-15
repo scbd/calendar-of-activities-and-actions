@@ -732,7 +732,7 @@ onMounted(async () => {
     loadDomainOptions(thesaurusDomains.COUNTRIES, locale.value).then(options => {
       remoteCountryOptions.value = options;
     }),
-    loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
+    loadDomainOptions(thesaurusDomains.GBF_TARGETS, locale.value).then(options => {
       remoteGlobalTargetOptions.value = options;
     }),
     loadSubsidiaryBodyOptions(locale.value).then(options => {
@@ -772,7 +772,7 @@ watch(() => locale.value, async (newLocale) => {
     setSubjectLabelMap(labelMap);
     
     remoteCountryOptions.value = await loadDomainOptions(thesaurusDomains.COUNTRIES, newLocale);
-    remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, newLocale);
+    remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_TARGETS, newLocale);
     remoteSubsidiaryBodyOptions.value = await loadSubsidiaryBodyOptions(newLocale);
   } catch (error) {
     console.error('Failed to reload options for locale', newLocale, error);

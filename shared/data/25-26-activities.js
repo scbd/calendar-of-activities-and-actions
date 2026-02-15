@@ -224,7 +224,7 @@ export default [
     "meetings": [],
     "identifier": "ACT-2025-06",
     "decisions": [
-      "CAL-DECISION-CP11-7"
+      "CAL-DECISION-CP-11-7"
     ]
   },
   {
@@ -389,7 +389,7 @@ export default [
     ],
     "identifier": "ACT-2025-11",
     "decisions": [
-      "CAL-DECISION-CP11-7"
+      "CAL-DECISION-CP-11-7"
     ]
   },
   {
@@ -913,7 +913,7 @@ export default [
     ],
     "identifier": "ACT-2025-27",
     "decisions": [
-      "CAL-DECISION-CP11-7"
+      "CAL-DECISION-CP-11-7"
     ]
   },
   {

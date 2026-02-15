@@ -6,44 +6,67 @@ import {
   collectValueLabelPairs,
   getDocBooleanValue,
   getDocCountries,
+  getDocDecisionIdentifiers,
   getDocDecisionLabels,
+  getDocGbfSections,
   getDocGlobalTargets,
+  getDocGoverningBodies,
   getDocRaw,
   getDocStringValue,
   getDocSubjects,
   getDocSubsidiaryBodies,
 } from '../document-processing';
-import { rawDocMap } from '../calendar-document-normalizer';
 
 describe('document processing utilities', () => {
-  it('retrieves raw docs from the weak map', () => {
-    const doc = { id: 'doc' } as CalendarDoc;
-    const raw = { original: true };
+  it('getDocRaw always returns null (deprecated)', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc' } as CalendarDoc;
 
-    rawDocMap.set(doc, raw);
-
-    expect(getDocRaw(doc)).toBe(raw);
+    expect(getDocRaw(doc)).toBeNull();
   });
 
   it('resolves string and boolean values', () => {
-    const doc = { id: 'doc', status: ' Active ' } as CalendarDoc;
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', status: ' Active ' } as unknown as CalendarDoc;
 
     expect(getDocStringValue(doc, 'status')).toBe('Active');
 
-    const booleanDoc = { id: 'doc', actionRequired: 'yes' } as CalendarDoc;
+    const booleanDoc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', actionRequired: 'yes' } as unknown as CalendarDoc;
 
     expect(getDocBooleanValue(booleanDoc, 'actionRequired')).toBe(true);
   });
 
-  it('collects subjects and bodies from docs and raw data', () => {
-    const doc = { id: 'doc', subjectEn: 'A, B', subsidiaryBodies: ['Body A'] } as CalendarDoc;
+  it('collects subjects and subsidiary bodies from docs', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', subjects: ['A', 'B'], subsidiaryBody: ['Body A'] } as unknown as CalendarDoc;
 
     expect(getDocSubjects(doc)).toEqual(['A', 'B']);
     expect(getDocSubsidiaryBodies(doc)).toEqual(['Body A']);
   });
 
-  it('collects decision labels using decision entries helper', () => {
-    const doc = { id: 'doc', decision: 'CBD/COP/15/1' } as unknown as CalendarDoc;
+  it('extracts governing bodies and gbf sections', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', governingBody: ['CBD'], gbfSections: ['SEC-A'] } as unknown as CalendarDoc;
+
+    expect(getDocGoverningBodies(doc)).toEqual(['CBD']);
+    expect(getDocGbfSections(doc)).toEqual(['SEC-A']);
+  });
+
+  it('collects decision identifiers and labels', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', decisions: ['CAL-DECISION-COP-15-4', 'CAL-DECISION-CP-11-7'] } as unknown as CalendarDoc;
+
+    expect(getDocDecisionIdentifiers(doc)).toEqual(['CAL-DECISION-COP-15-4', 'CAL-DECISION-CP-11-7']);
+
+    const labels = getDocDecisionLabels(doc);
+
+    expect(labels).toEqual(['COP 15/4', 'CP-11/7']);
+  });
+
+  it('uses label map when provided to getDocDecisionLabels', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', decisions: ['CAL-DECISION-COP-15-4'] } as unknown as CalendarDoc;
+    const labelMap = new Map([['CAL-DECISION-COP-15-4', '15/4']]);
+
+    expect(getDocDecisionLabels(doc, labelMap)).toEqual(['15/4']);
+  });
+
+  it('falls back to extractDecisionEntries for legacy docs without decisions array', () => {
+    const doc = { id: 'doc', schema: 'calendarActivity', identifier: 'doc', copDecision: 'CBD/COP/15/1' } as unknown as CalendarDoc;
     const labels = getDocDecisionLabels(doc);
 
     expect(Array.isArray(labels)).toBe(true);
@@ -57,9 +80,11 @@ describe('document processing utilities', () => {
 
     const doc = {
       id: 'doc',
+      schema: 'calendarActivity',
+      identifier: 'doc',
       gbfTargets: ['T1'],
       countries: ['CA'],
-    } as CalendarDoc;
+    } as unknown as CalendarDoc;
 
     expect(collectGlobalTargetEntries(doc)[0]?.value).toBe('T1');
     expect(collectCountryEntries(doc)[0]?.value).toBe('CA');

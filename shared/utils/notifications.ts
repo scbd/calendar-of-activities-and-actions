@@ -1,7 +1,4 @@
 import type { CalendarDoc } from '../types/calendar';
-import { normalizeSolrDocument } from '../services/solr';
-import { rawDocMap } from './calendar-document-normalizer';
-import { coerceIsoDate } from './date';
 import { htmlToText, normalizeWhitespace } from './text';
 
 export const NOTIFICATION_BASE_URL = 'https://www.cbd.int';
@@ -59,27 +56,11 @@ export interface NotificationDisplayEntry {
   error?: string;
 }
 
-export interface NotificationSnapshotRecord extends Record<string, unknown> {
-  symbol?: string;
-  url?: string;
-  urls?: string[];
-  files?: Array<{
-    url?: string;
-    name?: string;
-    type?: string;
-    language?: string;
-  }>;
-  recipients?: string[];
-  themes?: string[];
-  actionDate?: string;
-  deadline?: string;
-  date?: string;
-  createdDate?: string;
-  updatedDate?: string;
-  sender?: string;
-  title?: string;
-  titleEn?: string;
-}
+/**
+ * @deprecated NotificationSnapshotRecord is no longer used — notifications come from SOLR.
+ * Retained for backward-compatible imports.
+ */
+export type NotificationSnapshotRecord = Record<string, unknown>;
 
 const notificationKeyCache = new WeakMap<CalendarDoc, NotificationKey[]>();
 
@@ -328,167 +309,35 @@ export function buildNotificationExcerpt(source: string | null | undefined): str
 }
 
 /**
- * Convert snapshot notification records to normalized documents and seeded details.
- * @param records - Notification snapshot records.
- * @returns Normalized documents and pre-built details.
+ * @deprecated Notifications now come from SOLR — this function is a no-op stub.
+ * Retained for backward-compatible imports during migration.
  */
 export function buildDocsFromNotifications(
-  records: NotificationSnapshotRecord[],
+  _records: NotificationSnapshotRecord[],
 ): { docs: CalendarDoc[]; details: Record<NotificationKey, NotificationDetails> } {
-  const docs: CalendarDoc[] = [];
-  const details: Record<NotificationKey, NotificationDetails> = {};
-
-  records.forEach((record, index) => {
-    const doc = mapNotificationRecordToDoc(record, index);
-
-    docs.push(doc);
-
-    const key = doc.notificationKey;
-
-    if (key) {
-      const detail = buildNotificationDetailsFromSnapshot(record, key);
-
-      if (detail) {
-        details[key] = detail;
-      }
-    }
-  });
-
-  return { docs, details };
+  console.warn('[notifications] buildDocsFromNotifications() is deprecated — notifications are fetched from SOLR');
+  return { docs: [], details: {} };
 }
 
 /**
- * Convert a snapshot notification record to a normalized calendar document.
- * @param record - Snapshot record.
- * @param index - Array index used for fallback identifiers.
- * @returns Normalized calendar document.
+ * @deprecated Notifications now come from SOLR — this function is a no-op stub.
+ * Retained for backward-compatible imports during migration.
  */
-export function mapNotificationRecordToDoc(record: NotificationSnapshotRecord, index: number): CalendarDoc {
-  const normalized = normalizeSolrDocument(record as Record<string, unknown>);
-  const idCandidate = normalized['id'] ?? normalized['identifier'] ?? `notification-${index}`;
-  const id = String(idCandidate);
-  const symbolRaw = normalized['symbol'];
-  const symbol = typeof symbolRaw === 'string' ? symbolRaw.trim() : '';
-  const publishedOn = coerceIsoDate(normalized['date'] ?? normalized['createdDate'] ?? normalized['updatedDate']);
-  const actionDate = coerceIsoDate(normalized['actionDate']);
-  const deadline = coerceIsoDate(normalized['deadline']);
-  const startDateIso = publishedOn ?? actionDate ?? deadline ?? undefined;
-  const completionIso = actionDate ?? deadline ?? undefined;
-  const endDateIso = completionIso && completionIso !== startDateIso ? completionIso : undefined;
-
-  const recipients = normalizeNotificationList(normalized['recipients']);
-  const themes = normalizeNotificationList(normalized['themes'] ?? normalized['thematicAreas']);
-
-  const urls = Array.isArray(normalized['urls'])
-    ? Array.from(new Set(
-      (normalized['urls'] as unknown[])
-        .map(entry => String(entry).trim())
-        .filter(Boolean)
-        .map(entry => resolveNotificationUrl(entry)),
-    ))
-    : [];
-
-  const doc: CalendarDoc = {
-    ...normalized,
-    id,
-    identifier: normalized['identifier'] ?? id,
-    type: 'Notification',
-    schema: 'notification',
-    title: normalized['titleEn'] ?? normalized['title'] ?? (symbol || id),
-    titleEn: normalized['titleEn'] ?? normalized['title'] ?? (symbol || id),
-    status: (normalized['status'] as string | undefined) ?? 'Published',
-    statusKey: (normalized['statusKey'] as string | undefined) ?? 'PUBLISHED',
-    startDate: startDateIso,
-    endDate: endDateIso,
-    publishedDate: publishedOn ?? undefined,
-    actionDate: actionDate ?? undefined,
-    deadline: deadline ?? undefined,
-    actionRequired: Boolean(actionDate ?? deadline),
-    subjects: themes,
-    recipients,
-    responsibleOfficer: typeof normalized['sender'] === 'string'
-      ? normalized['sender']
-      : undefined,
-    notificationKey: symbol || undefined,
-    notificationKeys: symbol ? [symbol] : [],
-    notificationSymbol: symbol || undefined,
-    links: urls.length > 0
-      ? urls
-      : symbol
-        ? [buildNotificationLink(symbol)]
-        : [],
-  } as CalendarDoc;
-
-  if (!doc.statusNarrative && typeof normalized['reference'] === 'string') {
-    const reference = normalized['reference'].trim();
-
-    if (reference) {
-      doc.statusNarrative = reference;
-    }
-  }
-
-  rawDocMap.set(doc, record as Record<string, unknown>);
-  return doc;
+export function mapNotificationRecordToDoc(_record: NotificationSnapshotRecord, _index: number): CalendarDoc {
+  console.warn('[notifications] mapNotificationRecordToDoc() is deprecated — notifications are fetched from SOLR');
+  return { id: '', schema: 'notification', identifier: '' } as CalendarDoc;
 }
 
 /**
- * Build notification details from snapshot data for seeding state.
- * @param record - Snapshot record.
- * @param key - Notification symbol.
- * @returns Notification details or null.
+ * @deprecated Notifications now come from SOLR — this function is a no-op stub.
+ * Retained for backward-compatible imports during migration.
  */
 export function buildNotificationDetailsFromSnapshot(
-  record: NotificationSnapshotRecord,
-  key: NotificationKey,
+  _record: NotificationSnapshotRecord,
+  _key: NotificationKey,
 ): NotificationDetails | null {
-  const symbol = key.trim();
-
-  if (!symbol) {
-    return null;
-  }
-
-  const publishedOn = coerceIsoDate((record as Record<string, unknown>)['date'] ?? record.date ?? record.createdDate ?? record.updatedDate);
-  const actionDeadline = coerceIsoDate((record as Record<string, unknown>)['actionDate'] ?? record.actionDate ?? record.deadline);
-  const recipients = normalizeNotificationList(record.recipients);
-  const thematicAreas = normalizeNotificationList(record.themes);
-  const attachments = Array.isArray(record.files)
-    ? record.files
-      .map(file => {
-        const resolvedUrl = resolveNotificationUrl(file?.url ?? '');
-
-        if (!resolvedUrl) {
-          return null;
-        }
-
-        return {
-          name: file?.name ?? deriveNameFromUrl(resolvedUrl),
-          url: resolvedUrl,
-          type: file?.type,
-          language: file?.language,
-        } satisfies NotificationAttachment;
-      })
-      .filter((attachment): attachment is NotificationAttachment => Boolean(attachment?.url))
-    : [];
-
-  const link = Array.isArray(record.urls) && record.urls[0]
-    ? resolveNotificationUrl(record.urls[0]!)
-    : buildNotificationLink(symbol);
-
-  return {
-    key: symbol,
-    title: record.titleEn ?? record.title ?? symbol,
-    excerpt: undefined,
-    fullText: undefined,
-    from: record.sender && String(record.sender).trim() ? String(record.sender).trim() : undefined,
-    publishedOn,
-    actionDeadline,
-    actionRequired: Boolean(record.actionDate ?? record.deadline),
-    recipients,
-    thematicAreas,
-    attachments,
-    link,
-    article: null,
-  } satisfies NotificationDetails;
+  console.warn('[notifications] buildNotificationDetailsFromSnapshot() is deprecated — notifications are fetched from SOLR');
+  return null;
 }
 
 /**
@@ -506,22 +355,13 @@ export function getNotificationKeys(doc: CalendarDoc): NotificationKey[] {
   const keys: NotificationKey[] = [];
   const seen = new Set<NotificationKey>();
 
-  collectNotificationKeys(doc.notificationKey, keys, seen);
-  collectNotificationKeys(doc.notificationSymbol, keys, seen);
-  collectNotificationKeys(doc.notificationKeys, keys, seen);
-  collectNotificationKeys(doc.relatedDocuments, keys, seen);
+  const anyDoc = doc as Record<string, unknown>;
+
+  collectNotificationKeys(anyDoc['notificationKey'], keys, seen);
+  collectNotificationKeys(anyDoc['notificationSymbol'], keys, seen);
+  collectNotificationKeys(anyDoc['notificationKeys'], keys, seen);
+  collectNotificationKeys(anyDoc['relatedDocuments'], keys, seen);
   collectNotificationKeys(doc.notifications, keys, seen);
-
-  const raw = rawDocMap.get(doc);
-
-  if (raw) {
-    collectNotificationKeys((raw as Record<string, unknown>)['notificationKey'], keys, seen);
-    collectNotificationKeys((raw as Record<string, unknown>)['notificationKeys'], keys, seen);
-    collectNotificationKeys((raw as Record<string, unknown>)['notificationSymbol'], keys, seen);
-    collectNotificationKeys((raw as Record<string, unknown>)['symbol'], keys, seen);
-    collectNotificationKeys((raw as Record<string, unknown>)['relatedDocuments'], keys, seen);
-    collectNotificationKeys((raw as Record<string, unknown>)['notifications'], keys, seen);
-  }
 
   notificationKeyCache.set(doc, keys);
   return keys;

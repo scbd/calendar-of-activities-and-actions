@@ -59,8 +59,9 @@ describe('Decision Filtering with new decisions property', () => {
 
     const labels = getDocDecisionLabels(doc);
 
-    // Unknown identifiers should be ignored
-    expect(labels.length).toBe(0);
+    // Unknown identifiers are humanized (prefix stripped)
+    expect(labels.length).toBe(1);
+    expect(labels[0]).toBe('UNKNOWN-999');
   });
 
   it('should handle mixed valid and invalid identifiers', () => {
@@ -73,10 +74,11 @@ describe('Decision Filtering with new decisions property', () => {
 
     expect(labels).toContain('16/11');
     expect(labels).toContain('16/12');
-    expect(labels.length).toBe(2);
+    expect(labels).toContain('INVALID');
+    expect(labels.length).toBe(3);
   });
 
-  it('should deduplicate decisions from both decisions array and copDecision', () => {
+  it('should deduplicate decisions from decisions array', () => {
     const doc = {
       identifier: 'ACT-2024-07',
       decisions: ['CAL-DECISION-16-15'],
@@ -85,23 +87,20 @@ describe('Decision Filtering with new decisions property', () => {
 
     const labels = getDocDecisionLabels(doc);
 
-    // Should only appear once due to deduplication (may be '16/15' or 'COP 16/15')
-    const filtered = labels.filter(l => l.includes('16/15'));
-
-    expect(filtered.length).toBeGreaterThan(0);
-    expect(labels.length).toBeGreaterThan(0);
+    // decisions array takes priority, copDecision fallback is not used
+    expect(labels).toContain('16/15');
+    expect(labels.length).toBe(1);
   });
 
   it('should handle CP11/7 variant without hyphen', () => {
     const doc = {
-      decisions: ['CAL-DECISION-CP11-7'], // Uses identifier without hyphen
+      decisions: ['CAL-DECISION-CP11-7'], // Uses identifier without hyphen between type/number
       copDecision: 'CP-11/7',
     };
 
     const labels = getDocDecisionLabels(doc);
 
-    // The identifier CAL-DECISION-CP11-7 is not in cop-decision-terms.js
-    // So it falls back to copDecision, and "CP-" prefix is preserved (not "COP")
+    // humanizeDecisionIdentifier handles CP11-7 → CP-11/7
     expect(labels).toContain('CP-11/7');
   });
 

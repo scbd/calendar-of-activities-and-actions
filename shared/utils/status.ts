@@ -19,8 +19,10 @@ export function configureStatusLocalization(options: { te?: TranslateExists; t?:
 }
 
 /**
- * Normalize a status label to an uppercase key used for filtering.
- * @param label - Raw status label.
+ * Normalize a status label or thesaurus identifier to an uppercase key used for filtering.
+ * Handles plain labels (e.g., "Confirmed"), thesaurus identifiers
+ * (e.g., "NCHM-EVENT-STATUS-CONFIRMED"), and existing uppercase keys.
+ * @param label - Raw status label or thesaurus identifier.
  * @returns Normalized status key.
  */
 export function normalizeStatusKey(label: string | undefined): string | null {
@@ -28,8 +30,26 @@ export function normalizeStatusKey(label: string | undefined): string | null {
   const value = String(label).trim().toLowerCase();
 
   if (!value) return null;
+
+  // Handle thesaurus-style identifiers (e.g., NCHM-EVENT-STATUS-CONFIRMED)
+  const thesaurusMatch = value.match(/^nchm[-_](?:event[-_])?status[-_](.+)$/i);
+
+  if (thesaurusMatch) {
+    const statusPart = thesaurusMatch[1]!.replace(/[-_]+/g, '_').toUpperCase();
+
+    if (statusPart === 'CONFIRMED') return 'CONFIRMED';
+    if (statusPart === 'TENTATIVE') return 'TENTATIVE';
+    if (statusPart === 'COMPLETED') return 'COMPLETED';
+    if (statusPart === 'ONGOING') return 'ONGOING';
+    if (statusPart === 'TO_BE_CONFIRMED' || statusPart === 'TBC') return 'TO_BE_CONFIRMED';
+    return statusPart;
+  }
+
   if (value === 'confirmed') return 'CONFIRMED';
   if (value === 'tentative') return 'TENTATIVE';
+  if (value === 'completed') return 'COMPLETED';
+  if (value === 'ongoing') return 'ONGOING';
+  if (value === 'to be confirmed' || value === 'tbc') return 'TO_BE_CONFIRMED';
   return value.replace(/\s+/g, '_').toUpperCase();
 }
 

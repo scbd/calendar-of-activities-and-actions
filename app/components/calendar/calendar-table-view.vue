@@ -16,6 +16,7 @@
 
           <component
             :is="currentFilterComponent"
+            :facets="facets"
             :available-types="availableTypes"
             :available-subjects="availableSubjects"
             :available-statuses="availableStatuses"
@@ -381,6 +382,7 @@ const {
   loading,
   docs,
   filteredDocs,
+  facets,
   availableTypes,
   availableSubjects,
   availableStatuses,

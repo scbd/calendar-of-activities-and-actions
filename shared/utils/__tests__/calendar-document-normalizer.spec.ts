@@ -1,20 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import type { CalendarDoc } from '../../types/calendar';
 import {
   buildDocsFromActivities,
   normalizeMeetingDoc,
   rawDocMap,
 } from '../calendar-document-normalizer';
 
-describe('calendar document normalizer', () => {
-  it('normalizes meetings', () => {
+describe('calendar document normalizer (deprecated stubs)', () => {
+  it('rawDocMap is a WeakMap (noop)', () => {
+    expect(rawDocMap).toBeInstanceOf(WeakMap);
+  });
+
+  it('normalizeMeetingDoc returns a stub (deprecated)', () => {
     const meeting = { id: 'm1', subjects: ['Subject'], links: ['http://example.com'] };
     const doc = normalizeMeetingDoc(meeting, 0);
 
-    expect(doc.subjects).toEqual(['Subject']);
+    // Deprecated stub — returns the input cast rather than normalizing
+    expect(doc).toBeDefined();
   });
 
-  it('builds docs from activities and stores raw data', () => {
+  it('buildDocsFromActivities returns empty array (deprecated)', () => {
     const activityDocs = buildDocsFromActivities([
       {
         title: 'Activity 1',
@@ -26,9 +30,7 @@ describe('calendar document normalizer', () => {
       },
     ]);
 
-    expect(activityDocs.length).toBe(1);
-    expect(activityDocs[0]?.title).toBe('Activity 1');
-    expect(activityDocs[0]?.type).toBe('Nominations');
-    expect(rawDocMap.get(activityDocs[0] as CalendarDoc)).toBeDefined();
+    // Deprecated stub — returns empty array
+    expect(activityDocs).toEqual([]);
   });
 });

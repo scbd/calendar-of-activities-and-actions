@@ -13,8 +13,8 @@ import type {
   NotificationSolrDoc,
 } from '../utils/notifications';
 
-const DEFAULT_SOLR_INDEX_URL = 'https://api.cbd.int/api/v2013/index';
-const DEFAULT_ARTICLE_URL = 'https://api.cbd.int/api/v2017/articles';
+const DEFAULT_SOLR_INDEX_URL = 'https://api.cbddev.xyz/api/v2013/index';
+const DEFAULT_ARTICLE_URL = 'https://api.cbddev.xyz/api/v2017/articles';
 
 /**
  * Generic record describing SOLR query parameters.

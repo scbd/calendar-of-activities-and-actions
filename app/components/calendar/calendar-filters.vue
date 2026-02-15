@@ -13,13 +13,13 @@
         >
       </div>
 
-      <!-- Type Filter -->
+      <!-- Record Type Filter -->
       <div v-if="!hideTypeFilter" class="col-12 col-md-6 col-lg-3">
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
           v-model="selectedTypes"
-          :options="schemaOptions"
+          :options="recordTypeOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
@@ -27,11 +27,16 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.schemas')"
-        />
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
-      <!-- Activity Types Filter (hidden in tab view unless Activities tab is active) -->
-      <div v-if="!hideActivityTypesFilter" class="col-12 col-md-6 col-lg-3">
+      <!-- Activity Types Filter (only when calendarActivity is in selected types) -->
+      <div v-if="showActivityTypesFilter" class="col-12 col-md-6 col-lg-3">
         <label for="activity-types-filter" class="form-label">{{ t('calendar.filters.labels.activityTypes') }}</label>
         <Multiselect
           id="activity-types-filter"
@@ -41,10 +46,15 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.activityTypes')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.activityTypes')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- Global Targets Filter -->
@@ -58,10 +68,37 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.globalTargets')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.globalTargets')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
+      </div>
+
+      <!-- GBF Sections Filter -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <label for="gbf-sections-filter" class="form-label">{{ t('calendar.filters.labels.gbfSections') }}</label>
+        <Multiselect
+          id="gbf-sections-filter"
+          v-model="selectedGbfSections"
+          :options="gbfSectionOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.gbfSections')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- Countries Filter -->
@@ -75,10 +112,15 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.countries')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.countries')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- Subject Filter -->
@@ -92,13 +134,15 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :group-select="true"
-          group-values="children"
-          group-label="label"
-          :placeholder="t('calendar.filters.placeholders.subjects')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.subjects')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- Status Filter -->
@@ -112,18 +156,42 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.statuses')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.statuses')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
+      </div>
+
+      <!-- Governing Bodies Filter -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <label for="governing-body-filter" class="form-label">{{ t('calendar.filters.labels.governingBodies') }}</label>
+        <Multiselect
+          id="governing-body-filter"
+          v-model="selectedGoverningBodies"
+          :options="governingBodyOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.governingBodies')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- Subsidiary Body Filter -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="subsidiary-body-filter" class="form-label">
-          <span>{{ t('calendar.filters.labels.subsidiaryBodies') }}</span><br>
-
-        </label>
+        <label for="subsidiary-body-filter" class="form-label">{{ t('calendar.filters.labels.subsidiaryBodies') }}</label>
         <Multiselect
           id="subsidiary-body-filter"
           v-model="selectedSubsidiaryBodies"
@@ -132,29 +200,39 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.subsidiaryBodies')"
           label="label"
           track-by="value"
-        />
+          :placeholder="t('calendar.filters.placeholders.subsidiaryBodies')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
       </div>
 
       <!-- COP Decision Filter -->
-      <!-- <div class="col-12 col-md-6 col-lg-3">
+      <div class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
           v-model="selectedCopDecisions"
-          :options="copDecisionOptions"
+          :options="decisionOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
-          :placeholder="t('calendar.filters.placeholders.decisions')"
           label="label"
           track-by="value"
-        />
-      </div> -->
-      
+          :placeholder="t('calendar.filters.placeholders.decisions')"
+        >
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          </template>
+        </Multiselect>
+      </div>
+
       <!-- Date Range Filter -->
       <div class="col-12 col-md-6 col-lg-3">
         <label class="form-label">{{ t('calendar.filters.labels.dateRange') }}</label>
@@ -230,95 +308,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, watchEffect, nextTick, type Ref, type ComputedRef } from 'vue';
+import { ref, computed, watch, watchEffect, nextTick, onMounted, type Ref, type ComputedRef } from 'vue';
 import Multiselect from 'vue-multiselect';
-import { loadDomainOptions } from 'shared/services/thesaurus';
-import { thesaurusDomains } from 'shared/constants/thesaurus';
-import { activityTypeTerms } from 'shared/data/activity-type-terms.js';
-import { copDecisionTerms } from 'shared/data/cop-decision-terms.js';
-import { loadGroupedSubjectOptions, loadSubsidiaryBodyOptions, buildSubjectLabelMap, setSubjectLabelMap } from 'shared/utils/subjects';
+import { useThesaurusFilters } from '../../composables/use-thesaurus-filters';
+import type { FilterOption, FilterState, ParsedFacets } from 'shared/types/calendar';
 
-// Nuxt router for URL query string management
+// Nuxt auto-imports
 const route = useRoute();
 const router = useRouter();
+const { t, locale } = useI18n();
 
-// Define filter option types
-interface FilterOption {
-  value: string;
-  label: string;
-  children?: FilterOption[];
-  depth?: number;
-}
+// ---------------------------------------------------------------------------
+// Props & Emits
+// ---------------------------------------------------------------------------
 
-// Define props
 interface Props {
-  availableTypes?: string[];
-  availableSubjects?: string[];
-  availableStatuses?: string[];
-  availableSubsidiaryBodies?: string[];
-  availableCopDecisions?: string[];
-  preloadedCountryOptions?: FilterOption[];
-  preloadedGlobalTargetOptions?: FilterOption[];
+  /** Parsed SOLR facet counts — drives filter option visibility & counts. */
+  facets: ParsedFacets;
+  /** Default start date for the date range filter. */
   initialStartDate?: string;
+  /** Hide the record type filter (used in tab view mode). */
   hideTypeFilter?: boolean;
+  /** Active tab type in tab view mode — empty string when not in tab view. */
   activeTabType?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  availableTypes: () => [],
-  availableSubjects: () => [],
-  availableStatuses: () => [],
-  availableSubsidiaryBodies: () => [],
-  availableCopDecisions: () => [],
-  preloadedCountryOptions: () => [],
-  preloadedGlobalTargetOptions: () => [],
   initialStartDate: '',
   hideTypeFilter: false,
   activeTabType: '',
 });
 
-// Define emits
 const emit = defineEmits<{
   'update:filters': [filters: FilterState];
 }>();
 
-const { t, te, locale } = useI18n();
+// ---------------------------------------------------------------------------
+// Thesaurus filter options (merged with SOLR facet counts)
+// ---------------------------------------------------------------------------
 
-// Filter state
-interface FilterState {
-  types: string[];
-  subjects: string[];
-  statuses: string[];
-  subsidiaryBodies: string[];
-  copDecisions: string[];
-  activityTypes: string[];
-  globalTargets: string[];
-  countries: string[];
-  startDate: string;
-  endDate: string;
-  actionRequired: boolean;
-  searchText: string;
-  sort: string[];
-}
+const facetsRef = computed<ParsedFacets>(() => props.facets ?? {});
 
-interface LocalCalendarTerm {
-  identifier: string;
-  name?: string;
-  title?: Record<string, string>;
-}
+const {
+  recordTypeOptions,
+  subjectOptions,
+  governingBodyOptions,
+  subsidiaryBodyOptions,
+  activityTypeOptions,
+  globalTargetOptions,
+  gbfSectionOptions,
+  countryOptions,
+  statusOptions,
+  decisionOptions,
+} = useThesaurusFilters({
+  locale: computed(() => locale.value),
+  facets: facetsRef,
+});
+
+// ---------------------------------------------------------------------------
+// Constants & types
+// ---------------------------------------------------------------------------
 
 type FilterSelectionValue = FilterOption | string;
 
 const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
 
-// Reactive filter values
+// ---------------------------------------------------------------------------
+// Reactive filter selections
+// ---------------------------------------------------------------------------
+
 const selectedTypes = ref<FilterSelectionValue[]>([]);
 const selectedSubjects = ref<FilterSelectionValue[]>([]);
 const selectedStatuses = ref<FilterSelectionValue[]>([]);
 const selectedSubsidiaryBodies = ref<FilterSelectionValue[]>([]);
+const selectedGoverningBodies = ref<FilterSelectionValue[]>([]);
 const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
 const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
 const selectedGlobalTargets = ref<FilterSelectionValue[]>([]);
+const selectedGbfSections = ref<FilterSelectionValue[]>([]);
 const selectedCountries = ref<FilterSelectionValue[]>([]);
 const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
 const startDate = ref<string>(props.initialStartDate ?? '');
@@ -329,13 +396,17 @@ const searchText = ref<string>('');
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
 
-// Track if we're loading from URL to prevent circular updates
+// Track if we are loading from URL to prevent circular updates
 const isLoadingFromUrl = ref<boolean>(false);
 
-// Track if we've completed the initial mount (to only apply initialStartDate once)
+// Track if we have completed the initial mount (to only apply initialStartDate once)
 const hasCompletedInitialMount = ref<boolean>(false);
 
-// Computed property to check if any filters are active
+// ---------------------------------------------------------------------------
+// Computed helpers
+// ---------------------------------------------------------------------------
+
+/** Check if any filters are active (controls Clear button state). */
 const hasActiveFilters = computed<boolean>(() => {
   const activeSorts = extractSelectedValues(selectedSorts.value);
 
@@ -344,9 +415,11 @@ const hasActiveFilters = computed<boolean>(() => {
     selectedSubjects.value.length > 0 ||
     selectedStatuses.value.length > 0 ||
     selectedSubsidiaryBodies.value.length > 0 ||
+    selectedGoverningBodies.value.length > 0 ||
     selectedCopDecisions.value.length > 0 ||
     selectedActivityTypes.value.length > 0 ||
     selectedGlobalTargets.value.length > 0 ||
+    selectedGbfSections.value.length > 0 ||
     selectedCountries.value.length > 0 ||
     startDate.value !== '' ||
     endDate.value !== '' ||
@@ -356,32 +429,22 @@ const hasActiveFilters = computed<boolean>(() => {
   );
 });
 
-// Hide activity types filter in tab view unless Activities tab is selected
-const hideActivityTypesFilter = computed<boolean>(() => {
-  // If activeTabType is provided (tab view mode) and it's not 'activity', hide the filter
-  return props.activeTabType !== '' && props.activeTabType !== 'activity';
+/**
+ * Activity Types filter visibility:
+ * - Tab view: only on the calendarActivity tab
+ * - Non-tab view: when calendarActivity is selected or no types are selected
+ */
+const showActivityTypesFilter = computed<boolean>(() => {
+  if (props.activeTabType !== '') {
+    return props.activeTabType === 'calendarActivity';
+  }
+
+  const typeValues = extractSelectedValues(selectedTypes.value);
+
+  return typeValues.length === 0 || typeValues.includes('calendarActivity');
 });
 
-const subjectOptions = ref<FilterOption[]>([]);
-const remoteCountryOptions = ref<FilterOption[]>([]);
-const remoteGlobalTargetOptions = ref<FilterOption[]>([]);
-const remoteSubsidiaryBodyOptions = ref<FilterOption[]>([]);
-
-const STATUS_LABEL_OVERRIDES: Record<string, string> = {
-  tentat: 'Tentative',
-};
-
-const providedCountryOptions = computed(() => props.preloadedCountryOptions);
-const providedGlobalTargetOptions = computed(() => props.preloadedGlobalTargetOptions);
-
-const countryOptions = computed<FilterOption[]>(() =>
-  mergeOptions(remoteCountryOptions.value, providedCountryOptions.value),
-);
-
-const globalTargetOptions = computed<FilterOption[]>(() =>
-  mergeOptions(remoteGlobalTargetOptions.value, providedGlobalTargetOptions.value),
-);
-
+/** Sort options — mutually exclusive directions for each date field. */
 const sortOptions = computed<FilterOption[]>(() => {
   const selectedValues = extractSelectedValues(selectedSorts.value);
   const hasStartDateAsc = selectedValues.includes('startDate:asc');
@@ -391,15 +454,12 @@ const sortOptions = computed<FilterOption[]>(() => {
 
   const options: FilterOption[] = [];
 
-  // Only show startDate options if the opposite isn't selected
   if (!hasStartDateDesc) {
     options.push({ value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string });
   }
   if (!hasStartDateAsc) {
     options.push({ value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string });
   }
-
-  // Only show endDate options if the opposite isn't selected
   if (!hasEndDateDesc) {
     options.push({ value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string });
   }
@@ -407,7 +467,6 @@ const sortOptions = computed<FilterOption[]>(() => {
     options.push({ value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string });
   }
 
-  // Add title and schema sort options (replacing status)
   options.push({ value: 'title:asc', label: t('calendar.filters.sortOptions.titleAsc') as string });
   options.push({ value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string });
   options.push({ value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string });
@@ -415,95 +474,64 @@ const sortOptions = computed<FilterOption[]>(() => {
   return options;
 });
 
-// Schemas are constrained to the canonical keys provided by the activity index service.
-const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
+// ---------------------------------------------------------------------------
+// Value extraction & matching
+// ---------------------------------------------------------------------------
 
-const schemaOptions = computed<FilterOption[]>(() =>
-  SCHEMA_FILTER_KEYS.map((key) => {
-    const normalizedKey = key.toLowerCase();
-    const translationKey = `calendar.types.${normalizedKey}`;
-    const label = te(translationKey) ? (t(translationKey) as string) : formatSchemaLabel(normalizedKey);
+function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
+  return selection
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+      const raw = item?.value ?? '';
 
-    return { value: normalizedKey, label };
-  }),
-);
-
-function statusKeyToLabel(status: string): string {
-  if (!status) return '';
-  const raw = String(status).trim();
-  const normalizedKey = raw.replace(/\s+/g, '_').toLowerCase();
-  const translationKey = `calendar.status.${normalizedKey}`;
-
-  if (te(translationKey)) {
-    return t(translationKey) as string;
-  }
-  if (normalizedKey in STATUS_LABEL_OVERRIDES) {
-    return STATUS_LABEL_OVERRIDES[normalizedKey];
-  }
-  if (normalizedKey === 'confirm') {
-    return t('calendar.status.confirmed') as string;
-  }
-  // Explicit mapping for known keys
-  // If already mixed case (likely a label), return as-is
-  const isAllCapsOrUnderscore = /^[A-Z0-9_]+$/.test(raw);
-
-  if (!isAllCapsOrUnderscore) return raw;
-  // Convert KEY_NAME to "Key name"
-  return raw
-    .toLowerCase()
-    .split('_')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+      return typeof raw === 'string' ? raw.trim() : String(raw);
+    })
+    .filter((value) => value.length > 0);
 }
 
-const statusOptions = computed<FilterOption[]>(() =>
-  props.availableStatuses
-    .filter(statusKey => {
-      const normalized = statusKey.toLowerCase().trim();
+function findOptionsFromValues(values: string[], availableOptions: FilterOption[]): FilterOption[] {
+  if (!values.length || !availableOptions.length) return [];
 
-      return normalized !== 'not set' && 
-             normalized !== 'not_set' && 
-             normalized !== 'published';
-    })
-    .map(statusKey => ({ value: statusKey, label: statusKeyToLabel(statusKey) }))
-);
+  const optionMap = new Map(availableOptions.map((opt) => [opt.value, opt]));
 
-const subsidiaryBodyOptions = computed<FilterOption[]>(() => {
-  // Always use the remote options loaded from CBD-SUBJECT-LEGAL-STRUCT children
-  // Ignore props.availableSubsidiaryBodies as we want to show all available options
-  // from the thesaurus, not just those in the current filtered data
-  return remoteSubsidiaryBodyOptions.value;
-});
+  return values
+    .map((value) => optionMap.get(value))
+    .filter((option): option is FilterOption => Boolean(option));
+}
 
-const copDecisionOptions = computed<FilterOption[]>(() => {
-  // Use identifiers as values for exact matching in filter
-  // Display names as labels for user-friendly UI
-  return copDecisionTerms
-    .map(term => ({ value: term.identifier, label: term.name }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-});
+function areSortSelectionsDefault(values: string[]): boolean {
+  if (values.length !== DEFAULT_SORT_VALUES.length) return false;
 
-const activityTypeOptions = computed<FilterOption[]>(() =>
-  activityTypeTerms
-    .map(term => mapActivityTypeTermToOption(term))
-    .sort((a, b) => a.label.localeCompare(b.label))
-);
+  return values.every((value, index) => value === DEFAULT_SORT_VALUES[index]);
+}
 
-// Function to parse query string array parameter
+/**
+ * Create provisional FilterOption objects from raw URL string values.
+ * These will be replaced with proper thesaurus-labeled options once
+ * `syncSelectionWithOptions` runs after options finish loading.
+ */
+function toProvisionalOptions(values: string[]): FilterOption[] {
+  return values.map((v) => ({ value: v, label: v }));
+}
+
+// ---------------------------------------------------------------------------
+// URL query string management
+// ---------------------------------------------------------------------------
+
 function parseQueryArray(param: string | string[] | undefined): string[] {
   if (!param) return [];
   if (Array.isArray(param)) return param.filter(Boolean);
+
   return param.split(',').filter(Boolean);
 }
 
-// Function to update URL query string
 function updateUrlQuery(): void {
-  // Don't update URL if we're currently loading from URL
   if (isLoadingFromUrl.value) return;
 
   const query: Record<string, string | undefined> = {};
 
-  // Only add non-empty filters to query string
   const types = extractSelectedValues(selectedTypes.value);
 
   if (types.length > 0) query.types = types.join(',');
@@ -520,6 +548,10 @@ function updateUrlQuery(): void {
 
   if (subsidiaryBodies.length > 0) query.subsidiaryBodies = subsidiaryBodies.join(',');
 
+  const governingBodies = extractSelectedValues(selectedGoverningBodies.value);
+
+  if (governingBodies.length > 0) query.governingBodies = governingBodies.join(',');
+
   const copDecisions = extractSelectedValues(selectedCopDecisions.value);
 
   if (copDecisions.length > 0) query.copDecisions = copDecisions.join(',');
@@ -532,6 +564,10 @@ function updateUrlQuery(): void {
 
   if (globalTargets.length > 0) query.globalTargets = globalTargets.join(',');
 
+  const gbfSections = extractSelectedValues(selectedGbfSections.value);
+
+  if (gbfSections.length > 0) query.gbfSections = gbfSections.join(',');
+
   const countries = extractSelectedValues(selectedCountries.value);
 
   if (countries.length > 0) query.countries = countries.join(',');
@@ -542,7 +578,6 @@ function updateUrlQuery(): void {
     query.sort = sortSelections.join(',');
   }
 
-  // Only add date filters if they differ from initial default
   if (startDate.value && startDate.value !== props.initialStartDate) {
     query.startDate = startDate.value;
   }
@@ -557,87 +592,56 @@ function updateUrlQuery(): void {
     query.search = normalizedSearch;
   }
 
-  // Update URL without reloading page
   router.replace({ query });
 }
 
-// Function to load filters from URL query string
-function _loadFiltersFromUrl(): void {
+function loadFiltersFromUrl(): void {
   isLoadingFromUrl.value = true;
 
   const query = route.query;
 
-  // Load filter selections from URL
   const types = parseQueryArray(query.types as string | string[] | undefined);
   const subjects = parseQueryArray(query.subjects as string | string[] | undefined);
   const statuses = parseQueryArray(query.statuses as string | string[] | undefined);
   const subsidiaryBodies = parseQueryArray(query.subsidiaryBodies as string | string[] | undefined);
+  const governingBodies = parseQueryArray(query.governingBodies as string | string[] | undefined);
   const copDecisions = parseQueryArray(query.copDecisions as string | string[] | undefined);
   const activityTypes = parseQueryArray(query.activityTypes as string | string[] | undefined);
   const globalTargets = parseQueryArray(query.globalTargets as string | string[] | undefined);
+  const gbfSections = parseQueryArray(query.gbfSections as string | string[] | undefined);
   const countries = parseQueryArray(query.countries as string | string[] | undefined);
   const sortOrder = parseQueryArray(query.sort as string | string[] | undefined);
   const searchParam = typeof query.search === 'string'
     ? query.search
     : Array.isArray(query.search) ? query.search[0] ?? '' : '';
 
-  // Convert string values to FilterOption objects
-  if (types.length > 0) {
-    selectedTypes.value = findOptionsFromValues(types, schemaOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedTypes.value = [];
-  }
-  
-  if (subjects.length > 0) {
-    selectedSubjects.value = findOptionsFromValues(subjects, subjectOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedSubjects.value = [];
-  }
-  
-  if (statuses.length > 0) {
-    selectedStatuses.value = findOptionsFromValues(statuses, statusOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedStatuses.value = [];
-  }
-  
-  if (subsidiaryBodies.length > 0) {
-    selectedSubsidiaryBodies.value = findOptionsFromValues(subsidiaryBodies, subsidiaryBodyOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedSubsidiaryBodies.value = [];
-  }
-  
-  if (copDecisions.length > 0) {
-    selectedCopDecisions.value = findOptionsFromValues(copDecisions, copDecisionOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedCopDecisions.value = [];
-  }
-  
-  if (activityTypes.length > 0) {
-    selectedActivityTypes.value = findOptionsFromValues(activityTypes, activityTypeOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedActivityTypes.value = [];
-  }
-  
-  if (globalTargets.length > 0) {
-    selectedGlobalTargets.value = findOptionsFromValues(globalTargets, globalTargetOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedGlobalTargets.value = [];
-  }
-  
-  if (countries.length > 0) {
-    selectedCountries.value = findOptionsFromValues(countries, countryOptions.value);
-    hasUserInteracted.value = true;
-  } else {
-    selectedCountries.value = [];
-  }
+  // Restore selections as provisional FilterOption objects.
+  // syncSelectionWithOptions replaces these with proper thesaurus-labelled
+  // options once the composable finishes loading.
+  const restoreSelection = (
+    values: string[],
+    selection: Ref<FilterSelectionValue[]>,
+  ): void => {
+    if (values.length > 0) {
+      selection.value = toProvisionalOptions(values);
+      hasUserInteracted.value = true;
+    } else {
+      selection.value = [];
+    }
+  };
 
+  restoreSelection(types, selectedTypes);
+  restoreSelection(subjects, selectedSubjects);
+  restoreSelection(statuses, selectedStatuses);
+  restoreSelection(subsidiaryBodies, selectedSubsidiaryBodies);
+  restoreSelection(governingBodies, selectedGoverningBodies);
+  restoreSelection(copDecisions, selectedCopDecisions);
+  restoreSelection(activityTypes, selectedActivityTypes);
+  restoreSelection(globalTargets, selectedGlobalTargets);
+  restoreSelection(gbfSections, selectedGbfSections);
+  restoreSelection(countries, selectedCountries);
+
+  // Sort options are local computed — always available immediately
   if (sortOrder.length > 0) {
     selectedSorts.value = findOptionsFromValues(sortOrder, sortOptions.value);
     hasUserInteracted.value = true;
@@ -652,12 +656,11 @@ function _loadFiltersFromUrl(): void {
     searchText.value = '';
   }
 
-  // Load date filters
+  // Date filters
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
   } else {
-    // Only use initialStartDate on the very first load, not after clearing filters
     startDate.value = (!hasCompletedInitialMount.value && props.initialStartDate) ? props.initialStartDate : '';
   }
   if (query.endDate && typeof query.endDate === 'string') {
@@ -667,7 +670,7 @@ function _loadFiltersFromUrl(): void {
     endDate.value = '';
   }
 
-  // Load action required filter
+  // Action required
   if (query.actionRequired === 'true') {
     actionRequired.value = true;
     hasUserInteracted.value = true;
@@ -675,105 +678,14 @@ function _loadFiltersFromUrl(): void {
     actionRequired.value = false;
   }
 
-  // Allow updates again after a short delay to ensure all reactive updates complete
   nextTick(() => {
     isLoadingFromUrl.value = false;
   });
 }
 
-onMounted(async () => {
-  await Promise.all([
-    loadGroupedSubjectOptions(locale.value).then(options => {
-      subjectOptions.value = options;
-      // Build a flat label map for all subjects (including nested ones)
-      const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
-        const result: FilterOption[] = [];
-
-        for (const opt of opts) {
-          result.push({ value: opt.value, label: opt.label });
-          if (opt.children) {
-            result.push(...flattenOptions(opt.children));
-          }
-        }
-
-        return result;
-      };
-      const flatOptions = flattenOptions(options);
-      const labelMap = buildSubjectLabelMap(flatOptions);
-
-      setSubjectLabelMap(labelMap);
-    }),
-    loadDomainOptions(thesaurusDomains.COUNTRIES, locale.value).then(options => {
-      remoteCountryOptions.value = options;
-    }),
-    loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, locale.value).then(options => {
-      remoteGlobalTargetOptions.value = options;
-    }),
-    loadSubsidiaryBodyOptions(locale.value).then(options => {
-      remoteSubsidiaryBodyOptions.value = options;
-    }),
-  ]);
-
-  // Load filters from URL after options are loaded
-  _loadFiltersFromUrl();
-  
-  // Mark that initial mount is complete
-  hasCompletedInitialMount.value = true;
-});
-
-// Watch for locale changes and reload subject options
-watch(() => locale.value, async (newLocale) => {
-  try {
-    const options = await loadGroupedSubjectOptions(newLocale);
-
-    subjectOptions.value = options;
-    // Build a flat label map for all subjects (including nested ones)
-    const flattenOptions = (opts: FilterOption[]): FilterOption[] => {
-      const result: FilterOption[] = [];
-
-      for (const opt of opts) {
-        result.push({ value: opt.value, label: opt.label });
-        if (opt.children) {
-          result.push(...flattenOptions(opt.children));
-        }
-      }
-
-      return result;
-    };
-    const flatOptions = flattenOptions(options);
-    const labelMap = buildSubjectLabelMap(flatOptions);
-
-    setSubjectLabelMap(labelMap);
-    
-    remoteCountryOptions.value = await loadDomainOptions(thesaurusDomains.COUNTRIES, newLocale);
-    remoteGlobalTargetOptions.value = await loadDomainOptions(thesaurusDomains.GBF_GLOBAL_TARGETS, newLocale);
-    remoteSubsidiaryBodyOptions.value = await loadSubsidiaryBodyOptions(newLocale);
-  } catch (error) {
-    console.error('Failed to reload options for locale', newLocale, error);
-    subjectOptions.value = [];
-    remoteCountryOptions.value = [];
-    remoteGlobalTargetOptions.value = [];
-    remoteSubsidiaryBodyOptions.value = [];
-  }
-});
-
-// Watch for URL query changes (e.g., when tab view changes the type filter)
-watch(() => route.query, () => {
-  _loadFiltersFromUrl();
-}, { deep: true });
-
-function extractSelectedValues(selection: FilterSelectionValue[]): string[] {
-  return selection
-    .map(item => {
-      if (typeof item === 'string') {
-        return item.trim();
-      }
-      const raw = item?.value ?? '';
-
-      return typeof raw === 'string' ? raw.trim() : String(raw);
-    })
-    .filter(value => value.length > 0);
-}
+// ---------------------------------------------------------------------------
+// Filter state emission
+// ---------------------------------------------------------------------------
 
 function updateFilters(): void {
   const normalizedSearch = searchText.value.trim();
@@ -783,9 +695,11 @@ function updateFilters(): void {
     subjects: extractSelectedValues(selectedSubjects.value),
     statuses: extractSelectedValues(selectedStatuses.value),
     subsidiaryBodies: extractSelectedValues(selectedSubsidiaryBodies.value),
+    governingBodies: extractSelectedValues(selectedGoverningBodies.value),
     copDecisions: extractSelectedValues(selectedCopDecisions.value),
     activityTypes: extractSelectedValues(selectedActivityTypes.value),
     globalTargets: extractSelectedValues(selectedGlobalTargets.value),
+    gbfSections: extractSelectedValues(selectedGbfSections.value),
     countries: extractSelectedValues(selectedCountries.value),
     startDate: startDate.value,
     endDate: endDate.value,
@@ -803,9 +717,11 @@ function clearFilters(): void {
   selectedSubjects.value = [];
   selectedStatuses.value = [];
   selectedSubsidiaryBodies.value = [];
+  selectedGoverningBodies.value = [];
   selectedCopDecisions.value = [];
   selectedActivityTypes.value = [];
   selectedGlobalTargets.value = [];
+  selectedGbfSections.value = [];
   selectedCountries.value = [];
   selectedSorts.value = [...DEFAULT_SORT_VALUES];
   startDate.value = '';
@@ -817,66 +733,19 @@ function clearFilters(): void {
   updateFilters();
 }
 
-function mapActivityTypeTermToOption(term: LocalCalendarTerm): FilterOption {
-  const label = term.name || (term.title && term.title['en']) || term.identifier;
-  const value = term.identifier;
+// ---------------------------------------------------------------------------
+// Selection <-> option synchronization
+// ---------------------------------------------------------------------------
 
-  return { value, label };
-}
-
-function mergeOptions(primary: FilterOption[], fallback: FilterOption[]): FilterOption[] {
-  const merged = new Map<string, FilterOption>();
-
-  for (const option of fallback) {
-    if (!option?.value) continue;
-    merged.set(option.value, { value: option.value, label: option.label });
-  }
-
-  for (const option of primary) {
-    if (!option?.value) continue;
-    merged.set(option.value, { value: option.value, label: option.label });
-  }
-
-  return Array.from(merged.values()).sort((a, b) => a.label.localeCompare(b.label));
-}
-
-function areSortSelectionsDefault(values: string[]): boolean {
-  if (values.length !== DEFAULT_SORT_VALUES.length) {
-    return false;
-  }
-
-  return values.every((value, index) => value === DEFAULT_SORT_VALUES[index]);
-}
-
-function formatSchemaLabel(key: string): string {
-  return key
-    .split(/[\s_-]+/)
-    .filter(Boolean)
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function findOptionsFromValues(values: string[], availableOptions: FilterOption[]): FilterOption[] {
-  if (!values.length || !availableOptions.length) return [];
-  
-  // Build a flat map that includes options from nested children
-  const buildOptionMap = (opts: FilterOption[], map: Map<string, FilterOption> = new Map()): Map<string, FilterOption> => {
-    for (const opt of opts) {
-      map.set(opt.value, opt);
-      if (opt.children && opt.children.length > 0) {
-        buildOptionMap(opt.children, map);
-      }
-    }
-    return map;
-  };
-  
-  const optionMap = buildOptionMap(availableOptions);
-  
-  return values
-    .map(value => optionMap.get(value))
-    .filter((option): option is FilterOption => Boolean(option));
-}
-
+/**
+ * Watches an options list and re-maps selected items to match the latest
+ * options. Handles:
+ * - URL-loaded provisional FilterOption objects -> proper thesaurus options
+ * - Facet count changes that alter the available options
+ *
+ * When options are empty (still loading), selections are preserved so
+ * URL-loaded values survive until the composable finishes loading.
+ */
 function syncSelectionWithOptions(
   selection: Ref<FilterSelectionValue[]>,
   options: Ref<FilterOption[]> | ComputedRef<FilterOption[]>,
@@ -884,20 +753,14 @@ function syncSelectionWithOptions(
   watch(
     options,
     (newOptions) => {
-      // Build a flat map that includes options from nested children
-      const buildOptionMap = (opts: FilterOption[], map: Map<string, FilterOption> = new Map()): Map<string, FilterOption> => {
-        for (const opt of opts) {
-          map.set(opt.value, opt);
-          if (opt.children && opt.children.length > 0) {
-            buildOptionMap(opt.children, map);
-          }
-        }
-        return map;
-      };
-      
-      const optionMap = buildOptionMap(newOptions);
+      // Preserve URL-loaded selections while thesaurus options are loading
+      if (newOptions.length === 0) {
+        return;
+      }
+
+      const optionMap = new Map(newOptions.map((opt) => [opt.value, opt]));
       const filtered = selection.value
-        .map(item => optionMap.get(typeof item === 'string' ? item : item.value))
+        .map((item) => optionMap.get(typeof item === 'string' ? item : item.value))
         .filter((option): option is FilterOption => Boolean(option));
 
       const selectionChanged =
@@ -908,6 +771,7 @@ function syncSelectionWithOptions(
           if (!current || typeof current === 'string') {
             return true;
           }
+
           return current.value !== option.value || current.label !== option.label;
         });
 
@@ -920,17 +784,32 @@ function syncSelectionWithOptions(
   );
 }
 
-// Sync selections with options to ensure FilterOption objects are used
-// This is especially important when loading from URL (e.g., tab view setting types)
-syncSelectionWithOptions(selectedTypes, schemaOptions);
+// Register sync watchers for all filter selections
+syncSelectionWithOptions(selectedTypes, recordTypeOptions);
 syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
 syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);
-syncSelectionWithOptions(selectedCopDecisions, copDecisionOptions);
+syncSelectionWithOptions(selectedGoverningBodies, governingBodyOptions);
+syncSelectionWithOptions(selectedCopDecisions, decisionOptions);
 syncSelectionWithOptions(selectedActivityTypes, activityTypeOptions);
 syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
+syncSelectionWithOptions(selectedGbfSections, gbfSectionOptions);
 syncSelectionWithOptions(selectedCountries, countryOptions);
 syncSelectionWithOptions(selectedSorts, sortOptions);
+
+// ---------------------------------------------------------------------------
+// Lifecycle & watchers
+// ---------------------------------------------------------------------------
+
+onMounted(() => {
+  loadFiltersFromUrl();
+  hasCompletedInitialMount.value = true;
+});
+
+// Watch for URL query changes (e.g., tab view sets the type filter)
+watch(() => route.query, () => {
+  loadFiltersFromUrl();
+}, { deep: true });
 
 // Watch for first user interaction with any filter
 watch(
@@ -939,9 +818,11 @@ watch(
     selectedSubjects,
     selectedStatuses,
     selectedSubsidiaryBodies,
+    selectedGoverningBodies,
     selectedCopDecisions,
     selectedActivityTypes,
     selectedGlobalTargets,
+    selectedGbfSections,
     selectedCountries,
     selectedSorts,
     actionRequired,
@@ -954,9 +835,11 @@ watch(
         selectedSubjects.value.length > 0 ||
         selectedStatuses.value.length > 0 ||
         selectedSubsidiaryBodies.value.length > 0 ||
+        selectedGoverningBodies.value.length > 0 ||
         selectedCopDecisions.value.length > 0 ||
         selectedActivityTypes.value.length > 0 ||
         selectedGlobalTargets.value.length > 0 ||
+        selectedGbfSections.value.length > 0 ||
         selectedCountries.value.length > 0 ||
         searchText.value.trim().length > 0 ||
         !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
@@ -976,14 +859,16 @@ watch(
 
 // Emit updates whenever relevant filter state changes
 watchEffect(() => {
-  // touch all filter refs to create dependency
+  // Touch all filter refs to create dependency tracking
   void selectedTypes.value;
   void selectedSubjects.value;
   void selectedStatuses.value;
   void selectedSubsidiaryBodies.value;
+  void selectedGoverningBodies.value;
   void selectedCopDecisions.value;
   void selectedActivityTypes.value;
   void selectedGlobalTargets.value;
+  void selectedGbfSections.value;
   void selectedCountries.value;
   void selectedSorts.value;
   void startDate.value;
@@ -1009,5 +894,10 @@ watchEffect(() => {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
   }
+}
+
+.facet-count {
+  color: #6c757d;
+  font-size: 0.85em;
 }
 </style>

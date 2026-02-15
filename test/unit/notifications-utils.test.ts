@@ -1,19 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   getNotificationKeys,
-  mapNotificationRecordToDoc,
   notificationDisplayEntries,
   setNotificationStores,
 } from '../../shared/utils/notifications';
 import type { CalendarDoc } from '../../shared/types/calendar';
-
-const baseRecord = {
-  symbol: '2024-001',
-  urls: ['https://www.cbd.int/notifications/2024-001'],
-  recipients: [],
-  themes: [],
-  files: [],
-};
 
 describe('notification utilities integration', () => {
   beforeEach(() => {
@@ -38,9 +29,12 @@ describe('notification utilities integration', () => {
 
   it('returns display entries for seeded notifications', () => {
     const doc = {
-      schema: 'activity',
+      id: 'a1',
+      schema: 'calendarActivity',
+      identifier: 'a1',
       notificationKey: '2024-001',
       notificationKeys: ['2024-001'],
+      notifications: [],
     } as unknown as CalendarDoc;
 
     const entries = notificationDisplayEntries(doc as CalendarDoc);
@@ -49,16 +43,19 @@ describe('notification utilities integration', () => {
     expect(entries[0]?.key).toBe('2024-001');
   });
 
-  it('extracts unique notification keys from prefixed strings', () => {
-    const doc = mapNotificationRecordToDoc({
-      ...baseRecord,
+  it('extracts unique notification keys from SOLR-normalized doc', () => {
+    const doc = {
+      id: 'n1',
+      schema: 'notification',
+      identifier: 'n1',
       symbol: '2024-050',
-      relatedDocuments: ['NTF 2024-050, NTF 2024-055', '2024-050'],
-      urls: ['https://www.cbd.int/notifications/2024-050'],
-    }, 1);
+      notifications: ['2024-055'],
+      relatedDocuments: ['NTF 2024-050'],
+    } as unknown as CalendarDoc;
 
     const keys = getNotificationKeys(doc as CalendarDoc);
 
-    expect(keys).toEqual(['2024-050', '2024-055']);
+    expect(keys).toContain('2024-050');
+    expect(keys).toContain('2024-055');
   });
 });

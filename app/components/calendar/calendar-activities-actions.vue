@@ -16,6 +16,7 @@
 
           <component
             :is="currentFilterComponent"
+            :facets="facets"
             :available-types="availableTypes"
             :available-subjects="availableSubjects"
             :available-statuses="availableStatuses"
@@ -177,6 +178,7 @@ const {
   docs,
   locale: calendarLocale,
   groupedItems,
+  facets,
   availableTypes,
   availableSubjects,
   availableStatuses,

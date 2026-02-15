@@ -15,12 +15,30 @@ export interface SolrSelectBody {
 	'facet.pivot'?: string | string[];
 	defType?: 'dismax' | 'edismax';
 	qf?: string;
+	fl?: string;
 }
 
 export interface SolrResponseHeader {
 	status: number;
 	QTime: number;
 	params: Record<string, string>;
+}
+
+/**
+ * Typed facet counts from a SOLR response.
+ *
+ * `facet_fields` maps each faceted field to an alternating array of
+ * `[value, count, value, count, …]`.
+ *
+ * `facet_pivot` maps each pivot spec to an array of nested pivot objects.
+ */
+export interface SolrFacetCounts {
+	facet_queries: Record<string, number>;
+	facet_fields: Record<string, Array<string | number>>;
+	facet_ranges: Record<string, unknown>;
+	facet_intervals: Record<string, unknown>;
+	facet_heatmaps: Record<string, unknown>;
+	facet_pivot: Record<string, unknown[]>;
 }
 
 export interface SolrResponse<TDoc = Record<string, unknown>> {
@@ -30,5 +48,5 @@ export interface SolrResponse<TDoc = Record<string, unknown>> {
 		start: number;
 		docs: TDoc[];
 	};
-	facet_counts?: Record<string, unknown>;
+	facet_counts?: SolrFacetCounts;
 }

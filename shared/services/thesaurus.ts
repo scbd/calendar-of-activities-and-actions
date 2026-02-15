@@ -1,6 +1,6 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
 
-const defaultScbdApiBase = 'https://api.cbd.int';
+const defaultScbdApiBase = 'https://api.cbddev.xyz';
 
 function getApiBase(): string {
   // Use Vite/Nitro exposed public env at build/runtime without relying on #app in shared code
@@ -68,3 +68,5 @@ export async function loadDomainOptions(
   }
 }
 //https://api.cbd.int/api/v2013/thesaurus/terms?termCode=de
+
+// CBD - SUBJECT - LEGAL - STRUCT;

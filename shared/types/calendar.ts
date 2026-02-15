@@ -1,55 +1,147 @@
-import type { MeetingDoc } from '../services/solr';
+/**
+ * Calendar document types aligned with camelCased SOLR field names.
+ *
+ * Uses a discriminated union on `schema` so that
+ * `if (doc.schema === 'meeting')` narrows the type to `MeetingDoc`.
+ */
+
+// ---------------------------------------------------------------------------
+// Base document — common fields shared by every schema
+// ---------------------------------------------------------------------------
 
 /**
- * Normalized calendar document combining meeting, activity, and notification data.
+ * Fields present on every calendar document regardless of schema.
+ * All property names are camelCase with no SOLR suffixes.
  */
-export interface CalendarDoc extends MeetingDoc {
+export interface BaseCalendarDoc {
   id: string;
-  subjects?: string[];
-  subsidiaryBodies?: string[];
-  countries?: string[];
-  countriesEn?: string[];
-  links?: string[];
-  status?: string;
-  statusKey?: string | null;
+  schema: string;
+  identifier: string;
+
+  /** Localized title fields produced by SOLR normalization */
+  titleEn?: string;
+  titleFr?: string;
+  titleEs?: string;
+  titleAr?: string;
+  titleRu?: string;
+  titleZh?: string;
+
   startDate?: string;
   endDate?: string;
-  responsibleUnit?: string;
-  responsibleOfficer?: string;
-  statusNarrative?: string | null;
-  actors?: string[];
-  gbfTargets?: string[];
-  relatedDocuments?: string[];
-  country?: string;
-  countryEn?: string;
-  outcome?: string;
-  actionRequired?: boolean;
-  schema?: string | null;
-  symbol?: string;
-  notificationKey?: string;
-  notificationKeys?: string[];
-  notificationSymbol?: string;
-  publishedDate?: string;
-  actionDate?: string;
-  deadline?: string;
-  recipients?: string[];
-  activityType?: string;
+  createdDate?: string;
+  updatedDate?: string;
+
+  status?: string;
+  statusKey?: string;
+  url?: string[];
+
+  /** Related record identifiers (embedded or cross-referenced) */
   notifications?: string[];
-  activities?: string[];
   meetings?: string[];
+  activities?: string[];
 }
 
+// ---------------------------------------------------------------------------
+// Schema-specific documents
+// ---------------------------------------------------------------------------
+
+/** Meeting document — `schema === 'meeting'` */
+export interface MeetingDoc extends BaseCalendarDoc {
+  schema: 'meeting';
+
+  eventCity?: string;
+  eventCountry?: string;
+  meetingCode?: string;
+  hostGovernments?: string[];
+  themes?: string[];
+  thematicAreas?: string[];
+}
+
+/** Notification document — `schema === 'notification'` */
+export interface NotificationDoc extends BaseCalendarDoc {
+  schema: 'notification';
+
+  symbol?: string;
+  reference?: string;
+  sender?: string;
+  recipients?: string[];
+  actionDate?: string;
+  deadline?: string;
+  date?: string;
+
+  /** Localized full-text body */
+  fulltextEn?: string;
+  fulltextFr?: string;
+  fulltextEs?: string;
+  fulltextAr?: string;
+  fulltextRu?: string;
+  fulltextZh?: string;
+
+  files?: string[];
+}
+
+/** Calendar-activity document — `schema === 'calendarActivity'` */
+export interface CalendarActivityDoc extends BaseCalendarDoc {
+  schema: 'calendarActivity';
+
+  /** Activity type thesaurus identifier */
+  type?: string;
+  subType?: string;
+
+  /** Localized description */
+  descriptionEn?: string;
+  descriptionFr?: string;
+  descriptionEs?: string;
+  descriptionAr?: string;
+  descriptionRu?: string;
+  descriptionZh?: string;
+
+  actionRequiredByParties?: boolean;
+
+  /** Localized status narrative */
+  statusNarrativeEn?: string;
+  statusNarrativeFr?: string;
+  statusNarrativeEs?: string;
+  statusNarrativeAr?: string;
+  statusNarrativeRu?: string;
+  statusNarrativeZh?: string;
+
+  agendaItems?: string[];
+  subjects?: string[];
+  governingBody?: string[];
+  subsidiaryBody?: string[];
+  decisions?: string[];
+  responsibleUnitsAndOfficers?: string[];
+  gbfTargets?: string[];
+  gbfSections?: string[];
+  outcome?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Discriminated union
+// ---------------------------------------------------------------------------
+
 /**
- * Currently selected filter state for the calendar view.
+ * Any calendar SOLR document.
+ * Narrow via `doc.schema` to access schema-specific properties.
  */
+export type CalendarDoc = MeetingDoc | NotificationDoc | CalendarActivityDoc;
+
+// ---------------------------------------------------------------------------
+// Filter & pagination helpers
+// ---------------------------------------------------------------------------
+
+/** Currently selected filter state for the calendar view. */
 export interface FilterState {
   types: string[];
   subjects: string[];
   statuses: string[];
   subsidiaryBodies: string[];
+  governingBodies: string[];
   copDecisions: string[];
   activityTypes: string[];
   globalTargets: string[];
+  gbfSections: string[];
   countries: string[];
   startDate: string;
   endDate: string;
@@ -58,9 +150,29 @@ export interface FilterState {
   sort: string[];
 }
 
-/**
- * Grouping descriptor for structuring calendar documents by time or schema.
- */
+/** Single option in a filter dropdown (thesaurus term + optional facet count). */
+export interface FilterOption {
+  value: string;
+  label: string;
+  count?: number;
+}
+
+/** Facet values parsed from a SOLR response — field name → value/count pairs. */
+export type ParsedFacets = Record<string, Array<{ value: string; count: number }>>;
+
+/** Paginated result set returned by the SOLR query composable. */
+export interface PaginatedResult<T> {
+  docs: T[];
+  total: number;
+  start: number;
+  facets: ParsedFacets;
+}
+
+// ---------------------------------------------------------------------------
+// Grouping
+// ---------------------------------------------------------------------------
+
+/** Grouping descriptor for structuring calendar documents by time or schema. */
 export interface GroupedItem {
   key: string;
   label: string;

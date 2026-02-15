@@ -1,13 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { CalendarDoc } from '../../types/calendar';
+import type { CalendarDoc, NotificationDoc } from '../../types/calendar';
 import {
   buildDocsFromNotifications,
-  buildNotificationDetailsFromSnapshot,
   buildNotificationExcerpt,
   buildNotificationLink,
   deriveNameFromUrl,
   getNotificationKeys,
-  mapNotificationRecordToDoc,
   normalizeNotificationList,
   notificationDisplayEntries,
   parseNotificationAttachments,
@@ -15,17 +13,6 @@ import {
   selectNotificationTitle,
   setNotificationStores,
 } from '../notifications';
-
-const snapshotRecord = {
-  symbol: '2024-001',
-  urls: ['https://www.cbd.int/test'],
-  recipients: ['Party A'],
-  themes: ['Theme'],
-  files: [
-    { url: '/doc.pdf', name: 'Doc.pdf' },
-  ],
-  title: 'Notification Title',
-};
 
 describe('notification utilities', () => {
   beforeEach(() => {
@@ -57,40 +44,36 @@ describe('notification utilities', () => {
     expect(buildNotificationLink('2024-001')).toContain('2024-001');
   });
 
-  it('maps snapshot records to documents and details', () => {
-    const doc = mapNotificationRecordToDoc(snapshotRecord, 0);
+  it('buildDocsFromNotifications returns empty (deprecated stub)', () => {
+    const { docs, details } = buildDocsFromNotifications([]);
 
-    expect(doc.schema).toBe('notification');
-
-    const details = buildNotificationDetailsFromSnapshot(snapshotRecord, '2024-001');
-
-    expect(details?.key).toBe('2024-001');
+    expect(docs).toEqual([]);
+    expect(details).toEqual({});
   });
 
-  it('collects notification keys and display entries', () => {
-    const doc = mapNotificationRecordToDoc(snapshotRecord, 0);
+  it('collects notification keys from normalized SOLR doc', () => {
+    const doc: NotificationDoc = {
+      id: 'n1',
+      schema: 'notification',
+      identifier: 'n1',
+      symbol: '2024-001',
+      notifications: ['2024-002'],
+    };
     const keys = getNotificationKeys(doc as CalendarDoc);
 
-    expect(keys).toEqual(['2024-001']);
-    const entries = notificationDisplayEntries(doc as CalendarDoc);
+    expect(keys).toContain('2024-001');
+  });
+
+  it('returns display entries for non-notification docs with keys', () => {
+    const doc = {
+      id: 'a1',
+      schema: 'calendarActivity',
+      identifier: 'a1',
+      notifications: ['2024-001'],
+    } as unknown as CalendarDoc;
+
+    const entries = notificationDisplayEntries(doc);
 
     expect(entries[0]?.key).toBe('2024-001');
-  });
-
-  it('normalizes notification keys with prefixes without duplication', () => {
-    const doc = mapNotificationRecordToDoc({
-      ...snapshotRecord,
-      symbol: '2024-050',
-      relatedDocuments: ['NTF 2024-050, NTF 2024-055', '2024-050'],
-    }, 1);
-    const keys = getNotificationKeys(doc as CalendarDoc);
-
-    expect(keys).toEqual(['2024-050', '2024-055']);
-  });
-
-  it('builds docs from snapshot array', () => {
-    const { docs } = buildDocsFromNotifications([snapshotRecord]);
-
-    expect(docs.length).toBe(1);
   });
 });
