@@ -22,7 +22,6 @@ import { fetchNotificationDetails } from 'shared/services/solr-index';
 import type {
   CalendarDoc,
   FilterState,
-  FilterOption,
   GroupedItem,
   ParsedFacets,
 } from 'shared/types/calendar';
@@ -352,53 +351,6 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       .map(([key, v]) => ({ key, label: v.label, items: v.items }));
   });
 
-  // --- Backward-compatible filter-option computeds (from facets) -----------
-  // These derive from SOLR facets so consumers don't break until Phase 03/04
-  // migrates them to use `facets` directly.
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableTypes = computed<string[]>(() => {
-    return (facets.value.schema ?? []).map((f) => f.value).sort();
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableSubjects = computed<string[]>(() => {
-    return (facets.value.subjects ?? []).map((f) => f.value).sort();
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableStatuses = computed<string[]>(() => {
-    return (facets.value.status ?? []).map((f) => f.value).sort();
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableSubsidiaryBodies = computed<string[]>(() => {
-    return (facets.value.subsidiaryBody ?? []).map((f) => f.value).sort();
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableCopDecisions = computed<string[]>(() => {
-    return (facets.value.decisions ?? []).map((f) => f.value).sort();
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableCountryOptions = computed<FilterOption[]>(() => {
-    return (facets.value.countries ?? [])
-      .map((f) => ({ value: f.value, label: f.value, count: f.count }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  });
-
-  /** @deprecated Use `facets` ref — will be removed in Phase 04. */
-  const availableGlobalTargetOptions = computed<FilterOption[]>(() => {
-    return (facets.value.gbfTargets ?? [])
-      .map((f) => ({ value: f.value, label: f.value, count: f.count }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  });
-
-  // --- Backward-compatible alias -------------------------------------------
-  /** @deprecated Server handles filtering — alias for `docs`. Will be removed in Phase 04. */
-  const filteredDocs = computed<CalendarDoc[]>(() => docs.value);
-
   // --- Filter mutators -----------------------------------------------------
   function setFilters(filters: FilterState): void {
     const normalizedSort = filters.sort?.length
@@ -456,15 +408,5 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
     // Grouping
     groupedItems,
-
-    // Backward-compatible — deprecated; will be removed in Phase 04
-    filteredDocs,
-    availableTypes,
-    availableSubjects,
-    availableStatuses,
-    availableSubsidiaryBodies,
-    availableCopDecisions,
-    availableCountryOptions,
-    availableGlobalTargetOptions,
   };
 }

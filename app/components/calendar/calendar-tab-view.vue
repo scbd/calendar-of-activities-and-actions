@@ -36,8 +36,8 @@ defineEmits<{
 const router = useRouter();
 const route = useRoute();
 
-// Record types based on SCHEMA_FILTER_KEYS from calendar-filters.vue
-const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
+// Record types — calendarActivity replaces 'activity'
+const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'calendarActivity'] as const;
 
 // Initialize active tab from URL or default to 'meeting'
 const getInitialTab = (): string => {
@@ -56,23 +56,13 @@ const getInitialTab = (): string => {
 const activeTab = ref<string>(getInitialTab());
 
 const updateTypeFilter = (type: string) => {
-  console.log('[TabView] updateTypeFilter called with:', type);
-  console.log('[TabView] Current route.query:', route.query);
-  console.log('[TabView] Current activeTab:', activeTab.value);
-  
   // Preserve other query params but update types
   const query: Record<string, string | string[]> = {
     ...route.query,
-    types: type
+    types: type,
   };
 
-  console.log('[TabView] Setting query to:', query);
-
-  // Use push to navigate
-  router.push({ query }).then(() => {
-    console.log('[TabView] Navigation complete');
-    console.log('[TabView] New route.query.types:', route.query.types);
-  });
+  router.push({ query });
 };
 
 // Set initial filter on mount

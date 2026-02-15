@@ -43,14 +43,41 @@
         </ul>
       </div>
 
-      <div v-if="loading" class="loading-container">
-        <div class="spinner-border spinner-large" role="status">
-          <span class="visually-hidden">Loading...</span>
+      <!-- Initial loading state -->
+      <div v-if="initialLoading" class="loading-container" role="status" aria-live="polite">
+        <div class="spinner-border spinner-large">
+          <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
         </div>
       </div>
+
+      <!-- Error state -->
+      <div v-else-if="error" class="alert alert-danger d-flex align-items-center justify-content-between" role="alert">
+        <span>{{ t('calendar.messages.loadError') }}</span>
+        <button type="button" class="btn btn-outline-danger btn-sm ms-3" @click="handleRetry">
+          {{ t('calendar.messages.retry') }}
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="isEmpty" class="alert alert-warning" role="status" aria-live="polite">
+        {{ t('calendar.messages.noResults') }}
+      </div>
+
+      <!-- Results -->
       <div v-else>
-        <div v-if="sortedDocs.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>
-        <div v-else class="card">
+        <!-- Results count -->
+        <p v-if="total > 0" class="text-muted small mb-3" role="status" aria-live="polite">
+          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+        </p>
+
+        <!-- Re-query loading overlay (filter change, not initial) -->
+        <div v-if="loading" class="loading-container loading-container--overlay" role="status" aria-live="polite">
+          <div class="spinner-border spinner-large">
+            <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
+          </div>
+        </div>
+
+        <div class="card">
           <div class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="table-light">
@@ -104,7 +131,7 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="doc in sortedDocs" :key="doc.id">
+                <template v-for="doc in docs" :key="doc.id">
                   <tr class="main-row" :class="{ 'row-expanded': isExpanded(doc) }" @click="toggleRow(doc)">
                     <td class="expand-cell">
                       <button class="btn btn-sm btn-link" type="button" :aria-label="isExpanded(doc) ? 'Collapse' : 'Expand'">
@@ -148,6 +175,9 @@
                           :description="getDescription(doc)"
                           :subject-labels="getSubjectLabels(doc)"
                           :subsidiary-bodies="getSubsidiaryBodies(doc)"
+                          :governing-bodies="getGoverningBodies(doc)"
+                          :gbf-sections="getGbfSections(doc)"
+                          :global-targets="getGlobalTargets(doc)"
                           :decision-entries="getDecisionEntries(doc)"
                           :responsible-unit="getResponsibleUnit(doc)"
                           :responsible-officer="getResponsibleOfficer(doc)"
@@ -249,13 +279,24 @@
             </table>
           </div>
         </div>
+
+        <!-- Infinite scroll sentinel -->
+        <div ref="scrollSentinel" class="scroll-sentinel" aria-hidden="true" />
+
+        <!-- Loading more indicator -->
+        <div v-if="loadingMore" class="text-center py-3" role="status" aria-live="polite">
+          <div class="spinner-border spinner-border-sm me-2">
+            <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
+          </div>
+          <span class="text-muted small">{{ t('calendar.messages.loadingMore') }}</span>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
@@ -286,6 +327,9 @@ import {
   getDocBooleanValue,
   getDocStringValue,
   getDocSubsidiaryBodies,
+  getDocGoverningBodies,
+  getDocGbfSections,
+  getDocGlobalTargets,
 } from 'shared/utils/document-processing';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import {
@@ -318,36 +362,28 @@ const router = useRouter();
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
 
-// Record types based on SCHEMA_FILTER_KEYS
-const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
+// Record types — calendarActivity replaces 'activity'
+const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'calendarActivity'] as const;
 
 const recordTypes = computed(() =>
   SCHEMA_FILTER_KEYS.map((key) => {
-    const normalizedKey = key.toLowerCase();
-    const translationKey = `calendar.types.${normalizedKey}`;
-    const label = te(translationKey) ? (t(translationKey) as string) : key.charAt(0).toUpperCase() + key.slice(1);
+    const translationKey = `calendar.types.${key}`;
+    const label = te(translationKey)
+      ? (t(translationKey) as string)
+      : key.charAt(0).toUpperCase() + key.slice(1);
 
-    return { value: normalizedKey, label };
+    return { value: key, label };
   }),
 );
 
 // Tab selection handler
 const setActiveTab = (tabValue: string) => {
-  console.log('[TabView] setActiveTab called with:', tabValue);
-  
-  // Preserve other query params but update types
   const query: Record<string, string | string[]> = {
     ...route.query,
-    types: tabValue
+    types: tabValue,
   };
 
-  console.log('[TabView] Setting query to:', query);
-
-  // Use push to navigate
-  router.push({ query }).then(() => {
-    console.log('[TabView] Navigation complete');
-    console.log('[TabView] New route.query.types:', route.query.types);
-  });
+  router.push({ query });
 };
 
 // Computed property for current filter component
@@ -367,22 +403,23 @@ const createRegionDisplayNames = (code: string) => {
   }
 };
 
-const defaultStartDateIso = DateTime.now().startOf('day').toISO();
+const defaultStartDateIso = DateTime.now().startOf('day').toISODate();
 const queryStartDate = route.query.startDate as string;
 const initialStartDate = queryStartDate || defaultStartDateIso;
 
 const {
   loading,
+  loadingMore,
+  initialLoading,
   docs,
-  filteredDocs,
   facets,
-  availableTypes,
-  availableSubjects,
-  availableStatuses,
-  availableSubsidiaryBodies,
-  availableCopDecisions,
-  availableCountryOptions,
-  availableGlobalTargetOptions,
+  total,
+  hasMore,
+  loadMore,
+  retry,
+  error,
+  isEmpty,
+  currentFilters,
   setFilters,
 } = useCalendarData({
   initialStartDate,
@@ -405,6 +442,7 @@ const toggleRow = (doc: CalendarDoc) => {
   expandedRows.value[doc.id] = !expandedRows.value[doc.id];
 };
 
+// Sort triggers server-side re-query via FilterState.sort
 const toggleSort = (field: string) => {
   if (currentSortField.value === field) {
     currentSortDirection.value = currentSortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -412,56 +450,12 @@ const toggleSort = (field: string) => {
     currentSortField.value = field;
     currentSortDirection.value = 'asc';
   }
+  setFilters({ ...currentFilters.value, sort: [`${currentSortField.value}:${currentSortDirection.value}`] });
 };
 
 const getSortClass = (field: string): string => {
   return currentSortField.value === field ? 'active' : '';
 };
-
-const sortedDocs = computed<CalendarDoc[]>(() => {
-  const docs = [...filteredDocs.value];
-  const field = currentSortField.value;
-  const direction = currentSortDirection.value;
-
-  docs.sort((a, b) => {
-    let comparison = 0;
-
-    switch (field) {
-      case 'startDate': {
-        const aDate = getDocStringValue(a, 'startDate') || getDocStringValue(a, 'endDate') || '';
-        const bDate = getDocStringValue(b, 'startDate') || getDocStringValue(b, 'endDate') || '';
-
-        comparison = aDate.localeCompare(bDate);
-        break;
-      }
-      case 'type': {
-        const aType = getTypeLabel(a).toLowerCase();
-        const bType = getTypeLabel(b).toLowerCase();
-
-        comparison = aType.localeCompare(bType);
-        break;
-      }
-      case 'title': {
-        const aTitle = getTitle(a).toLowerCase();
-        const bTitle = getTitle(b).toLowerCase();
-
-        comparison = aTitle.localeCompare(bTitle);
-        break;
-      }
-      case 'status': {
-        const aStatus = getStatusLabel(a).toLowerCase();
-        const bStatus = getStatusLabel(b).toLowerCase();
-
-        comparison = aStatus.localeCompare(bStatus);
-        break;
-      }
-    }
-
-    return direction === 'asc' ? comparison : -comparison;
-  });
-
-  return docs;
-});
 
 const titleField = computed(() => getTitleFieldForLocale(locale.value as LocaleCode));
 
@@ -484,8 +478,8 @@ const getTypeLabel = (doc: CalendarDoc): string => {
   if (te('calendar.types.default')) {
     return t('calendar.types.default') as string;
   }
-  if (!raw && te('calendar.types.activity')) {
-    return t('calendar.types.activity') as string;
+  if (!raw && te('calendar.types.calendarActivity')) {
+    return t('calendar.types.calendarActivity') as string;
   }
   return raw ?? '';
 };
@@ -649,9 +643,47 @@ const getRelatedMeetings = (doc: CalendarDoc): CalendarDoc[] => {
   return getRelatedMeetingsUtil(notificationKey, docs.value);
 };
 
+const getGoverningBodies = (doc: CalendarDoc): string[] => getDocGoverningBodies(doc);
+
+const getGbfSections = (doc: CalendarDoc): string[] => getDocGbfSections(doc);
+
+const getGlobalTargets = (doc: CalendarDoc): string[] => getDocGlobalTargets(doc);
+
 const handleFiltersUpdate = (filters: FilterState) => {
-  setFilters(filters);
+  // Preserve the sort from column headers
+  setFilters({ ...filters, sort: [`${currentSortField.value}:${currentSortDirection.value}`] });
 };
+
+const handleRetry = () => {
+  void retry();
+};
+
+// --- Infinite scroll -------------------------------------------------------
+const scrollSentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+onMounted(() => {
+  if (!scrollSentinel.value) {
+    return;
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+
+      if (entry?.isIntersecting && hasMore.value && !loading.value && !loadingMore.value) {
+        void loadMore();
+      }
+    },
+    { rootMargin: '200px' },
+  );
+  observer.observe(scrollSentinel.value);
+});
+
+onUnmounted(() => {
+  observer?.disconnect();
+  observer = null;
+});
 </script>
 
 <style scoped>
@@ -672,6 +704,17 @@ const handleFiltersUpdate = (filters: FilterState) => {
   height: 3rem;
   border-width: 0.3em;
   color: var(--calendar-primary);
+}
+
+.loading-container--overlay {
+  position: relative;
+  min-height: 100px;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 5;
+}
+
+.scroll-sentinel {
+  height: 1px;
 }
 
 .table-responsive {
