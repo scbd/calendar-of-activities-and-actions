@@ -76,6 +76,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   // --- Core state ----------------------------------------------------------
   const docs = ref<CalendarDoc[]>([]);
   const loading = ref(false);
+  const loadingMore = ref(false);
   const initialLoading = ref(true);
   const total = ref(0);
   const start = ref(0);
@@ -215,11 +216,11 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
   // --- Load more (infinite scroll) ----------------------------------------
   async function loadMore(): Promise<void> {
-    if (!hasMore.value || loading.value) {
+    if (!hasMore.value || loading.value || loadingMore.value) {
       return;
     }
 
-    loading.value = true;
+    loadingMore.value = true;
     const nextStart = start.value + PAGE_SIZE;
 
     try {
@@ -237,8 +238,13 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       console.error('Failed to load more results', err);
       error.value = err instanceof Error ? err.message : 'Failed to load more results';
     } finally {
-      loading.value = false;
+      loadingMore.value = false;
     }
+  }
+
+  // --- Retry (re-execute current query) ------------------------------------
+  async function retry(): Promise<void> {
+    await executeQuery();
   }
 
   // --- Debounced filter watcher --------------------------------------------
@@ -421,10 +427,12 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     // Core SOLR-driven state
     docs,
     loading,
+    loadingMore,
     initialLoading,
     total,
     hasMore,
     loadMore,
+    retry,
     error,
     isEmpty,
     facets,

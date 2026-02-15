@@ -43,13 +43,41 @@
         </ul>
       </div>
 
-      <div v-if="loading" class="loading-container">
-        <div class="spinner-border spinner-large" role="status">
-          <span class="visually-hidden">Loading...</span>
+      <!-- Initial loading state -->
+      <div v-if="initialLoading" class="loading-container" role="status" aria-live="polite">
+        <div class="spinner-border spinner-large">
+          <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
         </div>
       </div>
+
+      <!-- Error state -->
+      <div v-else-if="error" class="alert alert-danger d-flex align-items-center justify-content-between" role="alert">
+        <span>{{ t('calendar.messages.loadError') }}</span>
+        <button type="button" class="btn btn-outline-danger btn-sm ms-3" @click="handleRetry">
+          {{ t('calendar.messages.retry') }}
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="isEmpty" class="alert alert-warning" role="status" aria-live="polite">
+        {{ t('calendar.messages.noResults') }}
+      </div>
+
+      <!-- Results -->
       <div v-else>
-        <div v-if="groupedItems.length === 0" class="alert alert-warning">{{ t('calendar.messages.noResults') }}</div>        <div v-for="group in groupedItems" :key="group.key" class="mb-4">
+        <!-- Results count -->
+        <p v-if="total > 0" class="text-muted small mb-3" role="status" aria-live="polite">
+          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+        </p>
+
+        <!-- Re-query loading overlay (filter change, not initial) -->
+        <div v-if="loading" class="loading-container loading-container--overlay" role="status" aria-live="polite">
+          <div class="spinner-border spinner-large">
+            <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
+          </div>
+        </div>
+
+        <div v-for="group in groupedItems" :key="group.key" class="mb-4">
           <div class="dg-sep"><h3 class="m-0">{{ groupLabel(group) }}</h3></div>
 
           <div :id="`accordion-${group.key}`" class="accordion">
@@ -66,13 +94,24 @@
             />
           </div>
         </div>
+
+        <!-- Infinite scroll sentinel -->
+        <div ref="scrollSentinel" class="scroll-sentinel" aria-hidden="true" />
+
+        <!-- Loading more indicator -->
+        <div v-if="loadingMore" class="text-center py-3" role="status" aria-live="polite">
+          <div class="spinner-border spinner-border-sm me-2">
+            <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
+          </div>
+          <span class="text-muted small">{{ t('calendar.messages.loadingMore') }}</span>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from 'vue';
+import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
@@ -106,36 +145,28 @@ const router = useRouter();
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
 
-// Record types based on SCHEMA_FILTER_KEYS
-const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'activity'] as const;
+// Record types — calendarActivity replaces 'activity'
+const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'calendarActivity'] as const;
 
 const recordTypes = computed(() =>
   SCHEMA_FILTER_KEYS.map((key) => {
-    const normalizedKey = key.toLowerCase();
-    const translationKey = `calendar.types.${normalizedKey}`;
-    const label = te(translationKey) ? (t(translationKey) as string) : key.charAt(0).toUpperCase() + key.slice(1);
+    const translationKey = `calendar.types.${key}`;
+    const label = te(translationKey)
+      ? (t(translationKey) as string)
+      : key.charAt(0).toUpperCase() + key.slice(1);
 
-    return { value: normalizedKey, label };
+    return { value: key, label };
   }),
 );
 
 // Tab selection handler
 const setActiveTab = (tabValue: string) => {
-  console.log('[TabView] setActiveTab called with:', tabValue);
-  
-  // Preserve other query params but update types
   const query: Record<string, string | string[]> = {
     ...route.query,
-    types: tabValue
+    types: tabValue,
   };
 
-  console.log('[TabView] Setting query to:', query);
-
-  // Use push to navigate
-  router.push({ query }).then(() => {
-    console.log('[TabView] Navigation complete');
-    console.log('[TabView] New route.query.types:', route.query.types);
-  });
+  router.push({ query });
 };
 
 // Computed property for current filter component
@@ -155,30 +186,24 @@ const createRegionDisplayNames = (code: string) => {
   }
 };
 
-// Format date for <input type="date"> which requires YYYY-MM-DD format
 const defaultStartDate = DateTime.now().startOf('day').toISODate();
-
-// Check for startDate in query params - use it to override default
 const queryStartDate = route.query.startDate as string;
 const initialStartDate = queryStartDate || defaultStartDate;
 
-console.log('[Filters] Default start date:', defaultStartDate);
-console.log('[Filters] Query start date:', queryStartDate);
-console.log('[Filters] Using initial start date:', initialStartDate);
-
 const {
   loading,
+  loadingMore,
+  initialLoading,
   docs,
   locale: calendarLocale,
   groupedItems,
   facets,
-  availableTypes,
-  availableSubjects,
-  availableStatuses,
-  availableSubsidiaryBodies,
-  availableCopDecisions,
-  availableCountryOptions,
-  availableGlobalTargetOptions,
+  total,
+  hasMore,
+  loadMore,
+  retry,
+  error,
+  isEmpty,
   setFilters,
 } = useCalendarData({
   initialStartDate,
@@ -189,9 +214,7 @@ const {
   },
 });
 
-const allDocsFlat = computed(() => {
-  return docs.value;
-});
+const allDocsFlat = computed(() => docs.value);
 
 setRegionDisplayNames(createRegionDisplayNames(locale.value));
 
@@ -200,6 +223,7 @@ watch(() => locale.value, (nextLocale) => {
   setRegionDisplayNames(createRegionDisplayNames(nextLocale));
 });
 
+// --- Accordion state -------------------------------------------------------
 const openItems = ref<Record<string, boolean>>({});
 
 const anyItemOpen = computed(() => Object.values(openItems.value).some(isOpen => isOpen));
@@ -225,68 +249,70 @@ const handleFiltersUpdate = (filters: FilterState) => {
   setFilters(filters);
 };
 
-// Handle auto-expand from query parameter
+const handleRetry = () => {
+  void retry();
+};
+
+// --- Infinite scroll -------------------------------------------------------
+const scrollSentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+onMounted(() => {
+  if (!scrollSentinel.value) {
+    return;
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+
+      if (entry?.isIntersecting && hasMore.value && !loading.value && !loadingMore.value) {
+        void loadMore();
+      }
+    },
+    { rootMargin: '200px' },
+  );
+  observer.observe(scrollSentinel.value);
+});
+
+onUnmounted(() => {
+  observer?.disconnect();
+  observer = null;
+});
+
+// --- Auto-expand from query parameter --------------------------------------
 const autoExpandId = route.query.autoExpand as string;
 
-console.log('[AutoExpand] Query params:', route.query);
-console.log('[AutoExpand] Target ID:', autoExpandId);
-
 if (autoExpandId) {
-  // Watch for loading to complete
   const stopWatch = watch(
     () => ({ isLoading: loading.value, docsCount: docs.value.length }),
     ({ isLoading, docsCount }) => {
-      console.log('[AutoExpand] Watch triggered - Loading:', isLoading, 'Docs count:', docsCount);
-      console.log('[AutoExpand] Grouped items count:', groupedItems.value.length);
-      
       if (!isLoading && docsCount > 0) {
-        console.log('[AutoExpand] Data loaded, stopping watcher');
-        // Stop watching once we've found the right moment
         stopWatch();
-        
-        // Get all visible docs from grouped items (filtered results)
+
         const visibleDocs = groupedItems.value.flatMap(group => group.items);
-        
-        // Log all doc IDs for debugging
-        console.log('[AutoExpand] All doc IDs:', docs.value.map(d => d.id));
-        console.log('[AutoExpand] Visible (filtered) doc IDs:', visibleDocs.map(d => d.id));
-        
-        // Wait for DOM to update
+
         nextTick(() => {
           setTimeout(() => {
-            // Find the item in visible (filtered) docs
             const docExists = visibleDocs.some(doc => String(doc.id) === autoExpandId);
-            
-            console.log('[AutoExpand] Doc exists?', docExists);
-            
+
             if (docExists) {
-              console.log('[AutoExpand] Expanding item:', autoExpandId);
               openItems.value[autoExpandId] = true;
-              
-              console.log('[AutoExpand] openItems state:', openItems.value);
-              
-              // Wait for accordion animation, then scroll
+
               setTimeout(() => {
                 const element = document.getElementById(`heading-${autoExpandId}`);
-                
-                console.log('[AutoExpand] Found element?', !!element, `#heading-${autoExpandId}`);
-                
+
                 if (element) {
                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  console.log('[AutoExpand] Scrolled to element');
                 }
               }, 400);
-            } else {
-              console.error('[AutoExpand] Could not find doc with ID:', autoExpandId);
             }
           }, 200);
         });
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
-} else {
-  console.log('[AutoExpand] No autoExpand query parameter');
 }
 </script>
 
@@ -556,10 +582,22 @@ h3 {
   padding: 3rem 0;
 }
 
+.loading-container--overlay {
+  position: relative;
+  min-height: 100px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 0.25rem;
+}
+
 .spinner-large {
   width: 3rem;
   height: 3rem;
   border-width: 0.3em;
   color: #0d6efd;
+}
+
+.scroll-sentinel {
+  height: 1px;
+  width: 100%;
 }
 </style>
