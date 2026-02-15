@@ -43,7 +43,8 @@
       "relatedMeetings": "Réunions connexes",
       "relatedNotifications": "Notifications associées",
       "untitled": "Sans titre",
-      "unknownDate": "Date inconnue"
+      "unknownDate": "Date inconnue",
+      "cpbRelated": "Protocole de Cartagena / Biosécurité"
     },
     "links": {
       "documents": "Documents »"
@@ -69,6 +70,8 @@
         "statuses": "Statut (s)",
         "subsidiaryBodies": "Organe(s) subsidiaire(s)",
         "governingBodies": "Organe(s) directeur(s)",
+        "governingAndSubsidiaryBodies": "Organe(s) directeur(s) et subsidiaire(s)",
+        "gbfTargetsAndSections": "Sections et cibles du CMB",
         "gbfSections": "Section(s) du CMB",
         "decisions": "Décision (s)",
         "dateRange": "Plage de dates",
@@ -88,6 +91,8 @@
         "statuses": "Sélectionnez les statuts",
         "subsidiaryBodies": "Sélectionnez les organes subsidiaires",
         "governingBodies": "Sélectionnez les organes directeurs",
+        "governingAndSubsidiaryBodies": "Sélectionnez les organes directeurs ou subsidiaires",
+        "gbfTargetsAndSections": "Sélectionnez les cibles ou sections du CMB",
         "gbfSections": "Sélectionnez les sections du CMB",
         "decisions": "Sélectionnez les décisions",
         "schemas": "Sélectionnez les types d'enregistrement",
@@ -133,28 +138,28 @@
       "clearAll": "Effacer tous les filtres"
     },
     "types": {
-      "cop": "Réunions des COP",
-      "sbstta": "Réunions du SBSTTA",
-      "sbi": "Réunions du SBI",
-      "meeting": "Réunions",
-      "notification": "Notifications",
-      "nominations": "Nominations",
-      "submission": "Soumissions",
-      "peerReview": "Évaluations par les pairs",
-      "report": "Rapports",
-      "forum": "Forums en ligne",
-      "activity": "Activités",
-      "calendarActivity": "Activités",
-      "webinar": "Webinaires",
-      "workshop": "Ateliers",
-      "training": "Formations",
-      "consultation": "Consultations",
-      "campaign": "Campagnes",
-      "other": "Autres",
-      "conference": "Conférences",
-      "side-event": "Évènements parallèles",
-      "default": "Activités",
-      "unknown": "Activités"
+      "cop": "Réunion de la COP",
+      "sbstta": "Réunion du SBSTTA",
+      "sbi": "Réunion du SBI",
+      "meeting": "Réunion",
+      "notification": "Notification",
+      "nominations": "Nomination",
+      "submission": "Soumission",
+      "peerReview": "Évaluation par les pairs",
+      "report": "Rapport",
+      "forum": "Forum en ligne",
+      "activity": "Activité",
+      "calendarActivity": "Activité",
+      "webinar": "Webinaire",
+      "workshop": "Atelier",
+      "training": "Formation",
+      "consultation": "Consultation",
+      "campaign": "Campagne",
+      "other": "Autre",
+      "conference": "Conférence",
+      "side-event": "Évènement parallèle",
+      "default": "Activité",
+      "unknown": "Activité"
     },
     "status": {
       "confirm": "Confirmé",
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "Notification {id}",
       "deadline": "par {date}",
+      "completedOn": "Terminé le {date}",
       "publishedOnDate": "Publié {date}",
       "fromSource": "De {source}",
       "loadingDetails": "Détails de la notification en cours de chargement...",
@@ -207,7 +213,8 @@
       "grid": "Affichage en grille",
       "list": "Affichage de la liste",
       "tabView": "Affichage des onglets par type d'enregistrement"
-    }
+    },
+    "pilotRelease": "Version pilote"
   },
   "nav": {
     "home": "Accueil",

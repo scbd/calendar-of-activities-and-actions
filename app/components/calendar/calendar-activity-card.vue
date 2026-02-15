@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-activity-card" :style="cardBackgroundStyle">
+  <div class="calendar-activity-card" :class="{ 'calendar-activity-card--cpb-highlight': isCpbHighlighted }" :style="cardBackgroundStyle">
     <div class="calendar-activity-card__header">
       <div class="calendar-activity-card__type" :style="typeStyle">
         {{ typeLabel }}
@@ -54,6 +54,9 @@ import { formatDateRange } from 'shared/utils/date';
 import {
   getDocBooleanValue,
   getDocStringValue,
+  getDocSubjects,
+  getDocGoverningBodies,
+  getDocGlobalTargets,
 } from 'shared/utils/document-processing';
 import { resolveCountryLabel } from 'shared/utils/labels';
 import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
@@ -80,7 +83,7 @@ const title = computed(() => {
 const dateRange = computed(() => formatDateRange(props.doc));
 
 const typeLabel = computed(() => {
-  const raw = getDocStringValue(props.doc, 'type');
+  const raw = getDocStringValue(props.doc, 'type') || getDocStringValue(props.doc, 'schema');
   const translationKey = `calendar.types.${normalizeTypeKey(raw)}`;
 
   if (te(translationKey)) {
@@ -99,7 +102,7 @@ const typeLabel = computed(() => {
 });
 
 const typeStyle = computed(() => {
-  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type')));
+  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type') || getDocStringValue(props.doc, 'schema')));
 
   return {
     backgroundColor: palette.background,
@@ -108,7 +111,7 @@ const typeStyle = computed(() => {
 });
 
 const cardBackgroundStyle = computed(() => {
-  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type')));
+  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type') || getDocStringValue(props.doc, 'schema')));
 
   // Convert hex to rgba with heavy alpha (0.15 = 15% opacity)
   const hexToRgba = (hex: string, alpha: number) => {
@@ -124,7 +127,20 @@ const cardBackgroundStyle = computed(() => {
   };
 });
 
-const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired') === true);
+const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties') === true);
+
+const isCpbHighlighted = computed(() => {
+  const subjects = getDocSubjects(props.doc);
+  const governingBodies = getDocGoverningBodies(props.doc);
+  const targets = getDocGlobalTargets(props.doc);
+
+  return (
+    subjects.includes('CBD-SUBJECT-CPB') ||
+    governingBodies.includes('CBD-SUBJECT-CPB') ||
+    targets.includes('GBF-TARGET-17') ||
+    subjects.includes('CBD-SUBJECT-SYNBIO')
+  );
+});
 
 const schemaValue = computed(() => {
   const direct = props.doc.schema ? String(props.doc.schema) : undefined;
@@ -166,12 +182,14 @@ const statusLabel = computed(() => {
   // Always normalize the status key to ensure consistent format
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED') {
-    return '';
-  }
-
+  // Check completed first — NOT_SET / NODATE with past dates should show
+  // "Completed" rather than being hidden.
   if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
+  }
+
+  if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED' || normalizedStatusKey === 'NODATE') {
+    return '';
   }
 
   return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);
@@ -204,6 +222,9 @@ const activityLink = computed(() => {
   padding: 1rem;
   border-bottom: 1px solid #f1f3f5;
   border-radius: 0.375rem;
+}
+
+.calendar-activity-card--cpb-highlight {
 }
 
 .calendar-activity-card__header {

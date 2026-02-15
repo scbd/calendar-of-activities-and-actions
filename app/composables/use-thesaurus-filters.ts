@@ -6,6 +6,7 @@ import { thesaurusDomains } from 'shared/constants/thesaurus';
 import { RECORD_TYPES } from 'shared/constants/record-types';
 import { getDomainTerms } from 'shared/services/thesaurus';
 import { parseDecisionLabel } from 'shared/utils/decision-links';
+import { STATUS_EQUIVALENCES, COMPLETED_FACET_ALIASES } from 'shared/utils/status';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,33 +50,148 @@ function getLocalizedLabel(term: ThesaurusTerm, locale: string): string {
 
 /**
  * Merge thesaurus terms with SOLR facet counts.
- * Returns only options whose count is > 0, sorted alphabetically by label.
+ *
+ * Always returns all thesaurus terms so every filter group is visible in
+ * the consolidated mega-filter dropdown, regardless of facet timing.
+ * Terms with matching facet counts include the count; terms without a
+ * match are still shown (without a count badge).
  */
 function mergeTermsWithFacets(
   terms: ThesaurusTerm[],
   facetEntries: Array<{ value: string; count: number }> | undefined,
   locale: string,
 ): FilterOption[] {
-  if (!facetEntries || facetEntries.length === 0) {
+  if (!terms || terms.length === 0) {
     return [];
   }
 
+  // When facet data hasn't loaded yet (undefined), return all terms without
+  // counts so the filter group is visible while SOLR data loads.
+  // An empty array means facets loaded but nothing matched — show nothing.
+  if (facetEntries === undefined) {
+    return terms
+      .map<FilterOption>((term) => ({
+        value: term.identifier,
+        label: getLocalizedLabel(term, locale),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  // When facet data is available, only show terms that have a count > 0.
   const countMap = new Map(facetEntries.map((f) => [f.value, f.count]));
 
   return terms
-    .reduce<FilterOption[]>((acc, term) => {
-      const count = countMap.get(term.identifier);
+    .filter((term) => (countMap.get(term.identifier) ?? 0) > 0)
+    .map<FilterOption>((term) => ({
+      value: term.identifier,
+      label: getLocalizedLabel(term, locale),
+      count: countMap.get(term.identifier)!,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
 
-      if (count && count > 0) {
-        acc.push({
-          value: term.identifier,
-          label: getLocalizedLabel(term, locale),
-          count,
-        });
+/**
+ * Merge thesaurus status terms with SOLR facet counts.
+ *
+ * SOLR documents may store either a short code (e.g. `CONFIRM`) or a full
+ * thesaurus identifier (e.g. `NCHM-EVENT-STATUS-CONFIRMED`). Both forms
+ * represent the same status. This function:
+ *
+ * 1. Combines facet counts from equivalent short-code / thesaurus-ID pairs.
+ * 2. Uses the **thesaurus identifier** as the canonical `value` so that the
+ *    query layer can expand it to both forms via `expandStatusValuesForQuery`.
+ * 3. Resolves a localized label from the thesaurus term when available.
+ *
+ * Returns only options whose combined count is > 0, sorted alphabetically.
+ */
+function mergeStatusTermsWithFacets(
+  terms: ThesaurusTerm[],
+  facetEntries: Array<{ value: string; count: number }> | undefined,
+  locale: string,
+): FilterOption[] {
+  if (!terms || terms.length === 0) {
+    return [];
+  }
+
+  // When facet data hasn't loaded yet (undefined), return all status terms
+  // without counts. An empty array means facets loaded but nothing matched.
+  if (facetEntries === undefined) {
+    return terms
+      .map<FilterOption>((term) => ({
+        value: term.identifier,
+        label: getLocalizedLabel(term, locale),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  if (facetEntries.length === 0) {
+    return [];
+  }
+
+  // Build lookups
+  const termByIdentifier = new Map(terms.map((t) => [t.identifier, t]));
+
+  // Build a count map from raw facet values
+  const rawCountMap = new Map(facetEntries.map((f) => [f.value, f.count]));
+
+  // Group equivalent values under the thesaurus ID (canonical key).
+  // Accumulate counts from both short-code and thesaurus-ID forms.
+  const consolidated = new Map<string, { label: string; count: number }>();
+
+  for (const eq of STATUS_EQUIVALENCES) {
+    const shortCount = rawCountMap.get(eq.solrCode) ?? 0;
+    const fullCount = rawCountMap.get(eq.thesaurusId) ?? 0;
+    const totalCount = shortCount + fullCount;
+
+    // Remove processed entries so we can handle unmatched values later
+    rawCountMap.delete(eq.solrCode);
+    rawCountMap.delete(eq.thesaurusId);
+
+    if (totalCount > 0) {
+      const term = termByIdentifier.get(eq.thesaurusId);
+      const label = term ? getLocalizedLabel(term, locale) : eq.thesaurusId;
+
+      consolidated.set(eq.thesaurusId, { label, count: totalCount });
+    }
+  }
+
+  // Fold NOT_SET / NODATE counts into Completed — these documents always
+  // display as "Completed" when their dates are in the past and have no
+  // meaningful standalone status. CONFIRM is NOT folded here because it
+  // still appears as "Confirmed" for current/future-dated documents.
+  const completedKey = 'NCHM-EVENT-STATUS-COMPLETED';
+
+  for (const alias of COMPLETED_FACET_ALIASES) {
+    const rawCount = rawCountMap.get(alias) ?? 0;
+
+    if (rawCount > 0) {
+      rawCountMap.delete(alias);
+      const existing = consolidated.get(completedKey);
+
+      if (existing) {
+        existing.count += rawCount;
+      } else {
+        const term = termByIdentifier.get(completedKey);
+        const label = term ? getLocalizedLabel(term, locale) : completedKey;
+
+        consolidated.set(completedKey, { label, count: rawCount });
       }
+    }
+  }
 
-      return acc;
-    }, [])
+  // Any remaining facet values that didn't match a known equivalence
+  // (e.g. "unpublished") are included as-is.
+  for (const [value, count] of rawCountMap) {
+    if (count > 0) {
+      const term = termByIdentifier.get(value);
+      const label = term ? getLocalizedLabel(term, locale) : value;
+
+      consolidated.set(value, { label, count });
+    }
+  }
+
+  return [...consolidated.entries()]
+    .map(([value, { label, count }]) => ({ value, label, count }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
@@ -192,29 +308,30 @@ export function useThesaurusFilters(options: UseThesaurusFiltersOptions) {
   /**
    * Record type options — static list from RECORD_TYPES, counts from the
    * `schema` facet. Labels resolved via i18n.
+   * Always returns all record types so the filter group is always visible;
+   * counts are attached when facet data is available.
    */
   const recordTypeOptions = computed<FilterOption[]>(() => {
-    const entries = facetsRef.value.schema ?? [];
+    const entries = facetsRef.value.schema;
 
-    if (entries.length === 0) {
-      return [];
+    // When facet data hasn't loaded yet (undefined), show all types without counts
+    if (entries === undefined) {
+      return RECORD_TYPES.map<FilterOption>((rt) => ({
+        value: rt.value,
+        label: t(rt.labelKey, rt.value),
+      }));
     }
 
     const countMap = new Map(entries.map((f) => [f.value, f.count]));
 
-    return RECORD_TYPES.reduce<FilterOption[]>((acc, rt) => {
-      const count = countMap.get(rt.value);
-
-      if (count && count > 0) {
-        acc.push({
-          value: rt.value,
-          label: t(rt.labelKey, rt.value),
-          count,
-        });
-      }
-
-      return acc;
-    }, []);
+    // When facet data is available, only show types with count > 0
+    return RECORD_TYPES
+      .filter((rt) => (countMap.get(rt.value) ?? 0) > 0)
+      .map<FilterOption>((rt) => ({
+        value: rt.value,
+        label: t(rt.labelKey, rt.value),
+        count: countMap.get(rt.value)!,
+      }));
   });
 
   /** Subject options — CBD-SUBJECTS thesaurus merged with `subjects` facet. */
@@ -252,10 +369,24 @@ export function useThesaurusFilters(options: UseThesaurusFiltersOptions) {
     mergeTermsWithFacets(countryTerms.value, facetsRef.value.eventCountry, localeRef.value),
   );
 
-  /** Status options — NCHM-EVENT-STATUS thesaurus merged with `status` facet. */
-  const statusOptions = computed<FilterOption[]>(() =>
-    mergeTermsWithFacets(statusTerms.value, facetsRef.value.status, localeRef.value),
-  );
+  /**
+   * Status options — NCHM-EVENT-STATUS thesaurus merged with both `status`
+   * (meetings/notifications use short codes) and `activityStatus`
+   * (calendarActivity uses thesaurus identifiers) facets.
+   */
+  const statusOptions = computed<FilterOption[]>(() => {
+    const statusFacets = facetsRef.value.status;
+    const activityStatusFacets = facetsRef.value.activityStatus;
+
+    // Both undefined means facet data hasn't loaded yet — pass undefined through
+    if (statusFacets === undefined && activityStatusFacets === undefined) {
+      return mergeStatusTermsWithFacets(statusTerms.value, undefined, localeRef.value);
+    }
+
+    const combinedFacets = [...(statusFacets ?? []), ...(activityStatusFacets ?? [])];
+
+    return mergeStatusTermsWithFacets(statusTerms.value, combinedFacets, localeRef.value);
+  });
 
   /**
    * COP Decision options — no thesaurus required. Built entirely from the

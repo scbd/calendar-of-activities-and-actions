@@ -132,7 +132,7 @@
               </thead>
               <tbody>
                 <template v-for="doc in docs" :key="doc.id">
-                  <tr class="main-row" :class="{ 'row-expanded': isExpanded(doc) }" @click="toggleRow(doc)">
+                  <tr class="main-row" :class="{ 'row-expanded': isExpanded(doc), 'row-cpb-highlight': isCpbHighlighted(doc) }" @click="toggleRow(doc)">
                     <td class="expand-cell">
                       <button class="btn btn-sm btn-link" type="button" :aria-label="isExpanded(doc) ? 'Collapse' : 'Expand'">
                         <span class="expand-icon">{{ isExpanded(doc) ? '▼' : '▶' }}</span>
@@ -326,6 +326,7 @@ import { formatDateRange, formatNotificationDate, formatGridDateRange, formatGri
 import {
   getDocBooleanValue,
   getDocStringValue,
+  getDocSubjects,
   getDocSubsidiaryBodies,
   getDocGoverningBodies,
   getDocGbfSections,
@@ -469,7 +470,7 @@ const getTitle = (doc: CalendarDoc): string => {
 };
 
 const getTypeLabel = (doc: CalendarDoc): string => {
-  const raw = getDocStringValue(doc, 'type');
+  const raw = getDocStringValue(doc, 'type') || getDocStringValue(doc, 'schema');
   const translationKey = `calendar.types.${normalizeTypeKey(raw)}`;
 
   if (te(translationKey)) {
@@ -485,7 +486,7 @@ const getTypeLabel = (doc: CalendarDoc): string => {
 };
 
 const getTypeStyle = (doc: CalendarDoc) => {
-  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(doc, 'type')));
+  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(doc, 'type') || getDocStringValue(doc, 'schema')));
 
   return {
     backgroundColor: palette.background,
@@ -549,12 +550,14 @@ const getStatusLabel = (doc: CalendarDoc): string => {
   // Always normalize the status key to ensure consistent format
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED') {
-    return '';
-  }
-
+  // Check completed first — NOT_SET / NODATE with past dates should show
+  // "Completed" rather than being hidden.
   if (shouldDisplayCompleted(doc, normalizedStatusKey, rawStatus)) {
     return t('calendar.status.completed') as string;
+  }
+
+  if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED' || normalizedStatusKey === 'NODATE') {
+    return '';
   }
 
   return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);
@@ -562,7 +565,20 @@ const getStatusLabel = (doc: CalendarDoc): string => {
 
 const getStatusColor = (doc: CalendarDoc): string => statusColor(doc);
 
-const isActionRequired = (doc: CalendarDoc): boolean => getDocBooleanValue(doc, 'actionRequired') === true;
+const isActionRequired = (doc: CalendarDoc): boolean => getDocBooleanValue(doc, 'actionRequired', 'actionRequiredByParties') === true;
+
+const isCpbHighlighted = (doc: CalendarDoc): boolean => {
+  const subjects = getDocSubjects(doc);
+  const governingBodies = getDocGoverningBodies(doc);
+  const targets = getDocGlobalTargets(doc);
+
+  return (
+    subjects.includes('CBD-SUBJECT-CPB') ||
+    governingBodies.includes('CBD-SUBJECT-CPB') ||
+    targets.includes('GBF-TARGET-17') ||
+    subjects.includes('CBD-SUBJECT-SYNBIO')
+  );
+};
 
 const getStatusNarrative = (doc: CalendarDoc): string => {
   if (isNotification(doc)) {
@@ -729,7 +745,7 @@ onUnmounted(() => {
   font-weight: 600;
   border-bottom: 2px solid #dee2e6;
   position: sticky;
-  top: 0;
+  top: var(--pilot-banner-height, 1.95rem);
   background-color: #f8f9fa;
   z-index: 10;
 }
@@ -780,6 +796,9 @@ onUnmounted(() => {
 
 .main-row.row-expanded {
   background-color: #e7f1ff;
+}
+
+.main-row.row-cpb-highlight {
 }
 
 .expand-cell {

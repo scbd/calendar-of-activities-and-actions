@@ -130,17 +130,8 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   }
 
   // --- SOLR endpoint -------------------------------------------------------
+  /** Always uses the centralized SOLR base (hardcoded to api.cbddev.xyz). */
   function getSolrEndpoint(): string {
-    try {
-      const config = useRuntimeConfig();
-
-      if (config.public.scbdApiBase) {
-        return `${(config.public.scbdApiBase as string).replace(/\/$/, '')}/api/v2013/index/select`;
-      }
-    } catch {
-      // useRuntimeConfig unavailable outside Nuxt context — fall through
-    }
-
     return getSolrSelectUrl();
   }
 

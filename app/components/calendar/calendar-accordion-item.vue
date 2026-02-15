@@ -1,5 +1,5 @@
 <template>
-  <div ref="accordionRef" class="accordion-item mb-4" :class="{ 'accordion-item--faded': fadeOthers && !isOpen }">
+  <div ref="accordionRef" class="accordion-item mb-4 shadow" :class="{ 'accordion-item--faded': fadeOthers && !isOpen, 'accordion-item--cpb-highlight': isCpbDoc }">
     <h2 :id="headingId" class="accordion-header">
       <button
         class="accordion-button p-0"
@@ -132,6 +132,11 @@
         </div>
       </div>
     </div>
+
+    <!-- CPB/Biosafety footer -->
+    <div v-if="isCpbDoc" class="accordion-item__cpb-footer">
+      {{ t('calendar.labels.cpbRelated') }}
+    </div>
   </div>
 </template>
 
@@ -152,6 +157,7 @@ import {
   getDocGoverningBodies,
   getDocRaw,
   getDocStringValue,
+  getDocSubjects,
   getDocSubsidiaryBodies,
 } from 'shared/utils/document-processing';
 import {
@@ -222,7 +228,7 @@ const title = computed(() => {
 const dateRange = computed(() => formatDateRange(props.doc));
 
 const typeLabel = computed(() => {
-  const raw = getDocStringValue(props.doc, 'type');
+  const raw = getDocStringValue(props.doc, 'type') || getDocStringValue(props.doc, 'schema');
   const translationKey = `calendar.types.${normalizeTypeKey(raw)}`;
 
   if (te(translationKey)) {
@@ -238,7 +244,7 @@ const typeLabel = computed(() => {
 });
 
 const typeStyle = computed(() => {
-  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type')));
+  const palette = getTypeColor(normalizeTypeKey(getDocStringValue(props.doc, 'type') || getDocStringValue(props.doc, 'schema')));
 
   return {
     backgroundColor: palette.background,
@@ -269,7 +275,20 @@ const statusNarrative = computed(() => {
   return getDocStringValue(props.doc, 'statusNarrative');
 });
 
-const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired') === true);
+const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties') === true);
+
+const isCpbDoc = computed(() => {
+  const subjects = getDocSubjects(props.doc);
+  const governingBodies = getDocGoverningBodies(props.doc);
+  const targets = getDocGlobalTargets(props.doc);
+
+  return (
+    subjects.includes('CBD-SUBJECT-CPB') ||
+    governingBodies.includes('CBD-SUBJECT-CPB') ||
+    targets.includes('GBF-TARGET-17') ||
+    subjects.includes('CBD-SUBJECT-SYNBIO')
+  );
+});
 
 const schemaValue = computed(() => {
   const direct = props.doc.schema ? String(props.doc.schema) : undefined;
@@ -596,11 +615,35 @@ const collapseId = computed(() => props.collapseId);
 .accordion-item {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--bs-accordion-border-radius) !important;
+}
+
+.accordion-item :deep(.accordion-header),
+.accordion-item :deep(.accordion-button) {
+  border-top-left-radius: var(--bs-accordion-inner-border-radius) !important;
+  border-top-right-radius: var(--bs-accordion-inner-border-radius) !important;
 }
 
 /* Fade out other accordion items when one is expanded */
 .accordion-item--faded {
   opacity: 0.2;
+}
+
+.accordion-item--cpb-highlight {
+  z-index: 1;
+  position: relative;
+}
+
+.accordion-item__cpb-footer {
+  background-color: #fa6938;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.28rem 1rem;
+  border-radius: 0 0 var(--bs-accordion-inner-border-radius) var(--bs-accordion-inner-border-radius);
 }
 
 /* Smooth accordion transitions */
@@ -627,7 +670,7 @@ const collapseId = computed(() => props.collapseId);
   position: relative;
   text-transform: uppercase;
   color: #fff;
-  border-radius: 0.375rem 0.375rem 0 0;
+  border-radius: var(--bs-accordion-inner-border-radius) var(--bs-accordion-inner-border-radius) 0 0;
 }
 
 .calendar-row__caret-spacer {

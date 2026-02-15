@@ -43,7 +43,8 @@
       "relatedMeetings": "Reuniones relacionadas",
       "relatedNotifications": "Notificaciones relacionadas",
       "untitled": "Sin título",
-      "unknownDate": "Fecha desconocida"
+      "unknownDate": "Fecha desconocida",
+      "cpbRelated": "Protocolo de Cartagena / Bioseguridad"
     },
     "links": {
       "documents": "Documentos»"
@@ -69,6 +70,8 @@
         "statuses": "Estado (es)",
         "subsidiaryBodies": "Órgano(s) subsidiario(s)",
         "governingBodies": "Órgano(s) rector(es)",
+        "governingAndSubsidiaryBodies": "Órgano(s) rector(es) y subsidiario(s)",
+        "gbfTargetsAndSections": "Secciones y objetivos del MMBI",
         "gbfSections": "Sección(es) del MMBI",
         "decisions": "Decisión (s)",
         "dateRange": "Intervalo de fechas",
@@ -88,6 +91,8 @@
         "statuses": "Seleccione los estados",
         "subsidiaryBodies": "Seleccione los órganos subsidiarios",
         "governingBodies": "Seleccione los órganos rectores",
+        "governingAndSubsidiaryBodies": "Seleccione los órganos rectores o subsidiarios",
+        "gbfTargetsAndSections": "Seleccione los objetivos o secciones del MMBI",
         "gbfSections": "Seleccione las secciones del MMBI",
         "decisions": "Decisiones selectas",
         "schemas": "Seleccione los tipos de registro",
@@ -133,28 +138,28 @@
       "clearAll": "Borrar todos los filtros"
     },
     "types": {
-      "cop": "Reuniones de la COP",
-      "sbstta": "Reuniones del OSACTT",
-      "sbi": "Reuniones del SBI",
-      "meeting": "Reuniones",
-      "notification": "Notificaciones",
-      "nominations": "Nominaciones",
-      "submission": "Presentaciones",
-      "peerReview": "Revisiones por pares",
-      "report": "Informes",
-      "forum": "Foros en línea",
-      "activity": "Actividades",
-      "calendarActivity": "Actividades",
-      "webinar": "Seminarios web",
-      "workshop": "Talleres",
-      "training": "Entrenamientos",
-      "consultation": "Consultas",
-      "campaign": "Campañas",
+      "cop": "Reunión de la COP",
+      "sbstta": "Reunión del OSACTT",
+      "sbi": "Reunión del SBI",
+      "meeting": "Reunión",
+      "notification": "Notificación",
+      "nominations": "Nominación",
+      "submission": "Presentación",
+      "peerReview": "Revisión por pares",
+      "report": "Informe",
+      "forum": "Foro en línea",
+      "activity": "Actividad",
+      "calendarActivity": "Actividad",
+      "webinar": "Seminario web",
+      "workshop": "Taller",
+      "training": "Entrenamiento",
+      "consultation": "Consulta",
+      "campaign": "Campaña",
       "other": "Otro",
-      "conference": "Conferencias",
-      "side-event": "Eventos paralelos",
-      "default": "Actividades",
-      "unknown": "Actividades"
+      "conference": "Conferencia",
+      "side-event": "Evento paralelo",
+      "default": "Actividad",
+      "unknown": "Actividad"
     },
     "status": {
       "confirm": "Confirmado",
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "Notificación {id}",
       "deadline": "antes del {date}",
+      "completedOn": "Completado el {date}",
       "publishedOnDate": "Publicado el {date}",
       "fromSource": "De {source}",
       "loadingDetails": "Cargando los detalles de la notificación...",
@@ -207,7 +213,8 @@
       "grid": "Vista de cuadrícula",
       "list": "Vista de lista",
       "tabView": "Vista de pestañas por tipo de registro"
-    }
+    },
+    "pilotRelease": "Versión piloto"
   },
   "nav": {
     "home": "Hogar",

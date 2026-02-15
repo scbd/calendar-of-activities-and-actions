@@ -43,7 +43,8 @@
       "relatedMeetings": "Связанные встречи",
       "relatedNotifications": "Похожие уведомления",
       "untitled": "Без названия",
-      "unknownDate": "Неизвестная дата"
+      "unknownDate": "Неизвестная дата",
+      "cpbRelated": "Картахенский протокол / Биобезопасность"
     },
     "links": {
       "documents": "Документы»"
@@ -69,6 +70,8 @@
         "statuses": "Статус (ы)",
         "subsidiaryBodies": "Вспомогательный(е) орган(ы)",
         "governingBodies": "Руководящий(е) орган(ы)",
+        "governingAndSubsidiaryBodies": "Руководящий(е) и вспомогательный(е) орган(ы)",
+        "gbfTargetsAndSections": "Разделы и цели ГБР",
         "gbfSections": "Раздел(ы) ГБР",
         "decisions": "Решение (ы)",
         "dateRange": "Диапазон дат",
@@ -88,6 +91,8 @@
         "statuses": "Выберите статусы",
         "subsidiaryBodies": "Выберите вспомогательные органы",
         "governingBodies": "Выберите руководящие органы",
+        "governingAndSubsidiaryBodies": "Выберите руководящие или вспомогательные органы",
+        "gbfTargetsAndSections": "Выберите цели или разделы ГБР",
         "gbfSections": "Выберите разделы ГБР",
         "decisions": "Выберите решения",
         "schemas": "Выберите типы записей",
@@ -133,28 +138,28 @@
       "clearAll": "Очистить все фильтры"
     },
     "types": {
-      "cop": "Заседания КС",
-      "sbstta": "Совещания ВОКНТТА",
-      "sbi": "Заседания ВОО",
-      "meeting": "Встречи",
-      "notification": "Уведомления",
-      "nominations": "Номинации",
-      "submission": "Заявки",
-      "peerReview": "Рецензии коллег",
-      "report": "Отчеты",
-      "forum": "Онлайн-форумы",
-      "activity": "Мероприятия",
-      "calendarActivity": "Мероприятия",
-      "webinar": "Вебинары",
-      "workshop": "Семинары",
-      "training": "Тренинги",
-      "consultation": "Консультации",
-      "campaign": "Кампании",
-      "other": "Другой",
-      "conference": "Конференции",
-      "side-event": "Параллельные мероприятия",
-      "default": "Мероприятия",
-      "unknown": "Мероприятия"
+      "cop": "Заседание КС",
+      "sbstta": "Совещание ВОКНТТА",
+      "sbi": "Заседание ВОО",
+      "meeting": "Встреча",
+      "notification": "Уведомление",
+      "nominations": "Номинация",
+      "submission": "Заявка",
+      "peerReview": "Рецензия коллег",
+      "report": "Отчёт",
+      "forum": "Онлайн-форум",
+      "activity": "Мероприятие",
+      "calendarActivity": "Мероприятие",
+      "webinar": "Вебинар",
+      "workshop": "Семинар",
+      "training": "Тренинг",
+      "consultation": "Консультация",
+      "campaign": "Кампания",
+      "other": "Другое",
+      "conference": "Конференция",
+      "side-event": "Параллельное мероприятие",
+      "default": "Мероприятие",
+      "unknown": "Мероприятие"
     },
     "status": {
       "confirm": "Подтверждено",
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "Уведомление {id}",
       "deadline": "по {date}",
+      "completedOn": "Завершено {date}",
       "publishedOnDate": "Опубликовано {date}",
       "fromSource": "Из {source}",
       "loadingDetails": "Загрузка сведений об уведомлении...",
@@ -207,7 +213,8 @@
       "grid": "Просмотр сетки",
       "list": "Просмотр списка",
       "tabView": "Просмотр вкладок по типу записи"
-    }
+    },
+    "pilotRelease": "Пилотный выпуск"
   },
   "nav": {
     "home": "Дом",

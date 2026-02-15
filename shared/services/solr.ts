@@ -9,6 +9,7 @@
 import { useQueryIndex } from '../../app/composables/use-query-index';
 import type { SolrSelectBody, SolrFacetCounts } from '../types/solr';
 import type { CalendarDoc, FilterState, ParsedFacets } from '../types/calendar';
+import { expandStatusValuesForQuery } from '../utils/status';
 import { SOLR_FACET_FIELDS } from '../constants/solr-fields';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
@@ -155,7 +156,7 @@ export function localizeFields(fields?: string | string[], locale?: LocaleCode):
 export const CALENDAR_LIST_FIELDS = [
   'id', '_id', 'schema_s', 'identifier_s',
   'title_EN_t', 'title_FR_t', 'title_ES_t', 'title_AR_t', 'title_RU_t', 'title_ZH_t',
-  'startDate_dt', 'endDate_dt', 'status_s',
+  'startDate_dt', 'endDate_dt', 'status_s', 'activityStatus_s',
   'eventCity_s', 'eventCountry_s', 'meetingCode_s',
   'type_s', 'subType_s',
   'symbol_s', 'date_dt', 'actionDate_dt',
@@ -164,6 +165,7 @@ export const CALENDAR_LIST_FIELDS = [
   'thematicAreas_ss',
   'notifications_ss', 'meetings_ss', 'activities_ss',
   'url_ss',
+  'actionRequiredByParties_b',
 ].join(',');
 
 /** All fields requested for expanded detail view. */
@@ -242,7 +244,9 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   } = params;
 
   const fq: string[] = [
-    '_state_s:public',
+    // calendarActivity docs have no _state_s field, so we accept public OR missing
+    '(_state_s:public OR (*:* NOT _state_s:*))',
+    // calendarActivity docs have no version_s field — the NOT already covers them
     '{!tag=version}(*:* NOT version_s:*)',
     '{!tag=schemaType}schemaType_s:scbd',
   ];
@@ -270,17 +274,40 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     }
   }
 
-  // Status filter (also multi-value)
+  // Status filter — meetings/notifications use `status_s` (short codes like
+  // CONFIRM), calendarActivity uses `activityStatus_s` (thesaurus IDs like
+  // NCHM-EVENT-STATUS-CONFIRMED). Expand each selected value to both forms
+  // and OR across both fields so all matching documents are found.
   if (filters.statuses?.length) {
-    fq.push(buildFilterQuery('status_s', 'status', filters.statuses));
+    const expandedStatuses = expandStatusValuesForQuery(filters.statuses);
+    const statusClause = buildFilterQuery('status_s', 'status', expandedStatuses);
+    const activityStatusClause = buildFilterQuery('activityStatus_s', 'status', expandedStatuses);
+
+    // Strip the {!tag=status} prefix from the individual clauses and wrap
+    // with a single tag so facet exclusion still works correctly.
+    const stripTag = (clause: string): string => clause.replace(/^\{!tag=[^}]+\}/, '');
+
+    fq.push(`{!tag=status}(${stripTag(statusClause)} OR ${stripTag(activityStatusClause)})`);
   }
 
   // Date range filters
-  if (filters.startDate) {
-    fq.push(`{!tag=startDate}startDate_dt:[${escapeSolrDate(filters.startDate)} TO *]`);
+  // Meetings use startDate_dt / endDate_dt; notifications use date_dt
+  // (publish date) and actionDate_dt (deadline).  We OR all relevant date
+  // fields so a document matches if ANY of its dates fall in range.
+  // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
+  {
+    const sd = toSolrDateString(filters.startDate || '2024-01-01');
+
+    fq.push(
+      `{!tag=startDate}(startDate_dt:[${sd} TO *] OR date_dt:[${sd} TO *] OR actionDate_dt:[${sd} TO *])`,
+    );
   }
   if (filters.endDate) {
-    fq.push(`{!tag=endDate}endDate_dt:[* TO ${escapeSolrDate(filters.endDate)}]`);
+    const ed = toSolrDateString(filters.endDate);
+
+    fq.push(
+      `{!tag=endDate}(endDate_dt:[* TO ${ed}] OR date_dt:[* TO ${ed}] OR actionDate_dt:[* TO ${ed}])`,
+    );
   }
 
   // Action required flag
@@ -290,7 +317,15 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
 
   // Text search — use edismax with locale-specific text + title fields
   const textField = getTextFieldForLocale(locale);
-  let q = '*:*';
+
+  // Default query uses _state_s:public (always true given the matching fq)
+  // instead of schema_s:(...) — putting the schema constraint in q prevents
+  // the {!ex=schema} facet exclusion from working, which hides record types
+  // that are not currently selected.
+  // Use schemaType_s:scbd — all relevant docs (including calendarActivity
+  // which lacks _state_s) share this field.  The _state_s constraint still
+  // lives in fq so meetings/notifications must be public.
+  let q = 'schemaType_s:scbd';
   let defType: 'edismax' | undefined;
   let qf: string | undefined;
 
@@ -391,6 +426,13 @@ export function normalizeCalendarDoc(raw: Record<string, unknown>): CalendarDoc 
     doc.id = doc._id;
   }
 
+  // calendarActivity docs store status in `activityStatus_s` (thesaurus ID)
+  // rather than `status_s`. Promote it to the canonical `status` field so
+  // cards, tables, and other display logic find it in a single place.
+  if (doc.schema === 'calendarActivity' && doc.activityStatus && !doc.status) {
+    doc.status = doc.activityStatus;
+  }
+
   // Ensure array fields are always arrays
   for (const field of CALENDAR_ARRAY_FIELDS) {
     if (!Array.isArray(doc[field])) {
@@ -418,7 +460,7 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
     : getTextFieldForLocale(locale);
 
   const fq: string[] = [
-    '_state_s:public',
+    '(_state_s:public OR (*:* NOT _state_s:*))',
     `{!tag=schema}schema_s:(${schema})`,
     '{!tag=version}(*:* NOT version_s:*)',
     '{!tag=schemaType}schemaType_s:scbd',
@@ -427,8 +469,8 @@ export function buildSelectBody(options: QueryOptions = {}): SolrSelectBody {
 
   // by default query everything; when sinceUpdatedDateISO provided, constrain updatedDate_dt
   const q = options.sinceUpdatedDateISO
-    ? `updatedDate_dt:[ ${escapeSolrDate(options.sinceUpdatedDateISO)} TO * ]`
-    : '*:*';
+    ? `updatedDate_dt:[ ${toSolrDateString(options.sinceUpdatedDateISO)} TO * ]`
+    : 'schemaType_s:scbd';
 
   const body: SolrSelectBody = {
     df,
@@ -484,7 +526,24 @@ export function collectAllFieldNames(docs: Array<Record<string, unknown>>): stri
   return Array.from(set).sort();
 }
 
-/** Escape colons and hyphens in ISO date strings for SOLR range queries. */
-export function escapeSolrDate(iso: string): string {
-  return iso.replaceAll(':', '\\:').replaceAll('-', '\\-');
+/**
+ * Convert a date string (ISO date or datetime) to a SOLR-compatible datetime.
+ *
+ * SOLR expects `YYYY-MM-DDTHH:mm:ssZ`. When the input is a bare date such as
+ * `2026-02-15` (from Luxon `toISODate()`), we append `T00:00:00Z`.  Full ISO
+ * strings that already include a time component are returned as-is.
+ *
+ * No backslash-escaping is performed — it is unnecessary for JSON POST bodies
+ * and causes double-escaping that makes the query a bad request.
+ */
+export function toSolrDateString(iso: string): string {
+  // Already a full datetime (contains 'T')
+  if (iso.includes('T')) {
+    return iso.endsWith('Z') ? iso : `${iso}Z`;
+  }
+
+  return `${iso}T00:00:00Z`;
 }
+
+/** @deprecated Use `toSolrDateString` instead. */
+export const escapeSolrDate = toSolrDateString;

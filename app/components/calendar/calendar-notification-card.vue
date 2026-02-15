@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-notification-card" :style="cardBackgroundStyle">
+  <div class="calendar-notification-card" :class="{ 'calendar-notification-card--cpb-highlight': isCpbHighlighted }" :style="cardBackgroundStyle">
     <div class="calendar-notification-card__header">
       <div class="calendar-notification-card__header-left">
         <a
@@ -26,11 +26,17 @@
         <span
           v-if="entry.details?.actionRequired"
           class="calendar-notification-card__badge"
+          :class="{ 'calendar-notification-card__badge--completed': isDeadlinePast }"
         >
-          {{ t('calendar.labels.actionRequired') }}
-          <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
-            {{ t('calendar.notifications.deadline', { date: formattedDeadline }) }}
-          </span>
+          <template v-if="isDeadlinePast">
+            {{ t('calendar.notifications.completedOn', { date: formattedDeadline }) }}
+          </template>
+          <template v-else>
+            {{ t('calendar.labels.actionRequired') }}
+            <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
+              {{ t('calendar.notifications.deadline', { date: formattedDeadline }) }}
+            </span>
+          </template>
         </span>
       </div>
     </div>
@@ -105,6 +111,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import ExpandablePillList from '../expandable-pill-list.vue';
 import { buildNotificationLink } from 'shared/utils/notifications';
@@ -124,6 +131,22 @@ const { t } = useI18n();
 const notificationLink = computed(() => buildNotificationLink(props.entry.key));
 const formattedDeadline = computed(() => formatNotificationDate(props.entry.details?.actionDeadline) || '');
 const formattedPublishedOn = computed(() => formatNotificationDate(props.entry.details?.publishedOn) || '');
+
+const isDeadlinePast = computed(() => {
+  const deadline = props.entry.details?.actionDeadline;
+
+  if (!deadline) {
+    return false;
+  }
+
+  const dt = DateTime.fromISO(String(deadline));
+
+  if (!dt.isValid) {
+    return false;
+  }
+
+  return dt.toUTC().endOf('day') < DateTime.utc();
+});
 
 const notificationCalendarLink = computed(() => {
   // Find the notification doc in allDocs to link to it in the main calendar view
@@ -202,12 +225,25 @@ const cardBackgroundStyle = computed(() => {
     backgroundColor: hexToRgba(palette.background, 0.15),
   };
 });
+
+const isCpbHighlighted = computed(() => {
+  const themes = props.entry.details?.thematicAreas ?? [];
+
+  return (
+    themes.includes('CBD-SUBJECT-CPB') ||
+    themes.includes('CBD-SUBJECT-SYNBIO')
+  );
+});
 </script>
 
 <style scoped>
 .calendar-notification-card {
   padding: 1rem;
   border-bottom: 1px solid #f1f3f5;
+}
+
+.calendar-notification-card--cpb-highlight {
+  border-radius: 0.375rem;
 }
 
 .calendar-notification-card__header {
@@ -265,6 +301,11 @@ const cardBackgroundStyle = computed(() => {
 }
 
 .calendar-notification-card__badge-deadline { font-weight: 400; }
+
+.calendar-notification-card__badge--completed {
+  background-color: #d1fae5; /* green tint */
+  color: #065f46;
+}
 
 .calendar-notification-card__status { margin-top: 0.75rem; font-weight: 600; }
 .calendar-notification-card__status--error { color: #b91c1c; }

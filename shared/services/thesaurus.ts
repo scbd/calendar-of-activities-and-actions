@@ -1,5 +1,5 @@
 import type { ThesaurusTerm } from '../types/thesaurus';
-import { getApiBase } from '../utils/api-config';
+import { getThesaurusBaseUrl } from '../utils/api-config';
 
 /**
  * Fetch all terms under a thesaurus domain (by domain identifier).
@@ -9,8 +9,8 @@ export async function getDomainTerms(
   termIdentifier: string,
   params: Record<string, unknown> = {},
 ): Promise<ThesaurusTerm[]> {
-  const base = getApiBase();
-  const url = `${base}/api/v2013/thesaurus/domains/${encodeURIComponent(termIdentifier)}/terms`;
+  const base = getThesaurusBaseUrl();
+  const url = `${base}/domains/${encodeURIComponent(termIdentifier)}/terms`;
 
   return await $fetch<ThesaurusTerm[]>(url, { method: 'GET', query: params });
 }
@@ -23,8 +23,8 @@ export async function getTerm(
   termCode: string,
   params: Record<string, unknown> = {},
 ): Promise<ThesaurusTerm> {
-  const base = getApiBase();
-  const url = `${base}/api/v2013/thesaurus/terms`;
+  const base = getThesaurusBaseUrl();
+  const url = `${base}/terms`;
 
   return await $fetch<ThesaurusTerm>(url, { method: 'GET', query: { termCode, ...params } });
 }

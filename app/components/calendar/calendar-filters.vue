@@ -8,8 +8,8 @@
           id="search-filter"
           v-model="searchText"
           type="search"
-          class="form-control form-control-sm"
           :placeholder="t('calendar.filters.placeholders.search')"
+          class="form-control form-control-lg"
         >
       </div>
 
@@ -28,9 +28,16 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.schemas')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
@@ -50,59 +57,58 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.activityTypes')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
 
-      <!-- Global Targets Filter -->
+      <!-- GBF Sections & Targets Filter (grouped) -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="global-targets-filter" class="form-label">{{ t('calendar.filters.labels.globalTargets') }}</label>
+        <label for="gbf-filter" class="form-label">{{ t('calendar.filters.labels.gbfTargetsAndSections') }}</label>
         <Multiselect
-          id="global-targets-filter"
-          v-model="selectedGlobalTargets"
-          :options="globalTargetOptions"
+          id="gbf-filter"
+          v-model="selectedGbfItems"
+          :options="gbfFilterOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          group-values="options"
+          group-label="groupLabel"
           label="label"
           track-by="value"
-          :placeholder="t('calendar.filters.placeholders.globalTargets')"
+          :placeholder="t('calendar.filters.placeholders.gbfTargetsAndSections')"
         >
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
           </template>
-        </Multiselect>
-      </div>
-
-      <!-- GBF Sections Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <label for="gbf-sections-filter" class="form-label">{{ t('calendar.filters.labels.gbfSections') }}</label>
-        <Multiselect
-          id="gbf-sections-filter"
-          v-model="selectedGbfSections"
-          :options="gbfSectionOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          label="label"
-          track-by="value"
-          :placeholder="t('calendar.filters.placeholders.gbfSections')"
-        >
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          <template #option="slotProps">
+            <span v-if="slotProps?.option?.$groupLabel">
+              {{ slotProps.option.$groupLabel }}
+            </span>
+            <span v-else>
+              {{ slotProps?.option?.label }}
+              <span v-if="slotProps?.option?.count != null" class="badge rounded-pill bg-secondary ms-1">{{ slotProps.option.count }}</span>
+            </span>
           </template>
         </Multiselect>
       </div>
 
       <!-- Countries Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div v-show="false" class="col-12 col-md-6 col-lg-3">
         <label for="countries-filter" class="form-label">{{ t('calendar.filters.labels.countries') }}</label>
         <Multiselect
           id="countries-filter"
@@ -116,9 +122,16 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.countries')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
@@ -138,9 +151,16 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.subjects')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
@@ -160,59 +180,58 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.statuses')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
 
-      <!-- Governing Bodies Filter -->
+      <!-- Governing & Subsidiary Bodies Filter (grouped) -->
       <div class="col-12 col-md-6 col-lg-3">
-        <label for="governing-body-filter" class="form-label">{{ t('calendar.filters.labels.governingBodies') }}</label>
+        <label for="bodies-filter" class="form-label">{{ t('calendar.filters.labels.governingAndSubsidiaryBodies') }}</label>
         <Multiselect
-          id="governing-body-filter"
-          v-model="selectedGoverningBodies"
-          :options="governingBodyOptions"
+          id="bodies-filter"
+          v-model="selectedBodies"
+          :options="bodyFilterOptions"
           :multiple="true"
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          group-values="options"
+          group-label="groupLabel"
           label="label"
           track-by="value"
-          :placeholder="t('calendar.filters.placeholders.governingBodies')"
+          :placeholder="t('calendar.filters.placeholders.governingAndSubsidiaryBodies')"
         >
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
           </template>
-        </Multiselect>
-      </div>
-
-      <!-- Subsidiary Body Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <label for="subsidiary-body-filter" class="form-label">{{ t('calendar.filters.labels.subsidiaryBodies') }}</label>
-        <Multiselect
-          id="subsidiary-body-filter"
-          v-model="selectedSubsidiaryBodies"
-          :options="subsidiaryBodyOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          label="label"
-          track-by="value"
-          :placeholder="t('calendar.filters.placeholders.subsidiaryBodies')"
-        >
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+          <template #option="slotProps">
+            <span v-if="slotProps?.option?.$groupLabel">
+              {{ slotProps.option.$groupLabel }}
+            </span>
+            <span v-else>
+              {{ slotProps?.option?.label }}
+              <span v-if="slotProps?.option?.count != null" class="badge rounded-pill bg-secondary ms-1">{{ slotProps.option.count }}</span>
+            </span>
           </template>
         </Multiselect>
       </div>
 
       <!-- COP Decision Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div v-show="false" class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
@@ -226,9 +245,16 @@
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.decisions')"
         >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
           <template #option="{ option }">
             <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="facet-count">&nbsp;({{ option.count }})</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
           </template>
         </Multiselect>
       </div>
@@ -371,6 +397,24 @@ const {
 
 type FilterSelectionValue = FilterOption | string;
 
+interface BodyFilterOption extends FilterOption {
+  bodyGroup: 'governingBodies' | 'subsidiaryBodies';
+}
+
+interface BodyFilterGroup {
+  groupLabel: string;
+  options: BodyFilterOption[];
+}
+
+interface GbfFilterOption extends FilterOption {
+  gbfGroup: 'gbfSections' | 'globalTargets';
+}
+
+interface GbfFilterGroup {
+  groupLabel: string;
+  options: GbfFilterOption[];
+}
+
 const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
 
 // ---------------------------------------------------------------------------
@@ -380,12 +424,10 @@ const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
 const selectedTypes = ref<FilterSelectionValue[]>([]);
 const selectedSubjects = ref<FilterSelectionValue[]>([]);
 const selectedStatuses = ref<FilterSelectionValue[]>([]);
-const selectedSubsidiaryBodies = ref<FilterSelectionValue[]>([]);
-const selectedGoverningBodies = ref<FilterSelectionValue[]>([]);
+const selectedBodies = ref<BodyFilterOption[]>([]);
 const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
 const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
-const selectedGlobalTargets = ref<FilterSelectionValue[]>([]);
-const selectedGbfSections = ref<FilterSelectionValue[]>([]);
+const selectedGbfItems = ref<GbfFilterOption[]>([]);
 const selectedCountries = ref<FilterSelectionValue[]>([]);
 const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
 const startDate = ref<string>(props.initialStartDate ?? '');
@@ -414,12 +456,10 @@ const hasActiveFilters = computed<boolean>(() => {
     selectedTypes.value.length > 0 ||
     selectedSubjects.value.length > 0 ||
     selectedStatuses.value.length > 0 ||
-    selectedSubsidiaryBodies.value.length > 0 ||
-    selectedGoverningBodies.value.length > 0 ||
+    selectedBodies.value.length > 0 ||
     selectedCopDecisions.value.length > 0 ||
     selectedActivityTypes.value.length > 0 ||
-    selectedGlobalTargets.value.length > 0 ||
-    selectedGbfSections.value.length > 0 ||
+    selectedGbfItems.value.length > 0 ||
     selectedCountries.value.length > 0 ||
     startDate.value !== '' ||
     endDate.value !== '' ||
@@ -442,6 +482,48 @@ const showActivityTypesFilter = computed<boolean>(() => {
   const typeValues = extractSelectedValues(selectedTypes.value);
 
   return typeValues.length === 0 || typeValues.includes('calendarActivity');
+});
+
+/** Grouped options for the combined governing / subsidiary bodies multiselect. */
+const bodyFilterOptions = computed<BodyFilterGroup[]>(() => {
+  const groups: BodyFilterGroup[] = [];
+
+  if (governingBodyOptions.value.length > 0) {
+    groups.push({
+      groupLabel: t('calendar.filters.labels.governingBodies') as string,
+      options: governingBodyOptions.value.map((opt) => ({ ...opt, bodyGroup: 'governingBodies' as const })),
+    });
+  }
+
+  if (subsidiaryBodyOptions.value.length > 0) {
+    groups.push({
+      groupLabel: t('calendar.filters.labels.subsidiaryBodies') as string,
+      options: subsidiaryBodyOptions.value.map((opt) => ({ ...opt, bodyGroup: 'subsidiaryBodies' as const })),
+    });
+  }
+
+  return groups;
+});
+
+/** Grouped options for the combined GBF sections / targets multiselect. */
+const gbfFilterOptions = computed<GbfFilterGroup[]>(() => {
+  const groups: GbfFilterGroup[] = [];
+
+  if (gbfSectionOptions.value.length > 0) {
+    groups.push({
+      groupLabel: t('calendar.filters.labels.gbfSections') as string,
+      options: gbfSectionOptions.value.map((opt) => ({ ...opt, gbfGroup: 'gbfSections' as const })),
+    });
+  }
+
+  if (globalTargetOptions.value.length > 0) {
+    groups.push({
+      groupLabel: t('calendar.filters.labels.globalTargets') as string,
+      options: globalTargetOptions.value.map((opt) => ({ ...opt, gbfGroup: 'globalTargets' as const })),
+    });
+  }
+
+  return groups;
 });
 
 /** Sort options — mutually exclusive directions for each date field. */
@@ -516,6 +598,26 @@ function toProvisionalOptions(values: string[]): FilterOption[] {
   return values.map((v) => ({ value: v, label: v }));
 }
 
+function toProvisionalBodyOptions(values: string[], bodyGroup: 'governingBodies' | 'subsidiaryBodies'): BodyFilterOption[] {
+  return values.map((v) => ({ value: v, label: v, bodyGroup }));
+}
+
+function toProvisionalGbfOptions(values: string[], gbfGroup: 'gbfSections' | 'globalTargets'): GbfFilterOption[] {
+  return values.map((v) => ({ value: v, label: v, gbfGroup }));
+}
+
+function extractGbfValuesByGroup(items: GbfFilterOption[], group: 'gbfSections' | 'globalTargets'): string[] {
+  return items
+    .filter((item) => item.gbfGroup === group)
+    .map((item) => item.value);
+}
+
+function extractBodyValuesByGroup(bodies: BodyFilterOption[], group: 'governingBodies' | 'subsidiaryBodies'): string[] {
+  return bodies
+    .filter((item) => item.bodyGroup === group)
+    .map((item) => item.value);
+}
+
 // ---------------------------------------------------------------------------
 // URL query string management
 // ---------------------------------------------------------------------------
@@ -527,10 +629,26 @@ function parseQueryArray(param: string | string[] | undefined): string[] {
   return param.split(',').filter(Boolean);
 }
 
+// Keys managed by this component — everything else in the URL is preserved.
+const MANAGED_QUERY_KEYS = new Set([
+  'types', 'subjects', 'statuses', 'subsidiaryBodies', 'governingBodies',
+  'copDecisions', 'activityTypes', 'globalTargets', 'gbfSections',
+  'countries', 'sort', 'startDate', 'endDate', 'actionRequired', 'search',
+]);
+
 function updateUrlQuery(): void {
   if (isLoadingFromUrl.value) return;
 
-  const query: Record<string, string | undefined> = {};
+  // Preserve query params not managed by this component (e.g. tab-view-toggle)
+  const preserved: Record<string, string | string[]> = {};
+
+  for (const [key, value] of Object.entries(route.query)) {
+    if (!MANAGED_QUERY_KEYS.has(key) && value != null) {
+      preserved[key] = value as string | string[];
+    }
+  }
+
+  const query: Record<string, string | undefined> = { ...preserved } as Record<string, string | undefined>;
 
   const types = extractSelectedValues(selectedTypes.value);
 
@@ -544,11 +662,11 @@ function updateUrlQuery(): void {
 
   if (statuses.length > 0) query.statuses = statuses.join(',');
 
-  const subsidiaryBodies = extractSelectedValues(selectedSubsidiaryBodies.value);
+  const subsidiaryBodies = extractBodyValuesByGroup(selectedBodies.value, 'subsidiaryBodies');
 
   if (subsidiaryBodies.length > 0) query.subsidiaryBodies = subsidiaryBodies.join(',');
 
-  const governingBodies = extractSelectedValues(selectedGoverningBodies.value);
+  const governingBodies = extractBodyValuesByGroup(selectedBodies.value, 'governingBodies');
 
   if (governingBodies.length > 0) query.governingBodies = governingBodies.join(',');
 
@@ -560,11 +678,11 @@ function updateUrlQuery(): void {
 
   if (activityTypes.length > 0) query.activityTypes = activityTypes.join(',');
 
-  const globalTargets = extractSelectedValues(selectedGlobalTargets.value);
+  const globalTargets = extractGbfValuesByGroup(selectedGbfItems.value, 'globalTargets');
 
   if (globalTargets.length > 0) query.globalTargets = globalTargets.join(',');
 
-  const gbfSections = extractSelectedValues(selectedGbfSections.value);
+  const gbfSections = extractGbfValuesByGroup(selectedGbfItems.value, 'gbfSections');
 
   if (gbfSections.length > 0) query.gbfSections = gbfSections.join(',');
 
@@ -633,12 +751,32 @@ function loadFiltersFromUrl(): void {
   restoreSelection(types, selectedTypes);
   restoreSelection(subjects, selectedSubjects);
   restoreSelection(statuses, selectedStatuses);
-  restoreSelection(subsidiaryBodies, selectedSubsidiaryBodies);
-  restoreSelection(governingBodies, selectedGoverningBodies);
+  // Restore combined governing + subsidiary bodies
+  const provisionalBodies: BodyFilterOption[] = [
+    ...toProvisionalBodyOptions(governingBodies, 'governingBodies'),
+    ...toProvisionalBodyOptions(subsidiaryBodies, 'subsidiaryBodies'),
+  ];
+
+  if (provisionalBodies.length > 0) {
+    selectedBodies.value = provisionalBodies;
+    hasUserInteracted.value = true;
+  } else {
+    selectedBodies.value = [];
+  }
   restoreSelection(copDecisions, selectedCopDecisions);
   restoreSelection(activityTypes, selectedActivityTypes);
-  restoreSelection(globalTargets, selectedGlobalTargets);
-  restoreSelection(gbfSections, selectedGbfSections);
+  // Restore combined GBF sections + targets
+  const provisionalGbf: GbfFilterOption[] = [
+    ...toProvisionalGbfOptions(gbfSections, 'gbfSections'),
+    ...toProvisionalGbfOptions(globalTargets, 'globalTargets'),
+  ];
+
+  if (provisionalGbf.length > 0) {
+    selectedGbfItems.value = provisionalGbf;
+    hasUserInteracted.value = true;
+  } else {
+    selectedGbfItems.value = [];
+  }
   restoreSelection(countries, selectedCountries);
 
   // Sort options are local computed — always available immediately
@@ -660,9 +798,12 @@ function loadFiltersFromUrl(): void {
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
-  } else {
-    startDate.value = (!hasCompletedInitialMount.value && props.initialStartDate) ? props.initialStartDate : '';
+  } else if (!hasCompletedInitialMount.value) {
+    // First mount: use the initial start date prop (today) if no URL param
+    startDate.value = props.initialStartDate || '';
   }
+  // After initial mount, leave startDate unchanged when URL has no startDate param.
+  // clearFilters() handles resetting startDate to '' explicitly.
   if (query.endDate && typeof query.endDate === 'string') {
     endDate.value = query.endDate;
     hasUserInteracted.value = true;
@@ -694,12 +835,12 @@ function updateFilters(): void {
     types: extractSelectedValues(selectedTypes.value),
     subjects: extractSelectedValues(selectedSubjects.value),
     statuses: extractSelectedValues(selectedStatuses.value),
-    subsidiaryBodies: extractSelectedValues(selectedSubsidiaryBodies.value),
-    governingBodies: extractSelectedValues(selectedGoverningBodies.value),
+    subsidiaryBodies: extractBodyValuesByGroup(selectedBodies.value, 'subsidiaryBodies'),
+    governingBodies: extractBodyValuesByGroup(selectedBodies.value, 'governingBodies'),
     copDecisions: extractSelectedValues(selectedCopDecisions.value),
     activityTypes: extractSelectedValues(selectedActivityTypes.value),
-    globalTargets: extractSelectedValues(selectedGlobalTargets.value),
-    gbfSections: extractSelectedValues(selectedGbfSections.value),
+    globalTargets: extractGbfValuesByGroup(selectedGbfItems.value, 'globalTargets'),
+    gbfSections: extractGbfValuesByGroup(selectedGbfItems.value, 'gbfSections'),
     countries: extractSelectedValues(selectedCountries.value),
     startDate: startDate.value,
     endDate: endDate.value,
@@ -716,12 +857,10 @@ function clearFilters(): void {
   selectedTypes.value = [];
   selectedSubjects.value = [];
   selectedStatuses.value = [];
-  selectedSubsidiaryBodies.value = [];
-  selectedGoverningBodies.value = [];
+  selectedBodies.value = [];
   selectedCopDecisions.value = [];
   selectedActivityTypes.value = [];
-  selectedGlobalTargets.value = [];
-  selectedGbfSections.value = [];
+  selectedGbfItems.value = [];
   selectedCountries.value = [];
   selectedSorts.value = [...DEFAULT_SORT_VALUES];
   startDate.value = '';
@@ -788,12 +927,74 @@ function syncSelectionWithOptions(
 syncSelectionWithOptions(selectedTypes, recordTypeOptions);
 syncSelectionWithOptions(selectedSubjects, subjectOptions);
 syncSelectionWithOptions(selectedStatuses, statusOptions);
-syncSelectionWithOptions(selectedSubsidiaryBodies, subsidiaryBodyOptions);
-syncSelectionWithOptions(selectedGoverningBodies, governingBodyOptions);
+// Sync combined bodies selection with both governing and subsidiary options
+watch(
+  [governingBodyOptions, subsidiaryBodyOptions],
+  ([newGovOptions, newSubOptions]) => {
+    if (newGovOptions.length === 0 && newSubOptions.length === 0) return;
+
+    const govMap = new Map(newGovOptions.map((opt) => [opt.value, { ...opt, bodyGroup: 'governingBodies' as const }]));
+    const subMap = new Map(newSubOptions.map((opt) => [opt.value, { ...opt, bodyGroup: 'subsidiaryBodies' as const }]));
+
+    const filtered = selectedBodies.value
+      .map((item) => {
+        if (item.bodyGroup === 'governingBodies') return govMap.get(item.value);
+        if (item.bodyGroup === 'subsidiaryBodies') return subMap.get(item.value);
+
+        return govMap.get(item.value) ?? subMap.get(item.value);
+      })
+      .filter((opt): opt is BodyFilterOption => Boolean(opt));
+
+    const selectionChanged =
+      filtered.length !== selectedBodies.value.length ||
+      filtered.some((opt, i) => {
+        const current = selectedBodies.value[i];
+
+        return !current || current.value !== opt.value || current.label !== opt.label;
+      });
+
+    if (selectionChanged) {
+      selectedBodies.value = filtered;
+      updateFilters();
+    }
+  },
+  { immediate: true },
+);
 syncSelectionWithOptions(selectedCopDecisions, decisionOptions);
 syncSelectionWithOptions(selectedActivityTypes, activityTypeOptions);
-syncSelectionWithOptions(selectedGlobalTargets, globalTargetOptions);
-syncSelectionWithOptions(selectedGbfSections, gbfSectionOptions);
+// Sync combined GBF selection with both sections and targets options
+watch(
+  [gbfSectionOptions, globalTargetOptions],
+  ([newSectionOptions, newTargetOptions]) => {
+    if (newSectionOptions.length === 0 && newTargetOptions.length === 0) return;
+
+    const sectionMap = new Map(newSectionOptions.map((opt) => [opt.value, { ...opt, gbfGroup: 'gbfSections' as const }]));
+    const targetMap = new Map(newTargetOptions.map((opt) => [opt.value, { ...opt, gbfGroup: 'globalTargets' as const }]));
+
+    const filtered = selectedGbfItems.value
+      .map((item) => {
+        if (item.gbfGroup === 'gbfSections') return sectionMap.get(item.value);
+        if (item.gbfGroup === 'globalTargets') return targetMap.get(item.value);
+
+        return sectionMap.get(item.value) ?? targetMap.get(item.value);
+      })
+      .filter((opt): opt is GbfFilterOption => Boolean(opt));
+
+    const selectionChanged =
+      filtered.length !== selectedGbfItems.value.length ||
+      filtered.some((opt, i) => {
+        const current = selectedGbfItems.value[i];
+
+        return !current || current.value !== opt.value || current.label !== opt.label;
+      });
+
+    if (selectionChanged) {
+      selectedGbfItems.value = filtered;
+      updateFilters();
+    }
+  },
+  { immediate: true },
+);
 syncSelectionWithOptions(selectedCountries, countryOptions);
 syncSelectionWithOptions(selectedSorts, sortOptions);
 
@@ -817,12 +1018,10 @@ watch(
     selectedTypes,
     selectedSubjects,
     selectedStatuses,
-    selectedSubsidiaryBodies,
-    selectedGoverningBodies,
+    selectedBodies,
     selectedCopDecisions,
     selectedActivityTypes,
-    selectedGlobalTargets,
-    selectedGbfSections,
+    selectedGbfItems,
     selectedCountries,
     selectedSorts,
     actionRequired,
@@ -834,12 +1033,10 @@ watch(
         selectedTypes.value.length > 0 ||
         selectedSubjects.value.length > 0 ||
         selectedStatuses.value.length > 0 ||
-        selectedSubsidiaryBodies.value.length > 0 ||
-        selectedGoverningBodies.value.length > 0 ||
+        selectedBodies.value.length > 0 ||
         selectedCopDecisions.value.length > 0 ||
         selectedActivityTypes.value.length > 0 ||
-        selectedGlobalTargets.value.length > 0 ||
-        selectedGbfSections.value.length > 0 ||
+        selectedGbfItems.value.length > 0 ||
         selectedCountries.value.length > 0 ||
         searchText.value.trim().length > 0 ||
         !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
@@ -863,12 +1060,10 @@ watchEffect(() => {
   void selectedTypes.value;
   void selectedSubjects.value;
   void selectedStatuses.value;
-  void selectedSubsidiaryBodies.value;
-  void selectedGoverningBodies.value;
+  void selectedBodies.value;
   void selectedCopDecisions.value;
   void selectedActivityTypes.value;
-  void selectedGlobalTargets.value;
-  void selectedGbfSections.value;
+  void selectedGbfItems.value;
   void selectedCountries.value;
   void selectedSorts.value;
   void startDate.value;
@@ -896,8 +1091,12 @@ watchEffect(() => {
   }
 }
 
-.facet-count {
-  color: #6c757d;
-  font-size: 0.85em;
+.facet-badge {
+  font-size: 0.75em;
+  vertical-align: middle;
+}
+
+#search-filter.form-control-lg {
+  height: calc(var(--bs-body-line-height) * 1em + 1rem + calc(var(--bs-border-width) * 2) - 5px);
 }
 </style>

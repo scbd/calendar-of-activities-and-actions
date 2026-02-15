@@ -55,6 +55,18 @@ export default defineNuxtConfig({
 
   vite: {
     assetsInclude: ['**/*.md'],
+    optimizeDeps: {
+      // Pre-bundle dependencies to avoid multiple reloads during dev startup
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'vue-multiselect',
+        '@fortawesome/fontawesome-svg-core',
+        '@fortawesome/vue-fontawesome',
+        '@fortawesome/free-solid-svg-icons',
+        'luxon'
+      ]
+    },
     resolve: {
       alias: {
         shared: fileURLToPath(new URL('./shared', import.meta.url))

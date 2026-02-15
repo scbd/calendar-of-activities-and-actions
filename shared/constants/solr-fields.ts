@@ -11,6 +11,7 @@ export const SOLR_FACET_FIELDS = {
   governingBody: '{!ex=governingBody}governingBody_ss',
   subsidiaryBody: '{!ex=subsidiaryBody}subsidiaryBody_ss',
   status: '{!ex=status}status_s',
+  activityStatus: '{!ex=status}activityStatus_s',
   activityType: '{!ex=activityType}type_s',
   gbfTargets: '{!ex=gbfTargets}gbfTargets_ss',
   gbfSections: '{!ex=gbfSections}gbfSections_ss',

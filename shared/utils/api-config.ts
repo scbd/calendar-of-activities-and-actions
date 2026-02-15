@@ -54,19 +54,32 @@ export function getApiBase(): string {
 // Derived endpoints
 // ---------------------------------------------------------------------------
 
+/**
+ * SOLR calls always point to **dev** (`api.cbddev.xyz`) because the
+ * production SOLR endpoint returns bad-request errors.
+ */
+const SOLR_API_BASE = 'https://api.cbddev.xyz';
+
 /** SOLR select endpoint — used by `useCalendarData` and `fetchNotificationDetails`. */
 export function getSolrSelectUrl(): string {
-  return `${getApiBase()}/api/v2013/index/select`;
+  return `${SOLR_API_BASE}/api/v2013/index/select`;
 }
 
 /** SOLR index base — used by `solr-index.ts` helpers. */
 export function getSolrIndexUrl(): string {
-  return `${getApiBase()}/api/v2013/index`;
+  return `${SOLR_API_BASE}/api/v2013/index`;
 }
 
-/** Thesaurus root — used by `thesaurus.ts` service. */
+/**
+ * Thesaurus root — used by `thesaurus.ts` service.
+ *
+ * Always points to **production** (`api.cbd.int`) because the dev/staging
+ * thesaurus endpoints are unreliable (many domains return 404).
+ */
+const THESAURUS_API_BASE = 'https://api.cbd.int';
+
 export function getThesaurusBaseUrl(): string {
-  return `${getApiBase()}/api/v2013/thesaurus`;
+  return `${THESAURUS_API_BASE}/api/v2013/thesaurus`;
 }
 
 /** Articles endpoint — used by notification article lookups. */

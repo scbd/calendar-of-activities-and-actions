@@ -43,7 +43,8 @@
       "relatedMeetings": "相关会议",
       "relatedNotifications": "相关通知",
       "untitled": "无标题",
-      "unknownDate": "未知日期"
+      "unknownDate": "未知日期",
+      "cpbRelated": "卡塔赫纳议定书 / 生物安全"
     },
     "links": {
       "documents": "文件”"
@@ -69,6 +70,8 @@
         "statuses": "状态（es）",
         "subsidiaryBodies": "附属机构",
         "governingBodies": "理事机构",
+        "governingAndSubsidiaryBodies": "理事机构和附属机构",
+        "gbfTargetsAndSections": "GBF 章节和目标",
         "gbfSections": "GBF 章节",
         "decisions": "决定",
         "dateRange": "日期范围",
@@ -88,6 +91,8 @@
         "statuses": "选择状态",
         "subsidiaryBodies": "选择附属机构",
         "governingBodies": "选择理事机构",
+        "governingAndSubsidiaryBodies": "选择理事机构或附属机构",
+        "gbfTargetsAndSections": "选择 GBF 目标或章节",
         "gbfSections": "选择 GBF 章节",
         "decisions": "选择决策",
         "schemas": "选择记录类型",
@@ -133,13 +138,13 @@
       "clearAll": "清除所有筛选条件"
     },
     "types": {
-      "cop": "缔约方会议会议",
+      "cop": "缔约方大会会议",
       "sbstta": "SBSTTA 会议",
       "sbi": "SBI 会议",
       "meeting": "会议",
       "notification": "通知",
       "nominations": "提名",
-      "submission": "提交的内容",
+      "submission": "提交",
       "peerReview": "同行评审",
       "report": "报告",
       "forum": "在线论坛",
@@ -147,11 +152,11 @@
       "calendarActivity": "活动",
       "webinar": "网络研讨会",
       "workshop": "研讨会",
-      "training": "训练",
+      "training": "培训",
       "consultation": "协商",
-      "campaign": "竞选活动",
+      "campaign": "宣传活动",
       "other": "其他",
-      "conference": "会议",
+      "conference": "大会",
       "side-event": "会外活动",
       "default": "活动",
       "unknown": "活动"
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "通知 {id}",
       "deadline": "截至 {date}",
+      "completedOn": "已于 {date} 完成",
       "publishedOnDate": "已发布 {date}",
       "fromSource": "来自 {source}",
       "loadingDetails": "正在加载通知详情...",
@@ -207,7 +213,8 @@
       "grid": "网格视图",
       "list": "列表视图",
       "tabView": "按记录类型查看选项卡"
-    }
+    },
+    "pilotRelease": "试点版本"
   },
   "nav": {
     "home": "主页",

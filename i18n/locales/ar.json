@@ -43,7 +43,8 @@
       "relatedMeetings": "اجتماعات ذات صلة",
       "relatedNotifications": "إشعارات ذات صلة",
       "untitled": "بدون عنوان",
-      "unknownDate": "تاريخ غير معروف"
+      "unknownDate": "تاريخ غير معروف",
+      "cpbRelated": "بروتوكول قرطاجنة / السلامة الأحيائية"
     },
     "links": {
       "documents": "المستندات»"
@@ -69,6 +70,8 @@
         "statuses": "الحالة (الحالات)",
         "subsidiaryBodies": "الهيئة (الهيئات) الفرعية",
         "governingBodies": "الهيئة (الهيئات) الإدارية",
+        "governingAndSubsidiaryBodies": "الهيئة (الهيئات) الإدارية والفرعية",
+        "gbfTargetsAndSections": "أقسام وأهداف الإطار العالمي للتنوع البيولوجي",
         "gbfSections": "أقسام الإطار العالمي للتنوع البيولوجي",
         "decisions": "القرار (القرارات)",
         "dateRange": "نطاق التاريخ",
@@ -88,6 +91,8 @@
         "statuses": "حدد الحالات",
         "subsidiaryBodies": "حدد الهيئات الفرعية",
         "governingBodies": "حدد الهيئات الإدارية",
+        "governingAndSubsidiaryBodies": "حدد الهيئات الإدارية أو الفرعية",
+        "gbfTargetsAndSections": "حدد أهداف أو أقسام الإطار العالمي للتنوع البيولوجي",
         "gbfSections": "حدد أقسام الإطار العالمي للتنوع البيولوجي",
         "decisions": "حدد القرارات",
         "schemas": "حدد أنواع السجلات",
@@ -133,28 +138,28 @@
       "clearAll": "مسح جميع الفلاتر"
     },
     "types": {
-      "cop": "اجتماعات مؤتمر الأطراف",
-      "sbstta": "اجتماعات الهيئة الفرعية للمشورة العلمية والتكنولوجية",
-      "sbi": "اجتماعات الهيئة الفرعية للتنفيذ",
-      "meeting": "اجتماعات",
-      "notification": "الإشعارات",
-      "nominations": "الترشيحات",
-      "submission": "التقديمات",
-      "peerReview": "مراجعات الأقران",
-      "report": "التقارير",
-      "forum": "المنتديات عبر الإنترنت",
-      "activity": "الأنشطة",
-      "calendarActivity": "الأنشطة",
-      "webinar": "ندوات عبر الإنترنت",
-      "workshop": "ورش عمل",
-      "training": "دورات تدريبية",
-      "consultation": "الإستشارات",
-      "campaign": "حملات",
+      "cop": "اجتماع مؤتمر الأطراف",
+      "sbstta": "اجتماع الهيئة الفرعية للمشورة العلمية والتكنولوجية",
+      "sbi": "اجتماع الهيئة الفرعية للتنفيذ",
+      "meeting": "اجتماع",
+      "notification": "إشعار",
+      "nominations": "ترشيح",
+      "submission": "تقديم",
+      "peerReview": "مراجعة الأقران",
+      "report": "تقرير",
+      "forum": "منتدى عبر الإنترنت",
+      "activity": "نشاط",
+      "calendarActivity": "نشاط",
+      "webinar": "ندوة عبر الإنترنت",
+      "workshop": "ورشة عمل",
+      "training": "دورة تدريبية",
+      "consultation": "استشارة",
+      "campaign": "حملة",
       "other": "آخر",
-      "conference": "مؤتمرات",
-      "side-event": "أحداث جانبية",
-      "default": "الأنشطة",
-      "unknown": "الأنشطة"
+      "conference": "مؤتمر",
+      "side-event": "حدث جانبي",
+      "default": "نشاط",
+      "unknown": "نشاط"
     },
     "status": {
       "confirm": "تم التأكيد",
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "إشعار {id}",
       "deadline": "بواسطة {date}",
+      "completedOn": "اكتمل في {date}",
       "publishedOnDate": "تم النشر {date}",
       "fromSource": "من {source}",
       "loadingDetails": "جاري تحميل تفاصيل الإشعار...",
@@ -207,7 +213,8 @@
       "grid": "عرض الشبكة",
       "list": "عرض القائمة",
       "tabView": "عرض علامة التبويب حسب نوع السجل"
-    }
+    },
+    "pilotRelease": "إصدار تجريبي"
   },
   "nav": {
     "home": "بيت",

@@ -257,8 +257,11 @@ const handleRetry = () => {
 const scrollSentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 
-onMounted(() => {
-  if (!scrollSentinel.value) {
+function setupScrollObserver(el: HTMLElement | null) {
+  observer?.disconnect();
+  observer = null;
+
+  if (!el) {
     return;
   }
 
@@ -272,7 +275,19 @@ onMounted(() => {
     },
     { rootMargin: '200px' },
   );
-  observer.observe(scrollSentinel.value);
+  observer.observe(el);
+}
+
+// The sentinel lives inside a v-else block that only renders after data loads,
+// so it is null at mount time. Watch the ref to attach the observer once the
+// element actually appears in the DOM.
+watch(scrollSentinel, (el) => {
+  setupScrollObserver(el);
+});
+
+onMounted(() => {
+  // Handle the (rare) case where the element already exists at mount time.
+  setupScrollObserver(scrollSentinel.value);
 });
 
 onUnmounted(() => {
@@ -321,7 +336,7 @@ if (autoExpandId) {
 </style>
 <style scoped>
 .activities-explorer {
-  --calendar-group-header-offset: 0px;
+  --calendar-group-header-offset: var(--pilot-banner-height, 1.95rem);
   --calendar-group-header-bg: var(--bs-body-bg, #fff);
 }
 

@@ -3,6 +3,112 @@ import type { CalendarDoc } from '../types/calendar';
 import { getDocStringValue } from './document-processing';
 import { safeDate } from './date';
 
+// ---------------------------------------------------------------------------
+// Status equivalence mapping
+// ---------------------------------------------------------------------------
+
+/**
+ * Maps thesaurus status identifiers to their equivalent SOLR short codes.
+ *
+ * Some SOLR documents store an abbreviated code (e.g. `CONFIRM`) while
+ * others store the full thesaurus identifier (e.g. `NCHM-EVENT-STATUS-CONFIRMED`).
+ * Both forms must be treated as the same status for filtering and display.
+ */
+export const STATUS_EQUIVALENCES: ReadonlyArray<{
+  thesaurusId: string;
+  solrCode: string;
+}> = [
+  { thesaurusId: 'NCHM-EVENT-STATUS-CONFIRMED', solrCode: 'CONFIRM' },
+  { thesaurusId: 'NCHM-EVENT-STATUS-TENTATIVE', solrCode: 'TENTAT' },
+  { thesaurusId: 'NCHM-EVENT-STATUS-POSTPONED', solrCode: 'POST' },
+  { thesaurusId: 'NCHM-EVENT-STATUS-CANCELLED', solrCode: 'CANCEL' },
+  { thesaurusId: 'NCHM-EVENT-STATUS-COMPLETED', solrCode: 'COMPLETED' },
+];
+
+/**
+ * SOLR status codes that are **always** treated as "Completed" in the facet
+ * count — their full count is folded into the Completed bucket because
+ * these documents have no meaningful standalone status.
+ */
+export const COMPLETED_FACET_ALIASES: readonly string[] = ['NOT_SET', 'NODATE'];
+
+/**
+ * Additional SOLR status codes to include when **querying** for Completed.
+ *
+ * CONFIRM / NCHM-EVENT-STATUS-CONFIRMED documents display as "Completed"
+ * when their dates are in the past, so the Completed filter must also match
+ * them. They are NOT folded into the Completed facet count because they
+ * still appear as "Confirmed" when dates are current or future.
+ */
+export const COMPLETED_QUERY_ALIASES: readonly string[] = [
+  ...COMPLETED_FACET_ALIASES,
+  'CONFIRM',
+  'NCHM-EVENT-STATUS-CONFIRMED',
+];
+
+/** Lookup from any status value to its full set of equivalent values. */
+const STATUS_ALIAS_MAP: ReadonlyMap<string, readonly string[]> = (() => {
+  const map = new Map<string, readonly string[]>();
+
+  for (const { thesaurusId, solrCode } of STATUS_EQUIVALENCES) {
+    const aliases = Object.freeze([thesaurusId, solrCode]);
+
+    map.set(thesaurusId, aliases);
+    map.set(solrCode, aliases);
+  }
+
+  // Selecting "Completed" should also match NOT_SET, NODATE, and
+  // CONFIRMED / CONFIRM documents (they display as Completed when their
+  // dates are in the past).
+  const completedEntry = map.get('NCHM-EVENT-STATUS-COMPLETED');
+
+  if (completedEntry) {
+    const extended = Object.freeze([...completedEntry, ...COMPLETED_QUERY_ALIASES]);
+
+    map.set('NCHM-EVENT-STATUS-COMPLETED', extended);
+    map.set('COMPLETED', extended);
+
+    // Only set alias mappings for codes that have no standalone filter
+    // meaning (NOT_SET, NODATE). Do NOT overwrite CONFIRM /
+    // NCHM-EVENT-STATUS-CONFIRMED — those keep their own bi-directional
+    // equivalence so selecting "Confirmed" only queries for Confirmed docs.
+    for (const alias of COMPLETED_FACET_ALIASES) {
+      map.set(alias, extended);
+    }
+  }
+
+  return map;
+})();
+
+/**
+ * Expand an array of selected status values so that each value also includes
+ * its equivalent form. This ensures the SOLR query matches documents that
+ * store either the short code or the full thesaurus identifier.
+ *
+ * Values without a known equivalent are returned as-is.
+ *
+ * @example
+ * expandStatusValuesForQuery(['NCHM-EVENT-STATUS-CONFIRMED'])
+ * // => ['NCHM-EVENT-STATUS-CONFIRMED', 'CONFIRM']
+ */
+export function expandStatusValuesForQuery(values: string[]): string[] {
+  const expanded = new Set<string>();
+
+  for (const value of values) {
+    const aliases = STATUS_ALIAS_MAP.get(value);
+
+    if (aliases) {
+      for (const alias of aliases) {
+        expanded.add(alias);
+      }
+    } else {
+      expanded.add(value);
+    }
+  }
+
+  return [...expanded];
+}
+
 type TranslateExists = (key: string) => boolean;
 type Translate = (key: string) => unknown;
 
@@ -45,11 +151,19 @@ export function normalizeStatusKey(label: string | undefined): string | null {
     return statusPart;
   }
 
+  // Full English labels
   if (value === 'confirmed') return 'CONFIRMED';
   if (value === 'tentative') return 'TENTATIVE';
   if (value === 'completed') return 'COMPLETED';
   if (value === 'ongoing') return 'ONGOING';
   if (value === 'to be confirmed' || value === 'tbc') return 'TO_BE_CONFIRMED';
+
+  // SOLR abbreviated short codes (status_s values)
+  if (value === 'confirm') return 'CONFIRMED';
+  if (value === 'tentat') return 'TENTATIVE';
+  if (value === 'post') return 'POSTPONED';
+  if (value === 'cancel') return 'CANCELLED';
+
   return value.replace(/\s+/g, '_').toUpperCase();
 }
 
@@ -109,7 +223,10 @@ export function shouldDisplayCompleted(
 ): boolean {
   const normalizedStatus = normalizeStatusKey(statusKey ?? rawStatus);
 
-  if (normalizedStatus !== 'CONFIRMED') {
+  // Statuses eligible for "past-date → completed" promotion
+  const eligibleStatuses = new Set(['CONFIRMED', 'NOT_SET', 'NODATE']);
+
+  if (!normalizedStatus || !eligibleStatuses.has(normalizedStatus)) {
     return false;
   }
 

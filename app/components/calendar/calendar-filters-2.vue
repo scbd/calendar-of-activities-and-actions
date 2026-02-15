@@ -309,68 +309,54 @@ const showActivityTypes = computed<boolean>(() => {
 const filterOptions = computed<FilterGroup[]>(() => {
   const groups: FilterGroup[] = [];
 
-  if (!props.hideTypeFilter && schemaOptions.value.length > 0) {
+  if (!props.hideTypeFilter) {
     groups.push({
       groupLabel: t('calendar.filters.labels.schemas') as string,
       options: schemaOptions.value,
     });
   }
 
-  if (showActivityTypes.value && activityTypeOptions.value.length > 0) {
+  if (showActivityTypes.value) {
     groups.push({
       groupLabel: t('calendar.filters.labels.activityTypes') as string,
       options: activityTypeOptions.value,
     });
   }
 
-  if (globalTargetOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.globalTargets') as string,
-      options: globalTargetOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.globalTargets') as string,
+    options: globalTargetOptions.value,
+  });
 
-  if (gbfSectionOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.gbfSections') as string,
-      options: gbfSectionOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.gbfSections') as string,
+    options: gbfSectionOptions.value,
+  });
 
-  if (countryOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.countries') as string,
-      options: countryOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.countries') as string,
+    options: countryOptions.value,
+  });
 
-  if (subjectOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.subjects') as string,
-      options: subjectOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.subjects') as string,
+    options: subjectOptions.value,
+  });
 
-  if (statusOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.statuses') as string,
-      options: statusOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.statuses') as string,
+    options: statusOptions.value,
+  });
 
-  if (governingBodyOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.governingBodies') as string,
-      options: governingBodyOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.governingBodies') as string,
+    options: governingBodyOptions.value,
+  });
 
-  if (subsidiaryBodyOptions.value.length > 0) {
-    groups.push({
-      groupLabel: t('calendar.filters.labels.subsidiaryBodies') as string,
-      options: subsidiaryBodyOptions.value,
-    });
-  }
+  groups.push({
+    groupLabel: t('calendar.filters.labels.subsidiaryBodies') as string,
+    options: subsidiaryBodyOptions.value,
+  });
 
   if (copDecisionOptions.value.length > 0) {
     groups.push({
@@ -637,9 +623,12 @@ function loadFiltersFromUrl(): void {
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
-  } else {
-    startDate.value = (!hasCompletedInitialMount.value && props.initialStartDate) ? props.initialStartDate : '';
+  } else if (!hasCompletedInitialMount.value) {
+    // First mount: use the initial start date prop (today) if no URL param
+    startDate.value = props.initialStartDate || '';
   }
+  // After initial mount, leave startDate unchanged when URL has no startDate param.
+  // clearFilters() handles resetting startDate to '' explicitly.
 
   if (query.endDate && typeof query.endDate === 'string') {
     endDate.value = query.endDate;

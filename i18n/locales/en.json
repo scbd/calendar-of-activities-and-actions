@@ -43,7 +43,8 @@
       "relatedMeetings": "Related Meetings",
       "relatedNotifications": "Related Notifications",
       "untitled": "Untitled",
-      "unknownDate": "Unknown date"
+      "unknownDate": "Unknown date",
+      "cpbRelated": "Cartagena Protocol / Biosafety"
     },
     "links": {
       "documents": "Documents »"
@@ -69,6 +70,8 @@
     "statuses": "Status(es)",
     "subsidiaryBodies": "Subsidiary body(ies)",
     "governingBodies": "Governing body(ies)",
+    "governingAndSubsidiaryBodies": "Governing and Subsidiary Body(ies)",
+    "gbfTargetsAndSections": "GBF Sections & Targets",
     "gbfSections": "GBF Section(s)",
     "decisions": "Decision(s)",
     "dateRange": "Date range",
@@ -88,6 +91,8 @@
     "statuses": "Select statuses",
     "subsidiaryBodies": "Select subsidiary bodies",
     "governingBodies": "Select governing bodies",
+    "governingAndSubsidiaryBodies": "Select governing or subsidiary bodies",
+    "gbfTargetsAndSections": "Select GBF targets or sections",
     "gbfSections": "Select GBF sections",
     "decisions": "Select decisions",
     "schemas": "Select record types",
@@ -133,28 +138,28 @@
       "clearAll": "Clear all filters"
     },
     "types": {
-      "cop": "COP meetings",
-      "sbstta": "SBSTTA meetings",
-      "sbi": "SBI meetings",
-      "meeting": "Meetings",
-      "notification": "Notifications",
-      "nominations": "Nominations",
-      "submission": "Submissions",
-      "peerReview": "Peer-reviews",
-      "report": "Reports",
-      "forum": "Online Forums",
-      "activity": "Activities",
-      "calendarActivity": "Activities",
-      "webinar": "Webinars",
-      "workshop": "Workshops",
-      "training": "Trainings",
-      "consultation": "Consultations",
-      "campaign": "Campaigns",
+      "cop": "COP Meeting",
+      "sbstta": "SBSTTA Meeting",
+      "sbi": "SBI Meeting",
+      "meeting": "Meeting",
+      "notification": "Notification",
+      "nominations": "Nomination",
+      "submission": "Submission",
+      "peerReview": "Peer-review",
+      "report": "Report",
+      "forum": "Online Forum",
+      "activity": "Activity",
+      "calendarActivity": "Activity",
+      "webinar": "Webinar",
+      "workshop": "Workshop",
+      "training": "Training",
+      "consultation": "Consultation",
+      "campaign": "Campaign",
       "other": "Other",
-      "conference": "Conferences",
-      "side-event": "Side-events",
-      "default": "Activities",
-      "unknown": "Activities"
+      "conference": "Conference",
+      "side-event": "Side-event",
+      "default": "Activity",
+      "unknown": "Activity"
     },
     "status": {
       "confirm": "Confirmed",
@@ -169,6 +174,7 @@
     "notifications": {
       "notificationLabel": "Notification {id}",
       "deadline": "by {date}",
+      "completedOn": "Completed on {date}",
       "publishedOnDate": "Published {date}",
       "fromSource": "From {source}",
       "loadingDetails": "Loading notification details…",
@@ -176,6 +182,7 @@
       "themes": "Themes",
       "attachments": "Attachments",
       "viewNotification": "View notification",
+      "viewNotificationAria": "View notification for {title}",
       "notFound": "Notification not found",
       "loadFailed": "Unable to load notification details."
     },
@@ -207,7 +214,8 @@
       "grid": "Grid View",
       "list": "List View",
       "tabView": "Tab View by Record Type"
-    }
+    },
+    "pilotRelease": "Pilot Release"
   },
   "nav": {
     "home": "Home",
