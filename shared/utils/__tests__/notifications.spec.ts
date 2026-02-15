@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { CalendarDoc, NotificationDoc } from '../../types/calendar';
 import {
-  buildDocsFromNotifications,
   buildNotificationExcerpt,
   buildNotificationLink,
   deriveNameFromUrl,
@@ -42,13 +41,6 @@ describe('notification utilities', () => {
     expect(buildNotificationExcerpt('<p>Hello</p>')).toBe('Hello');
     expect(selectNotificationTitle('2024-001', { title: 'Title' }, null)).toBe('Title');
     expect(buildNotificationLink('2024-001')).toContain('2024-001');
-  });
-
-  it('buildDocsFromNotifications returns empty (deprecated stub)', () => {
-    const { docs, details } = buildDocsFromNotifications([]);
-
-    expect(docs).toEqual([]);
-    expect(details).toEqual({});
   });
 
   it('collects notification keys from normalized SOLR doc', () => {

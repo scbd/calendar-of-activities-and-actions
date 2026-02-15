@@ -4,7 +4,6 @@ import { loadDomainOptions, getDomainTerms } from '../services/thesaurus';
 import type { CalendarDoc } from '../types/calendar';
 import { getDocSubjects } from './document-processing';
 import { ref } from 'vue';
-import { subjectsUsed } from '../data/subjects-used';
 
 export interface SubjectOption {
   value: string;
@@ -78,12 +77,9 @@ export async function loadSubjectOptions(locale: string = 'en'): Promise<Subject
 
   try {
     const options = await promise;
-    
-    // Filter options to only include subjects that are actually used in the data
-    const filteredOptions = options.filter(option => subjectsUsed.has(option.value));
 
-    cachedSubjectOptions.set(locale, filteredOptions);
-    return filteredOptions;
+    cachedSubjectOptions.set(locale, options);
+    return options;
   } finally {
     inflightPromises.delete(locale);
   }
@@ -114,25 +110,17 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
   const promise = (async () => {
     try {
       const terms = await getDomainTerms(thesaurusDomains.CBD_SUBJECTS);
-      
-      console.log('[loadGroupedSubjectOptions] Total terms loaded:', terms.length);
-      
-      // Filter to only used subjects
-      const usedTerms = terms.filter(term => subjectsUsed.has(term.identifier));
-      
-      console.log('[loadGroupedSubjectOptions] Used terms after filtering:', usedTerms.length);
-      console.log('[loadGroupedSubjectOptions] subjectsUsed size:', subjectsUsed.size);
-      
+
       // Create a map of all terms for easy lookup
-      const termMap = new Map(usedTerms.map(term => [term.identifier, term]));
+      const termMap = new Map(terms.map(term => [term.identifier, term]));
       
       // Find CBD-SUBJECT-LEGAL-STRUCT to handle its children specially
-      const legalStructTerm = usedTerms.find(term => term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT');
+      const legalStructTerm = terms.find(term => term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT');
       const legalStructChildren = new Set(legalStructTerm?.narrowerTerms || []);
-      
-      // Find top-level subjects (those without broader terms or whose broader terms are not in the used set)
+
+      // Find top-level subjects (those without broader terms or whose broader terms are not in the term set)
       // Exclude CBD-SUBJECT-LEGAL-STRUCT itself, but include its children as top-level
-      const topLevelTerms = usedTerms.filter(term => {
+      const topLevelTerms = terms.filter(term => {
         // Exclude CBD-SUBJECT-LEGAL-STRUCT itself
         if (term.identifier === 'CBD-SUBJECT-LEGAL-STRUCT') {
           return false;
@@ -151,8 +139,6 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
           broaderId !== 'CBD-SUBJECT-LEGAL-STRUCT' && termMap.has(broaderId)
         );
       });
-      
-      console.log('[loadGroupedSubjectOptions] Top-level terms:', topLevelTerms.length);
       
       // Build hierarchical structure
       const buildHierarchy = (term: ThesaurusTerm): SubjectOption => {
@@ -186,9 +172,6 @@ export async function loadGroupedSubjectOptions(locale: string = 'en'): Promise<
       const groupedOptions = topLevelTerms
         .map(term => buildHierarchy(term))
         .sort((a, b) => a.label.localeCompare(b.label));
-      
-      console.log('[loadGroupedSubjectOptions] Final grouped options:', groupedOptions.length);
-      console.log('[loadGroupedSubjectOptions] Sample options:', groupedOptions.slice(0, 3));
       
       cachedGroupedSubjectOptions.set(locale, groupedOptions);
       return groupedOptions;

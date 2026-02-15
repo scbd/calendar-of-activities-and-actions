@@ -56,12 +56,6 @@ export interface NotificationDisplayEntry {
   error?: string;
 }
 
-/**
- * @deprecated NotificationSnapshotRecord is no longer used — notifications come from SOLR.
- * Retained for backward-compatible imports.
- */
-export type NotificationSnapshotRecord = Record<string, unknown>;
-
 const notificationKeyCache = new WeakMap<CalendarDoc, NotificationKey[]>();
 
 function appendNotificationKey(
@@ -308,37 +302,6 @@ export function buildNotificationExcerpt(source: string | null | undefined): str
   return `${plain.slice(0, 277).trimEnd()}...`;
 }
 
-/**
- * @deprecated Notifications now come from SOLR — this function is a no-op stub.
- * Retained for backward-compatible imports during migration.
- */
-export function buildDocsFromNotifications(
-  _records: NotificationSnapshotRecord[],
-): { docs: CalendarDoc[]; details: Record<NotificationKey, NotificationDetails> } {
-  console.warn('[notifications] buildDocsFromNotifications() is deprecated — notifications are fetched from SOLR');
-  return { docs: [], details: {} };
-}
-
-/**
- * @deprecated Notifications now come from SOLR — this function is a no-op stub.
- * Retained for backward-compatible imports during migration.
- */
-export function mapNotificationRecordToDoc(_record: NotificationSnapshotRecord, _index: number): CalendarDoc {
-  console.warn('[notifications] mapNotificationRecordToDoc() is deprecated — notifications are fetched from SOLR');
-  return { id: '', schema: 'notification', identifier: '' } as CalendarDoc;
-}
-
-/**
- * @deprecated Notifications now come from SOLR — this function is a no-op stub.
- * Retained for backward-compatible imports during migration.
- */
-export function buildNotificationDetailsFromSnapshot(
-  _record: NotificationSnapshotRecord,
-  _key: NotificationKey,
-): NotificationDetails | null {
-  console.warn('[notifications] buildNotificationDetailsFromSnapshot() is deprecated — notifications are fetched from SOLR');
-  return null;
-}
 
 /**
  * Get distinct notification keys from a calendar document.
