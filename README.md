@@ -2,6 +2,12 @@
 
 A searchable calendar application for CBD (Convention on Biological Diversity) activities and actions, built with Nuxt.js and TypeScript. This project provides a consolidated view of Secretariat activities, party-led actions, and related COP decisions with advanced filtering and search capabilities.
 
+## Data Source
+
+All calendar data (meetings, notifications, calendar activities) is fetched live from the **SOLR index API** at `https://api.cbddev.xyz/api/v2013/index`. Filter options are loaded from CBD thesaurus domain endpoints and merged with SOLR facet counts.
+
+See [docs/endpoint-data-migration.md](docs/endpoint-data-migration.md) for full architecture details.
+
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
 ## Quick Setup
