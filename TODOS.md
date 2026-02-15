@@ -58,4 +58,4 @@ Notes:
 - [ ] update actors from notifications
 - [ ] icons 
 - [ ] list all Subsidiary body(ies)
-- [ ] enable E2E tests with running dev server
+- [x] enable E2E tests with running dev server

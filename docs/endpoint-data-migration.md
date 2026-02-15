@@ -190,10 +190,10 @@ The SOLR index uses three document schemas:
 
 ## Test Status
 
-- **117 unit/nuxt tests pass** (including 5 skipped for deleted static data)
-- **30 pre-existing test failures** from Phase 02 migration (nuxt component tests need mocks updated for SOLR composable shape)
+- **145 unit/nuxt tests pass** (2 skipped for deleted static data)
+- **0 test failures**
 - **0 TypeScript compilation errors**
-- **E2E tests** require running dev server (deferred)
+- **22 E2E tests** covering homepage, tab filtering, and filter interactions (require running dev server — `yarn test:e2e`)
 
 ## Migration Phases
 
@@ -204,5 +204,7 @@ The SOLR index uses three document schemas:
 | Phase 03 | Filter components migration | p03-01 through p03-03 |
 | Phase 04 | Display components + infinite scroll | p04-01 through p04-03 |
 | Phase 05 | Cleanup + verification + documentation | p05-01 through p05-02 |
+| Phase 06 | Test fixes + runtime config | p06-01 through p06-02 |
+| Phase 07 | E2E tests + final validation | p07-01 through p07-02 |
 
 Full planning details: `.github/planing/endpoint-data-migrate/`
