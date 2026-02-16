@@ -17,9 +17,12 @@
     "labels": {
       "decision": "Решение",
       "paragraph": "Параграф",
-      "subjects": "Предметы",
-      "associatedBody": "Связанный орган",
+      "subjects": "THEMES",
+      "associatedBody": "Вспомогательный орган",
+      "governingBody": "Руководящий орган",
       "governingBodies": "Руководящие органы",
+      "subsidiaryBody": "Вспомогательный орган",
+      "subsidiaryBodies": "Вспомогательные органы",
       "gbfSections": "Разделы ГРБ",
       "responsibleUnit": "Ответственное подразделение",
       "responsibleOfficer": "Ответственный сотрудник",
@@ -170,6 +173,11 @@
       "completed": "Завершено",
       "ongoing": "Продолжается",
       "to_be_confirmed": "Должен быть подтвержден"
+    },
+    "meetings": {
+      "viewDocuments": "Просмотреть документы",
+      "viewWebsite": "Просмотреть вебсайт",
+      "symbol": "Символ"
     },
     "notifications": {
       "notificationLabel": "Уведомление {id}",

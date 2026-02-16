@@ -154,6 +154,34 @@ export function getDocGlobalTargets(doc: CalendarDoc): string[] {
 }
 
 /**
+ * Extract recipients from a notification document.
+ * @param doc - Calendar document.
+ * @returns Array of recipient strings.
+ */
+export function getDocRecipients(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'recipient', 'recipients');
+}
+
+/**
+ * Extract thematic areas from a document.
+ * Reads `themes_ss` (normalised to `themes`).
+ * @param doc - Calendar document.
+ * @returns Array of thematic-area identifier strings.
+ */
+export function getDocThemes(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'themes');
+}
+
+/**
+ * Extract file/attachment entries from a notification document.
+ * @param doc - Calendar document.
+ * @returns Array of raw file strings (may be JSON or URLs).
+ */
+export function getDocFiles(doc: CalendarDoc): string[] {
+  return readStringArray(doc, 'files');
+}
+
+/**
  * Retrieve the list of unique country identifiers.
  * @param doc - Calendar document.
  * @returns Array of unique country codes or names.

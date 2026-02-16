@@ -16,7 +16,7 @@ import {
 describe('notification utilities', () => {
   beforeEach(() => {
     setNotificationStores({
-      getDetails: () => ({ '2024-001': { key: '2024-001', title: 'Notification', actionRequired: false, recipients: [], thematicAreas: [], attachments: [], link: '' } }),
+      getDetails: () => ({ '2024-001': { key: '2024-001', title: 'Notification', actionRequired: false, recipients: [], themes: [], attachments: [], link: '' } }),
       getLoading: () => ({ '2024-001': false }),
       getErrors: () => ({}),
     });

@@ -14,7 +14,7 @@ describe('notification utilities integration', () => {
         title: 'Seeded Notification',
         actionRequired: false,
         recipients: [],
-        thematicAreas: [],
+        themes: [],
         attachments: [],
         link: 'https://www.cbd.int/notifications/2024-001',
       },

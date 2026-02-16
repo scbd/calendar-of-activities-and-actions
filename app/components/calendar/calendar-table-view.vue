@@ -135,7 +135,9 @@
                   <tr class="main-row" :class="{ 'row-expanded': isExpanded(doc), 'row-cpb-highlight': isCpbHighlighted(doc) }" @click="toggleRow(doc)">
                     <td class="expand-cell">
                       <button class="btn btn-sm btn-link" type="button" :aria-label="isExpanded(doc) ? 'Collapse' : 'Expand'">
-                        <span class="expand-icon">{{ isExpanded(doc) ? '▼' : '▶' }}</span>
+                        <span class="expand-icon" :class="{ 'expand-icon--open': isExpanded(doc) }">
+                          <FontAwesomeIcon icon="chevron-right" />
+                        </span>
                       </button>
                     </td>
                     <td class="date-cell">
@@ -169,7 +171,7 @@
                   <tr v-if="isExpanded(doc)" class="details-row">
                     <td colspan="6" class="details-cell">
                       <div class="details-container">
-                        <CalendarDocumentDetails
+                        <CalendarAccordianDetails
                           :status-narrative="getStatusNarrative(doc)"
                           :symbol="getMeetingSymbol(doc)"
                           :description="getDescription(doc)"
@@ -302,7 +304,7 @@ import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarFilters2 from './calendar-filters-2.vue';
-import CalendarDocumentDetails from './calendar-document-details.vue';
+import CalendarAccordianDetails from './accordian/details.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import {
   configureStatusLocalization,
@@ -341,6 +343,7 @@ import {
 } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels } from 'shared/utils/subjects';
+import { useBodyLabels } from '~/composables/use-body-labels';
 
 // Props
 const props = defineProps<{
@@ -357,6 +360,7 @@ defineEmits<{
 }>();
 
 const { t, te, locale } = useI18n();
+const { resolveGoverningBodyLabels, resolveSubsidiaryBodyLabels } = useBodyLabels();
 const route = useRoute();
 const router = useRouter();
 
@@ -599,7 +603,7 @@ const getDescription = (doc: CalendarDoc): string => getDocStringValue(doc, 'des
 
 const getSubjectLabels = (doc: CalendarDoc): string[] => displaySubjectLabels(doc);
 
-const getSubsidiaryBodies = (doc: CalendarDoc): string[] => getDocSubsidiaryBodies(doc);
+const getSubsidiaryBodies = (doc: CalendarDoc): string[] => resolveSubsidiaryBodyLabels(getDocSubsidiaryBodies(doc));
 
 const getResponsibleUnit = (doc: CalendarDoc): string => responsibleUnitLabel(doc);
 
@@ -659,7 +663,7 @@ const getRelatedMeetings = (doc: CalendarDoc): CalendarDoc[] => {
   return getRelatedMeetingsUtil(notificationKey, docs.value);
 };
 
-const getGoverningBodies = (doc: CalendarDoc): string[] => getDocGoverningBodies(doc);
+const getGoverningBodies = (doc: CalendarDoc): string[] => resolveGoverningBodyLabels(getDocGoverningBodies(doc));
 
 const getGbfSections = (doc: CalendarDoc): string[] => getDocGbfSections(doc);
 
@@ -811,6 +815,10 @@ onUnmounted(() => {
   font-size: 0.8rem;
   color: #6c757d;
   transition: transform 0.2s ease;
+}
+
+.expand-icon--open {
+  transform: rotate(90deg);
 }
 
 .date-cell {

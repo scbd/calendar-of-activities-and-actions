@@ -17,9 +17,12 @@
     "labels": {
       "decision": "决定",
       "paragraph": "帕拉",
-      "subjects": "科目",
-      "associatedBody": "关联机构",
+      "subjects": "THEMES",
+      "associatedBody": "附属机构",
+      "governingBody": "管理机构",
       "governingBodies": "管理机构",
+      "subsidiaryBody": "附属机构",
+      "subsidiaryBodies": "附属机构",
       "gbfSections": "全球生物多样性框架各节",
       "responsibleUnit": "责任单位",
       "responsibleOfficer": "负责官员",
@@ -170,6 +173,11 @@
       "completed": "已完成",
       "ongoing": "正在进行中",
       "to_be_confirmed": "待确认"
+    },
+    "meetings": {
+      "viewDocuments": "查看文件",
+      "viewWebsite": "查看网站",
+      "symbol": "符号"
     },
     "notifications": {
       "notificationLabel": "通知 {id}",

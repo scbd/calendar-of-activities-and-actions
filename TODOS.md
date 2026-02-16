@@ -5,57 +5,48 @@ Notes:
 
 # TODOS
 
-- [x] docker image
+- translate activities and reindex
 
-<!-- - [ ] deploy to dev server -->
-<!--  -->
-<!-- - [ ] update suggestion 1 and 2 -->
+- [ ] list view
+  - [x] shorten orange footer background to div behind text.
+  - [x] add purple NP in footer purple in the background- if themes, or bodies 
+  - [ ] add more info to the list view
+    - [x] meeting
+      - [x] location: eventCity_EN_s === 'online'? 'ONLINE' : eventCity_EN_s, eventCountry_EN_t
+      - [x] website link
+      - [x] themes
+    - [ ] notifications
+      - [ ] action required badge, completed on date if in past : actionDate_s - deadline_s
+      - [x] themes : themes_ss
+      - [x] link to notification url_ss
+      - [x] description when expanded
+      - [x] fix dates on notifications - date_s
+    - activity
+      - [x] themes : themes_ss - change label to Thematic Area(s)
+      - [x] Governing Body Then Subsiduary Body
+      - [x] description/status narrative when expanded
+      - [ ] fix dates on activities -  Q1-Q2 ect
 
-- [x] consolidate types
-
-- [x] clean status
-
-- [x] view docs
-
-- [x] translations  
-
-- [x] normalize variables
-
-- [x] refactor code
-
-- [x] default date to show (all future dates)
-
-- [x] programatically change status that is confirmed to complete if date exceeds the end date if exists else 1 day after start date.
-
-- [x] fix schemas
-
-- [x] fix dir structure
-
-- [x] show notifications
-  - if responsible unit empty hide line
-  - if responsible officer empty hide line
-  - if responsible unit and officer empty hide section
-  - notification shows sept 27 and under notification notification sept 28, use published date for notification in always visible section
-
-- [x] endpoint data migration — all data from SOLR endpoint (see docs/endpoint-data-migration.md)
-  - [x] SOLR query builder + types + constants (Phase 01)
-  - [x] useCalendarData composable with pagination + facets (Phase 02)
-  - [x] useThesaurusFilters composable — thesaurus + facet merge (Phase 02)
-  - [x] Both filter components migrated to facet-driven options (Phase 03)
-  - [x] Infinite scroll in list, table, and tab views (Phase 04)
-  - [x] New filters: Governing Bodies, GBF Sections, COP Decisions (Phase 03)
-  - [x] Removed 37 static data files, scripts, and dead code (Phase 05)
-  - [x] i18n for all 6 locales (Phase 03)
-
-- [x] fix 30 pre-existing nuxt component test failures (mocks need updating for SOLR composable)
-  - [x] Rewrote calendar-activities-actions.test.ts — mocks useCalendarData composable (15 pass)
-  - [x] Rewrote calendar-table-view.test.ts — mocks useCalendarData composable (18 pass)
-  - [x] 1 E2E failure remains (net::ERR_CONNECTION_REFUSED — needs running dev server)
-- [x] move API base URL to Nuxt runtime config (single NUXT_PUBLIC_SCBD_API_BASE env var)
+- 
 - [ ] advanced search one line
 - [ ] sort in advance disappear through transition
-- [ ] display gbf targets https://www.cbd.int/app/images/gbf-targets/gbf-23-64.png
+- [ ] display gbf targets https://www.cbd.int/app/images/gbf-targets/gbf-23-32.png
 - [ ] update actors from notifications
 - [ ] icons 
 - [ ] list all Subsidiary body(ies)
+- [ ] 
 - [x] enable E2E tests with running dev server
+
+
+
+https://www.cbd.int/meetings/SYNBIO-OM-2026-01
+
+https://www.cbd.int/meetings/IMP-AHSTAG-2026-02
+
+https://www.cbd.int/meetings/PA-WS-2026-03
+
+https://www.cbd.int/meetings/006672
+
+https://www.cbd.int/meetings/IAS-WS-2026-01
+
+https://www.cbd.int/meetings/NP-CC-05

@@ -142,12 +142,12 @@ export function formatDateRange(doc: CalendarDoc): string {
   const isNotification = schema === 'notification' || type === 'notification';
 
   if (isNotification) {
-    const published = safeDate(
-      getDocStringValue(doc, 'publishedDate', 'date', 'createdDate'),
+    const notifDate = safeDate(
+      getDocStringValue(doc, 'deadline', 'date'),
     );
 
-    if (published) {
-      return published.toFormat('d LLLL yyyy');
+    if (notifDate) {
+      return notifDate.toFormat('d LLLL yyyy');
     }
   }
 
@@ -180,12 +180,12 @@ export function formatGridDateRange(doc: CalendarDoc): string {
   const isNotification = schema === 'notification' || type === 'notification';
 
   if (isNotification) {
-    const published = safeDate(
-      getDocStringValue(doc, 'publishedDate', 'date', 'createdDate'),
+    const notifDate = safeDate(
+      getDocStringValue(doc, 'deadline', 'date'),
     );
 
-    if (published) {
-      return published.toFormat('yyyy-MM-dd');
+    if (notifDate) {
+      return notifDate.toFormat('yyyy-MM-dd');
     }
   }
 

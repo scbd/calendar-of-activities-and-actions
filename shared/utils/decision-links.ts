@@ -440,12 +440,147 @@ function labelFromUrl(rawUrl: string): string {
   }
 }
 
+/**
+ * Parse a CBD decision path (e.g. "CBD/CP/MOP/DEC/11/7") into a DecisionEntry.
+ *
+ * Supported formats:
+ *   CBD/COP/DEC/{session}/{decision}[/{paragraph}]       → "COP {session}/{decision}"
+ *     URL: https://www.cbd.int/decisions/cop/{session}/{decision_padded}[/{paragraph_padded}]
+ *   CBD/CP/MOP/DEC/{session}/{decision}[/{paragraph}]    → "CP-MOP {session}/{decision}"
+ *     URL: https://www.cbd.int/decisions/mop?m=cp-mop-{session_padded}
+ *   CBD/NP/MOP/DEC/{session}/{decision}[/{paragraph}]    → "NP-MOP {session}/{decision}"
+ *     URL: https://www.cbd.int/decisions/np-mop?m=np-mop-{session_padded}
+ */
+export function parseCbdDecisionPath(path: string): DecisionEntry | null {
+  if (!path) {
+    return null;
+  }
+
+  const trimmed = path.trim().toUpperCase();
+  const segments = trimmed.split('/').filter(Boolean);
+
+  if (segments[0] !== 'CBD') {
+    return null;
+  }
+
+  let type: DecisionType | null = null;
+  let decIndex = -1;
+
+  // CBD/COP/DEC/...
+  if (segments[1] === 'COP' && segments[2] === 'DEC') {
+    type = 'COP';
+    decIndex = 3;
+  }
+  // CBD/CP/MOP/DEC/...
+  else if (segments[1] === 'CP' && segments[2] === 'MOP' && segments[3] === 'DEC') {
+    type = 'CP';
+    decIndex = 4;
+  }
+  // CBD/NP/MOP/DEC/...
+  else if (segments[1] === 'NP' && segments[2] === 'MOP' && segments[3] === 'DEC') {
+    type = 'NP';
+    decIndex = 4;
+  }
+
+  if (!type || decIndex < 0 || decIndex >= segments.length) {
+    return null;
+  }
+
+  const sessionNum = Number.parseInt(segments[decIndex]!, 10);
+  const decisionNum = Number.parseInt(segments[decIndex + 1] ?? '', 10);
+
+  if (!Number.isFinite(sessionNum) || !Number.isFinite(decisionNum)) {
+    return null;
+  }
+
+  // Any additional numeric segments after the decision number are paragraphs
+  const paragraphs: string[] = [];
+
+  for (let i = decIndex + 2; i < segments.length; i++) {
+    const seg = segments[i]!;
+
+    if (/^\d+$/.test(seg)) {
+      paragraphs.push(String(Number.parseInt(seg, 10)));
+    }
+  }
+
+  // Build label with appropriate abbreviation
+  let label: string;
+
+  if (type === 'COP') {
+    label = `COP ${sessionNum}/${decisionNum}`;
+  } else if (type === 'CP') {
+    label = `CP-MOP ${sessionNum}/${decisionNum}`;
+  } else {
+    label = `NP-MOP ${sessionNum}/${decisionNum}`;
+  }
+
+  if (paragraphs.length > 0) {
+    label += ` P. ${paragraphs.join(',')}`;
+  }
+
+  // Build URL — CP-MOP and NP-MOP only use session number, not decision number
+  let href: string;
+  const sessionPadded = sessionNum.toString().padStart(2, '0');
+  const decisionPadded = decisionNum.toString().padStart(2, '0');
+
+  if (type === 'COP') {
+    // https://www.cbd.int/decisions/cop/{session}/{decision_padded}[/{paragraph_padded}]
+    href = `https://www.cbd.int/decisions/cop/${String(sessionNum)}/${decisionPadded}`;
+
+    if (paragraphs.length > 0) {
+      const paragraphPadded = Number.parseInt(paragraphs[0]!, 10).toString().padStart(2, '0');
+
+      href += `/${paragraphPadded}`;
+    }
+  } else if (type === 'CP') {
+    // https://www.cbd.int/decisions/mop?m=cp-mop-{session_padded}
+    href = `https://www.cbd.int/decisions/mop?m=cp-mop-${sessionPadded}`;
+  } else {
+    // https://www.cbd.int/decisions/np-mop?m=np-mop-{session_padded}
+    href = `https://www.cbd.int/decisions/np-mop?m=np-mop-${sessionPadded}`;
+  }
+
+  return { label, href };
+}
+
 export function extractDecisionEntries(record: Record<string, unknown>): DecisionEntry[] {
   const normalizedRecord = normalizeSolrDocument(record);
   const entries: DecisionEntry[] = [];
   const labelMap = new Map<string, DecisionEntry>();
   const uniqueUrls = new Set<string>();
 
+  // -----------------------------------------------------------------------
+  // Primary: decisions field (normalized from decisions_ss)
+  // Contains CBD decision paths like "CBD/CP/MOP/DEC/11/7"
+  // -----------------------------------------------------------------------
+  const decisionsField = normalizedRecord['decisions'];
+  const decisionPaths = toStringArray(decisionsField);
+
+  if (decisionPaths.length > 0) {
+    const pathEntries: DecisionEntry[] = [];
+
+    decisionPaths.forEach(path => {
+      const entry = parseCbdDecisionPath(path);
+
+      if (entry) {
+        const key = sanitizeKey(entry.label);
+
+        if (!labelMap.has(key)) {
+          labelMap.set(key, entry);
+          pathEntries.push(entry);
+        }
+      }
+    });
+
+    if (pathEntries.length > 0) {
+      return pathEntries;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Fallback: legacy copDecision / decision / URL fields
+  // -----------------------------------------------------------------------
   const labelCandidates: string[] = [];
   const urlCandidates: string[] = [];
 

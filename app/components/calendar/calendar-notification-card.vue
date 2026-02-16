@@ -190,7 +190,7 @@ const thematicLabels = computed(() => {
   const labels = subjectLabelMap.value;
   const seen = new Set<string>();
 
-  return props.entry.details.thematicAreas
+  return props.entry.details.themes
     .map(theme => resolveSubjectLabel(theme, labels) || fallbackSubjectLabel(theme))
     .filter(label => {
       if (!label || !label.trim()) {
@@ -227,7 +227,7 @@ const cardBackgroundStyle = computed(() => {
 });
 
 const isCpbHighlighted = computed(() => {
-  const themes = props.entry.details?.thematicAreas ?? [];
+  const themes = props.entry.details?.themes ?? [];
 
   return (
     themes.includes('CBD-SUBJECT-CPB') ||

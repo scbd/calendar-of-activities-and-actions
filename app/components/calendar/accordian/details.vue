@@ -18,16 +18,16 @@
       <div class="calendar-detail-content">{{ description }}</div>
     </div>
 
-    <!-- Subsidiary bodies -->
-    <div v-if="subsidiaryBodies.length" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.associatedBody') }}</span>
-      <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
-    </div>
-
     <!-- Governing bodies -->
     <div v-if="governingBodies.length" class="calendar-detail-section">
-      <span class="calendar-detail-label">{{ t('calendar.labels.governingBodies') }}</span>
+      <span class="calendar-detail-label">{{ governingBodies.length > 1 ? t('calendar.labels.governingBodies') : t('calendar.labels.governingBody') }}</span>
       <div class="calendar-detail-content">{{ governingBodies.join(', ') }}</div>
+    </div>
+
+    <!-- Subsidiary bodies -->
+    <div v-if="subsidiaryBodies.length" class="calendar-detail-section">
+      <span class="calendar-detail-label">{{ subsidiaryBodies.length > 1 ? t('calendar.labels.subsidiaryBodies') : t('calendar.labels.subsidiaryBody') }}</span>
+      <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
     </div>
 
     <!-- GBF Sections -->
@@ -43,9 +43,31 @@
     <div v-if="globalTargets.length" class="calendar-detail-section">
       <span class="calendar-detail-label">{{ t('calendar.filters.labels.globalTargets') }}</span>
       <ExpandablePillList
-        class="calendar-pill-row"
+        class="calendar-pill-row calendar-pill-row--gbf-targets"
         :items="globalTargets"
-      />
+        pill-class="calendar-pill calendar-pill--gbf-target"
+      >
+        <template #default="{ item }">
+          <a
+            v-if="gbfTargetUrl(item)"
+            :href="gbfTargetUrl(item)"
+            target="_blank"
+            rel="noopener"
+            :aria-label="gbfTargetLabel(item)"
+          >
+            <img
+              :src="gbfTargetImageUrl(item)"
+              :alt="gbfTargetLabel(item)"
+              :title="gbfTargetLabel(item)"
+              class="gbf-target-img"
+              width="20"
+              height="20"
+              loading="lazy"
+            />
+          </a>
+          <span v-else>{{ item }}</span>
+        </template>
+      </ExpandablePillList>
     </div>
 
     <!-- Decisions -->
@@ -75,8 +97,8 @@
 
 <script setup lang="ts">
 import { useI18n } from '#imports';
-import ExpandablePillList from '../expandable-pill-list.vue';
-import DecisionLink from '../decision-link.vue';
+import ExpandablePillList from '../../expandable-pill-list.vue';
+import DecisionLink from '../../decision-link.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
 
 const _props = defineProps<{
@@ -95,6 +117,51 @@ const _props = defineProps<{
 }>();
 
 const { t } = useI18n();
+
+/**
+ * Convert a GBF target identifier (e.g. "GBF-TARGET-01") to the CBD image URL.
+ * Returns an empty string when the identifier doesn't match the expected pattern.
+ */
+function gbfTargetImageUrl(identifier: string): string {
+  const match = identifier.match(/GBF-TARGET-(\d+)/i);
+
+  if (!match) {
+    return '';
+  }
+
+  const num = parseInt(match[1], 10);
+  const padded = String(num).padStart(2, '0');
+
+  return `https://www.cbd.int/app/images/gbf-targets/gbf-${padded}-64.png`;
+}
+
+/**
+ * Derive an accessible label from a GBF target identifier.
+ * E.g. "GBF-TARGET-01" → "GBF Target 1".
+ */
+function gbfTargetLabel(identifier: string): string {
+  const match = identifier.match(/GBF-TARGET-(\d+)/i);
+
+  if (!match) {
+    return identifier;
+  }
+
+  return `GBF Target ${parseInt(match[1], 10)}`;
+}
+
+/**
+ * Build the external CBD link for a GBF target.
+ * E.g. "GBF-TARGET-01" → "https://www.cbd.int/gbf/targets/1".
+ */
+function gbfTargetUrl(identifier: string): string {
+  const match = identifier.match(/GBF-TARGET-(\d+)/i);
+
+  if (!match) {
+    return '';
+  }
+
+  return `https://www.cbd.int/gbf/targets/${parseInt(match[1], 10)}`;
+}
 </script>
 
 <style scoped>
@@ -155,6 +222,23 @@ const { t } = useI18n();
   background-color: #f1f3f5;
   color: #1f1f1f;
   font-size: 0.875rem;
+}
+
+.calendar-pill-row--gbf-targets {
+  align-items: center;
+}
+
+.calendar-pill--gbf-target {
+  padding: 0.125rem;
+  background-color: transparent;
+}
+
+.gbf-target-img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: contain;
 }
 
 /* Responsive adjustments */

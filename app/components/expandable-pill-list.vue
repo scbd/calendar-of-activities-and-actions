@@ -5,7 +5,7 @@
       :key="`${item}-${index}`"
       :class="pillClasses"
     >
-      {{ item }}
+      <slot :item="item" :index="index">{{ item }}</slot>
     </span>
     <button
       v-if="showToggle"

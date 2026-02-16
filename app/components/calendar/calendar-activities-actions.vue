@@ -1,5 +1,5 @@
 <template>
-  <section class="activities-explorer">
+  <section class="activities-explorer ">
     <div class="container-fluid py-3">
       <div v-if="!hideFilterCard" class="card mb-3">
         <div class="card-body">
@@ -65,11 +65,6 @@
 
       <!-- Results -->
       <div v-else>
-        <!-- Results count -->
-        <p v-if="total > 0" class="text-muted small mb-3" role="status" aria-live="polite">
-          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
-        </p>
-
         <!-- Re-query loading overlay (filter change, not initial) -->
         <div v-if="loading" class="loading-container loading-container--overlay" role="status" aria-live="polite">
           <div class="spinner-border spinner-large">
@@ -77,8 +72,20 @@
           </div>
         </div>
 
-        <div v-for="group in groupedItems" :key="group.key" class="mb-4">
-          <div class="dg-sep"><h3 class="m-0">{{ groupLabel(group) }}</h3></div>
+        <div v-for="(group, groupIndex) in groupedItems" :key="group.key" class="mb-4">
+          <div class="dg-sep text-bg-secondary text">
+            <h3 class="m-0">
+              {{ groupLabel(group) }}
+              <span
+                v-if="total > 0"
+                class="dg-sep__results-count float-end"
+                role="status"
+                aria-live="polite"
+              >
+                {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+              </span>
+            </h3>
+          </div>
 
           <div :id="`accordion-${group.key}`" class="accordion">
             <CalendarAccordionItem
@@ -117,7 +124,7 @@ import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarFilters2 from './calendar-filters-2.vue';
-import CalendarAccordionItem from './calendar-accordion-item.vue';
+import CalendarAccordionItem from './accordian/item.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import { configureStatusLocalization } from 'shared/utils/status';
 import { configureLabelLocalization, setRegionDisplayNames } from 'shared/utils/labels';
@@ -344,22 +351,31 @@ if (autoExpandId) {
   position: sticky;
   top: var(--calendar-group-header-offset);
   z-index: 3;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0.75rem ;
   border-top: 1px solid #e5e5e5;
   border-bottom: 1px solid #e5e5e5;
   margin: 1.5rem 0 1rem;
-  background-color: var(--calendar-group-header-bg);
   scroll-margin-top: calc(var(--calendar-group-header-offset) + 1rem);
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
+  color:#ffffff;
 }
 h3 {
   font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
   font-weight: 500;
   line-height: 33.6px;
-  margin-bottom: 8px;
-  margin-top: 0px;
+  margin-bottom: 0;
+  margin-top: 0;
+  color: #ffffff;
+}
+
+.dg-sep__results-count {
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: #ffffff;
+  white-space: nowrap;
+  line-height: 33.6px;
 }
 
 .calendar-accordion__summary {

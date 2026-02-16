@@ -22,7 +22,7 @@ export interface NotificationSolrDoc {
   url?: string[];
   files?: string[];
   recipients?: string[];
-  thematicAreas?: string[];
+  themes?: string[];
   actionDate?: string;
 }
 
@@ -43,7 +43,7 @@ export interface NotificationDetails {
   actionDeadline?: string | null;
   actionRequired: boolean;
   recipients: string[];
-  thematicAreas: string[];
+  themes: string[];
   attachments: NotificationAttachment[];
   link: string;
   article?: NotificationArticleRecord | null;
@@ -370,6 +370,20 @@ export function getRelatedActivities(notificationKey: string, allDocs: CalendarD
     return [];
   }
 
+  // Find the notification document to get its activities array
+  const notificationDoc = allDocs.find(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+
+    const symbol = typeof doc.symbol === 'string' ? doc.symbol : undefined;
+
+    return symbol === notificationKey;
+  });
+
+  const notificationActivities = notificationDoc?.activities;
+  const hasDirectRefs = Array.isArray(notificationActivities) && notificationActivities.length > 0;
+
   return allDocs.filter(doc => {
     // Skip notifications
     if (doc.schema === 'notification') {
@@ -379,12 +393,22 @@ export function getRelatedActivities(notificationKey: string, allDocs: CalendarD
     // Skip meetings - they're handled separately
     const schemaValue = (doc.schema ? String(doc.schema) : '').toLowerCase();
     const typeValue = (doc.type ? String(doc.type) : '').toLowerCase();
-    
+
     if (schemaValue === 'meeting' || typeValue === 'meeting') {
       return false;
     }
 
-    // Check if this activity references the notification
+    // Check if the notification's activities_ss references this activity
+    if (hasDirectRefs) {
+      const docId = doc.id;
+      const docIdentifier = doc.identifier;
+
+      if (notificationActivities!.some(ref => ref === docId || ref === docIdentifier)) {
+        return true;
+      }
+    }
+
+    // Fallback: check if this activity references the notification
     const keys = getNotificationKeys(doc);
 
     return keys.includes(notificationKey);
@@ -470,8 +494,10 @@ export function getRelatedMeetings(notificationKey: string, allDocs: CalendarDoc
     }
 
     const docId = doc.id || doc.identifier;
+    const meetingCode = doc.meetingCode;
     
-    return docId && notificationDoc.meetings!.includes(docId);
+    return (docId && notificationDoc.meetings!.includes(docId)) ||
+           (meetingCode && notificationDoc.meetings!.includes(meetingCode));
   });
 }
 

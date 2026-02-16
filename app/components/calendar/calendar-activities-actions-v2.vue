@@ -84,7 +84,7 @@ import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute } from '#app';
 import CalendarFilters2 from './calendar-filters-2.vue';
-import CalendarAccordionItem from './calendar-accordion-item.vue';
+import CalendarAccordionItem from './accordian/item.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import { configureStatusLocalization } from 'shared/utils/status';
 import { configureLabelLocalization, setRegionDisplayNames } from 'shared/utils/labels';

@@ -17,9 +17,12 @@
     "labels": {
       "decision": "القرار",
       "paragraph": "الفقرة",
-      "subjects": "الموضوعات",
-      "associatedBody": "هيئة مرتبطة",
+      "subjects": "THEMES",
+      "associatedBody": "هيئة فرعية",
+      "governingBody": "هيئة إدارية",
       "governingBodies": "هيئات الإدارة",
+      "subsidiaryBody": "هيئة فرعية",
+      "subsidiaryBodies": "هيئات فرعية",
       "gbfSections": "أقسام الإطار العالمي للتنوع البيولوجي",
       "responsibleUnit": "الوحدة المسؤولة",
       "responsibleOfficer": "موظف مسؤول",
@@ -170,6 +173,11 @@
       "completed": "أُنجزت",
       "ongoing": "جاري",
       "to_be_confirmed": "سيتم التأكيد عليها"
+    },
+    "meetings": {
+      "viewDocuments": "عرض المستندات",
+      "viewWebsite": "عرض الموقع",
+      "symbol": "الرمز"
     },
     "notifications": {
       "notificationLabel": "إشعار {id}",

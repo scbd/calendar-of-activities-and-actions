@@ -17,9 +17,12 @@
     "labels": {
       "decision": "Decision",
       "paragraph": "Para",
-      "subjects": "Subjects",
-      "associatedBody": "Associated body",
-      "governingBodies": "Governing bodies",
+      "subjects": "THEMES",
+      "associatedBody": "Subsidiary body",
+      "governingBody": "Governing Body",
+      "governingBodies": "Governing Bodies",
+      "subsidiaryBody": "Subsidiary Body",
+      "subsidiaryBodies": "Subsidiary Bodies",
       "gbfSections": "GBF sections",
       "responsibleUnit": "Responsible unit",
       "responsibleOfficer": "Responsible officer",
@@ -44,7 +47,8 @@
       "relatedNotifications": "Related Notifications",
       "untitled": "Untitled",
       "unknownDate": "Unknown date",
-      "cpbRelated": "Cartagena Protocol / Biosafety"
+      "cpbRelated": "Cartagena Protocol / Biosafety",
+      "npRelated": "Nagoya Protocol / ABS"
     },
     "links": {
       "documents": "Documents »"
@@ -170,6 +174,11 @@
       "completed": "Completed",
       "ongoing": "Ongoing",
       "to_be_confirmed": "To be confirmed"
+    },
+    "meetings": {
+      "viewDocuments": "View documents",
+      "viewWebsite": "View website",
+      "symbol": "Symbol"
     },
     "notifications": {
       "notificationLabel": "Notification {id}",

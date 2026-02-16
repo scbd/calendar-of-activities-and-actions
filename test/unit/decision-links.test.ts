@@ -1,5 +1,112 @@
 import { describe, it, expect } from 'vitest';
-import { extractDecisionEntries, parseDecisionLabel, resolveDecisionHref, resolveDecisionHrefWithFallback } from 'shared/utils/decision-links';
+import { extractDecisionEntries, parseCbdDecisionPath, parseDecisionLabel, resolveDecisionHref, resolveDecisionHrefWithFallback } from 'shared/utils/decision-links';
+
+describe('parseCbdDecisionPath', () => {
+  it('parses COP decision path', () => {
+    const entry = parseCbdDecisionPath('CBD/COP/DEC/15/4');
+
+    expect(entry).toEqual({
+      label: 'COP 15/4',
+      href: 'https://www.cbd.int/decisions/cop/15/04',
+    });
+  });
+
+  it('parses CP-MOP decision path', () => {
+    const entry = parseCbdDecisionPath('CBD/CP/MOP/DEC/11/7');
+
+    expect(entry).toEqual({
+      label: 'CP-MOP 11/7',
+      href: 'https://www.cbd.int/decisions/mop?m=cp-mop-11',
+    });
+  });
+
+  it('parses NP-MOP decision path', () => {
+    const entry = parseCbdDecisionPath('CBD/NP/MOP/DEC/5/3');
+
+    expect(entry).toEqual({
+      label: 'NP-MOP 5/3',
+      href: 'https://www.cbd.int/decisions/np-mop?m=np-mop-05',
+    });
+  });
+
+  it('parses CP-MOP decision path with paragraph segment', () => {
+    const entry = parseCbdDecisionPath('CBD/CP/MOP/DEC/11/7/7');
+
+    expect(entry).toEqual({
+      label: 'CP-MOP 11/7 P. 7',
+      href: 'https://www.cbd.int/decisions/mop?m=cp-mop-11',
+    });
+  });
+
+  it('generates correct COP URL with paragraph', () => {
+    const entry = parseCbdDecisionPath('CBD/COP/DEC/15/4/1');
+
+    expect(entry).toEqual({
+      label: 'COP 15/4 P. 1',
+      href: 'https://www.cbd.int/decisions/cop/15/04/01',
+    });
+  });
+
+  it('generates correct COP URL with different paragraph', () => {
+    const entry = parseCbdDecisionPath('CBD/COP/DEC/15/4/4');
+
+    expect(entry).toEqual({
+      label: 'COP 15/4 P. 4',
+      href: 'https://www.cbd.int/decisions/cop/15/04/04',
+    });
+  });
+
+  it('returns null for non-CBD paths', () => {
+    expect(parseCbdDecisionPath('SOME/OTHER/PATH')).toBeNull();
+  });
+
+  it('returns null for empty string', () => {
+    expect(parseCbdDecisionPath('')).toBeNull();
+  });
+
+  it('handles case-insensitive paths', () => {
+    const entry = parseCbdDecisionPath('cbd/cop/dec/16/1');
+
+    expect(entry).toEqual({
+      label: 'COP 16/1',
+      href: 'https://www.cbd.int/decisions/cop/16/01',
+    });
+  });
+});
+
+describe('extractDecisionEntries with decisions_ss', () => {
+  it('extracts entries from decisions_ss (CP-MOP)', () => {
+    const entries = extractDecisionEntries({
+      decisions_ss: ['CBD/CP/MOP/DEC/11/7/7'],
+    });
+
+    expect(entries).toEqual([
+      {
+        label: 'CP-MOP 11/7 P. 7',
+        href: 'https://www.cbd.int/decisions/mop?m=cp-mop-11',
+      },
+    ]);
+  });
+
+  it('extracts multiple decisions from decisions_ss', () => {
+    const entries = extractDecisionEntries({
+      decisions_ss: ['CBD/COP/DEC/15/4', 'CBD/CP/MOP/DEC/11/7'],
+    });
+
+    expect(entries).toHaveLength(2);
+    expect(entries[0]!.label).toBe('COP 15/4');
+    expect(entries[1]!.label).toBe('CP-MOP 11/7');
+  });
+
+  it('falls back to legacy copDecision when decisions_ss is absent', () => {
+    const entries = extractDecisionEntries({
+      copDecision_s: '16/22',
+    });
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries[0]!.label).toContain('16/22');
+  });
+});
 
 describe('decision-links utilities', () => {
   it('parses paragraph tokens from NP decisions', () => {

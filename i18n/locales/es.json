@@ -17,9 +17,12 @@
     "labels": {
       "decision": "Decisión",
       "paragraph": "Para",
-      "subjects": "Asignaturas",
-      "associatedBody": "Organismo asociado",
+      "subjects": "THEMES",
+      "associatedBody": "Órgano subsidiario",
+      "governingBody": "Órgano rector",
       "governingBodies": "Órganos rectores",
+      "subsidiaryBody": "Órgano subsidiario",
+      "subsidiaryBodies": "Órganos subsidiarios",
       "gbfSections": "Secciones del MMB",
       "responsibleUnit": "Unidad responsable",
       "responsibleOfficer": "Funcionario responsable",
@@ -170,6 +173,11 @@
       "completed": "Completado",
       "ongoing": "En curso",
       "to_be_confirmed": "Pendiente de confirmación"
+    },
+    "meetings": {
+      "viewDocuments": "Ver documentos",
+      "viewWebsite": "Ver sitio web",
+      "symbol": "Símbolo"
     },
     "notifications": {
       "notificationLabel": "Notificación {id}",

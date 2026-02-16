@@ -12,7 +12,10 @@ import type {
   NotificationKey,
   NotificationSolrDoc,
 } from '../utils/notifications';
-import { getSolrIndexUrl, getArticlesBaseUrl } from '../utils/api-config';
+import { getSolrIndexUrl, getSolrSelectUrl, getArticlesBaseUrl } from '../utils/api-config';
+import { normalizeCalendarDoc, CALENDAR_LIST_FIELDS } from './solr';
+import type { CalendarDoc } from '../types/calendar';
+import type { SolrResponse } from '../types/solr';
 
 /**
  * Generic record describing SOLR query parameters.
@@ -156,7 +159,7 @@ export async function fetchNotificationDetails(key: NotificationKey): Promise<No
     wt: 'json',
     rows: 1,
     q: `schema_s:notification AND symbol_s:"${trimmedKey}"`,
-    fl: 'symbol:symbol_s,title:title_t,title_EN:title_EN_t,fulltext:fulltext_t,from:from_t,date:date_dt,url:url_ss,files:files_ss,actionDate:actionDate_dt,recipients:recipient_ss,thematicAreas:thematicAreas_EN_txt'
+    fl: 'symbol:symbol_s,title:title_t,title_EN:title_EN_t,fulltext:fulltext_t,from:from_t,date:date_dt,url:url_ss,files:files_ss,actionDate:actionDate_dt,recipients:recipient_ss,themes:themes_ss'
   });
 
   const response = await fetchWithRetry(url, { headers: { Accept: 'application/json' } });
@@ -170,7 +173,7 @@ export async function fetchNotificationDetails(key: NotificationKey): Promise<No
   const article = await fetchNotificationArticle(trimmedKey);
   const attachments = parseNotificationAttachments(doc.files);
   const recipients = normalizeNotificationList(doc.recipients);
-  const thematicAreas = normalizeNotificationList(doc.thematicAreas);
+  const themes = normalizeNotificationList(doc.themes);
   const title = selectNotificationTitle(trimmedKey, doc, article);
   const excerpt = buildNotificationExcerpt(article?.summary?.en ?? doc.fulltext ?? null);
   const fullText = doc.fulltext ? normalizeWhitespace(doc.fulltext) : undefined;
@@ -185,9 +188,68 @@ export async function fetchNotificationDetails(key: NotificationKey): Promise<No
     actionDeadline: doc.actionDate ?? null,
     actionRequired: Boolean(doc.actionDate),
     recipients,
-    thematicAreas,
+    themes,
     attachments,
     link: buildNotificationLink(trimmedKey),
     article,
   } satisfies NotificationDetails;
+}
+
+// ---------------------------------------------------------------------------
+// Related document fetcher
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch related calendar documents from SOLR for a specific schema type.
+ *
+ * Makes a single SOLR request that matches documents by `identifier_s` OR
+ * `meetingCode_s` (for meetings) so that references like `"CAL-ACT-2025-001"`
+ * or `"CP-MOP-11"` resolve correctly.
+ *
+ * @param identifiers - Array of reference strings (identifiers or meeting codes).
+ * @param schema - SOLR schema value: `'calendarActivity'` or `'meeting'`.
+ * @returns Normalized `CalendarDoc[]` for the matching documents.
+ */
+export async function fetchRelatedDocsBySchema(
+  identifiers: string[],
+  schema: 'calendarActivity' | 'meeting',
+): Promise<CalendarDoc[]> {
+  if (!identifiers.length) {
+    return [];
+  }
+
+  // Build an OR query across identifier_s, meetingCode_s and symbol_s
+  // (meetings use short codes like "CP-MOP-11" stored in meetingCode_s
+  // and symbols like "SBI-06" stored in symbol_s).
+  const escaped = identifiers.map(id => `"${id}"`);
+  const identifierClause = `identifier_s:(${escaped.join(' OR ')})`;
+  const meetingCodeClause = schema === 'meeting'
+    ? ` OR meetingCode_s:(${escaped.join(' OR ')}) OR symbol_s:(${escaped.join(' OR ')})`
+    : '';
+
+  const q = `schema_s:${schema} AND (${identifierClause}${meetingCodeClause})`;
+
+  const endpoint = getSolrSelectUrl();
+
+  const body = {
+    q,
+    wt: 'json',
+    rows: identifiers.length,
+    start: 0,
+    fl: CALENDAR_LIST_FIELDS,
+    fq: [
+      '(_state_s:public OR (*:* NOT _state_s:*))',
+      'schemaType_s:scbd',
+    ],
+  };
+
+  const response = await $fetch<SolrResponse>(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  const rawDocs = response?.response?.docs ?? [];
+
+  return rawDocs.map(raw => normalizeCalendarDoc(raw as Record<string, unknown>));
 }

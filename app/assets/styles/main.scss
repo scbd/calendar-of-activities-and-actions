@@ -10,7 +10,9 @@
   --body-color: #1D1D1D; /* Body text color */
   --link-color: #0079C0; /* Link color */
 }
-
+.debug {
+  border: 1px solid red;
+}
 // Full viewport height setup
 html, body, #__nuxt {
   height: 100vh;

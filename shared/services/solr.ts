@@ -162,10 +162,12 @@ export const CALENDAR_LIST_FIELDS = [
   'symbol_s', 'date_dt', 'actionDate_dt',
   'subjects_ss', 'governingBody_ss', 'subsidiaryBody_ss',
   'gbfTargets_ss', 'gbfSections_ss', 'decisions_ss',
-  'thematicAreas_ss',
+  'themes_ss',
   'notifications_ss', 'meetings_ss', 'activities_ss',
   'url_ss',
   'actionRequiredByParties_b',
+  // Notification-specific fields
+  'recipient_ss', 'files_ss', 'sender_s', 'reference_s', 'fulltext_s', 'deadline_dt',
 ].join(',');
 
 /** All fields requested for expanded detail view. */
@@ -179,8 +181,8 @@ export const CALENDAR_DETAIL_FIELDS = [
   'fulltext_AR_t', 'fulltext_RU_t', 'fulltext_ZH_t',
   'actionRequiredByParties_b',
   'agendaItems_ss', 'responsibleUnitsAndOfficers_ss',
-  'hostGovernments_ss', 'themes_ss',
-  'reference_s', 'sender_s', 'recipients_ss', 'files_ss',
+  'hostGovernments_ss',
+  'reference_s', 'sender_s', 'recipient_ss', 'files_ss',
   'outcome_s',
   'createdDate_dt', 'updatedDate_dt',
 ].join(',');
@@ -239,7 +241,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     searchText,
     start = 0,
     rows = 50,
-    sort = 'startDate_dt asc',
+    sort = 'def(startDate_dt,deadline_dt) asc',
     fl = CALENDAR_LIST_FIELDS,
   } = params;
 
@@ -290,24 +292,31 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     fq.push(`{!tag=status}(${stripTag(statusClause)} OR ${stripTag(activityStatusClause)})`);
   }
 
-  // Date range filters
-  // Meetings use startDate_dt / endDate_dt; notifications use date_dt
-  // (publish date) and actionDate_dt (deadline).  We OR all relevant date
-  // fields so a document matches if ANY of its dates fall in range.
+  // Date range filters — schema-aware
+  // Each schema type is filtered on its PRIMARY date field only (the same
+  // field used for grouping and display), with a fallback when the primary
+  // field is absent.  This prevents a future endDate or actionDate from
+  // pulling in documents whose primary date is in the past.
+  //
+  //   meetings / activities → startDate_dt  (fallback: endDate_dt)
+  //   notifications         → deadline_dt   (fallback: date_dt)
+  //
   // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
   {
     const sd = toSolrDateString(filters.startDate || '2024-01-01');
 
-    fq.push(
-      `{!tag=startDate}(startDate_dt:[${sd} TO *] OR date_dt:[${sd} TO *] OR actionDate_dt:[${sd} TO *])`,
-    );
+    const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[${sd} TO *] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[${sd} TO *])))`;
+    const notif = `(schema_s:notification AND (deadline_dt:[${sd} TO *] OR ((*:* NOT deadline_dt:*) AND date_dt:[${sd} TO *])))`;
+
+    fq.push(`{!tag=startDate}(${nonNotif} OR ${notif})`);
   }
   if (filters.endDate) {
     const ed = toSolrDateString(filters.endDate);
 
-    fq.push(
-      `{!tag=endDate}(endDate_dt:[* TO ${ed}] OR date_dt:[* TO ${ed}] OR actionDate_dt:[* TO ${ed}])`,
-    );
+    const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[* TO ${ed}] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[* TO ${ed}])))`;
+    const notif = `(schema_s:notification AND (deadline_dt:[* TO ${ed}] OR ((*:* NOT deadline_dt:*) AND date_dt:[* TO ${ed}])))`;
+
+    fq.push(`{!tag=endDate}(${nonNotif} OR ${notif})`);
   }
 
   // Action required flag
@@ -405,7 +414,7 @@ const CALENDAR_ARRAY_FIELDS: ReadonlySet<string> = new Set([
   'notifications', 'meetings', 'activities',
   'subjects', 'governingBody', 'subsidiaryBody',
   'gbfTargets', 'gbfSections', 'decisions',
-  'thematicAreas', 'agendaItems', 'responsibleUnitsAndOfficers',
+  'agendaItems', 'responsibleUnitsAndOfficers',
   'hostGovernments', 'themes', 'url', 'recipients', 'files',
 ]);
 

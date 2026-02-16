@@ -17,9 +17,12 @@
     "labels": {
       "decision": "Décision",
       "paragraph": "Para",
-      "subjects": "Sujets",
-      "associatedBody": "Organisme associé",
+      "subjects": "THEMES",
+      "associatedBody": "Organe subsidiaire",
+      "governingBody": "Organe directeur",
       "governingBodies": "Organes directeurs",
+      "subsidiaryBody": "Organe subsidiaire",
+      "subsidiaryBodies": "Organes subsidiaires",
       "gbfSections": "Sections du CMB",
       "responsibleUnit": "Unité responsable",
       "responsibleOfficer": "Officier responsable",
@@ -170,6 +173,11 @@
       "completed": "Terminé",
       "ongoing": "En cours",
       "to_be_confirmed": "À confirmer"
+    },
+    "meetings": {
+      "viewDocuments": "Voir les documents",
+      "viewWebsite": "Voir le site web",
+      "symbol": "Symbole"
     },
     "notifications": {
       "notificationLabel": "Notification {id}",

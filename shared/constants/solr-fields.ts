@@ -17,7 +17,7 @@ export const SOLR_FACET_FIELDS = {
   gbfSections: '{!ex=gbfSections}gbfSections_ss',
   countries: '{!ex=countries}eventCountry_s',
   decisions: '{!ex=decisions}decisions_ss',
-  thematicAreas: '{!ex=thematicAreas}thematicAreas_ss',
+  themes: '{!ex=themes}themes_ss',
 } as const;
 
 export type SolrFacetFieldKey = keyof typeof SOLR_FACET_FIELDS;

@@ -49,12 +49,12 @@ export interface BaseCalendarDoc {
 export interface MeetingDoc extends BaseCalendarDoc {
   schema: 'meeting';
 
+  symbol?: string;
   eventCity?: string;
   eventCountry?: string;
   meetingCode?: string;
   hostGovernments?: string[];
   themes?: string[];
-  thematicAreas?: string[];
 }
 
 /** Notification document — `schema === 'notification'` */
@@ -67,6 +67,7 @@ export interface NotificationDoc extends BaseCalendarDoc {
   recipients?: string[];
   actionDate?: string;
   deadline?: string;
+  publishedDate?: string;
   date?: string;
 
   /** Localized full-text body */

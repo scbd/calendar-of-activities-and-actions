@@ -71,7 +71,7 @@
       :aria-labelledby="headingId"
     >
       <div class="accordion-body">
-        <CalendarDocumentDetails
+        <CalendarAccordianDetails
           :status-narrative="statusNarrative"
           :symbol="documentSymbol"
           :description="description"
@@ -135,7 +135,7 @@
 
     <!-- CPB/Biosafety footer -->
     <div v-if="isCpbDoc" class="accordion-item__cpb-footer">
-      {{ t('calendar.labels.cpbRelated') }}
+      <span class="accordion-item__cpb-label">{{ t('calendar.labels.cpbRelated') }}</span>
     </div>
   </div>
 </template>
@@ -146,7 +146,7 @@ import { useI18n } from '#imports';
 import { getTitleFieldForLocale, normalizeSolrDocument } from 'shared/services/solr';
 import type { LocaleCode } from 'shared/services/solr';
 import type { CalendarDoc } from 'shared/types/calendar';
-import CalendarDocumentDetails from './calendar-document-details.vue';
+import CalendarAccordianDetails from './calendar-accordian-details.vue';
 import CalendarNotificationCard from './calendar-notification-card.vue';
 import CalendarActivityCard from './calendar-activity-card.vue';
 import { formatDateRange } from 'shared/utils/date';
@@ -635,15 +635,23 @@ const collapseId = computed(() => props.collapseId);
 }
 
 .accordion-item__cpb-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0;
+  border-radius: 0 0 var(--bs-accordion-inner-border-radius) var(--bs-accordion-inner-border-radius);
+}
+
+.accordion-item__cpb-label {
   background-color: #fa6938;
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 600;
-  text-align: right;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 0.28rem 1rem;
-  border-radius: 0 0 var(--bs-accordion-inner-border-radius) var(--bs-accordion-inner-border-radius);
+  padding: 0.2rem 0.625rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  width: fit-content;
 }
 
 /* Smooth accordion transitions */

@@ -37,6 +37,9 @@ const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
 
+/** Solr function sort that picks startDate_dt for meetings/activities, deadline_dt for notifications. */
+const SOLR_DEFAULT_SORT = 'def(startDate_dt,deadline_dt) asc';
+
 const defaultFilters: FilterState = {
   types: [],
   subjects: [],
@@ -140,18 +143,25 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     const mapped = sortValues
       .map((v) => {
         const [field, dir] = v.split(':');
-        const solrField = field === 'startDate' ? 'startDate_dt'
-          : field === 'endDate' ? 'endDate_dt'
-            : field === 'title' ? 'title_EN_t'
-              : field === 'schema' ? 'schema_s'
-                : field === 'actionRequired' ? 'actionRequiredByParties_b'
-                  : `${field}_s`;
+        const direction = dir === 'desc' ? 'desc' : 'asc';
 
-        return `${solrField} ${dir === 'desc' ? 'desc' : 'asc'}`;
+        // startDate uses def() so notifications (deadline_dt) interleave
+        // correctly with meetings/activities (startDate_dt)
+        if (field === 'startDate') {
+          return `def(startDate_dt,deadline_dt) ${direction}`;
+        }
+
+        const solrField = field === 'endDate' ? 'endDate_dt'
+          : field === 'title' ? 'title_EN_t'
+            : field === 'schema' ? 'schema_s'
+              : field === 'actionRequired' ? 'actionRequiredByParties_b'
+                : `${field}_s`;
+
+        return `${solrField} ${direction}`;
       })
       .filter(Boolean);
 
-    return mapped.length > 0 ? mapped.join(', ') : 'startDate_dt asc';
+    return mapped.length > 0 ? mapped.join(', ') : SOLR_DEFAULT_SORT;
   }
 
   // --- Fetch a single page from SOLR --------------------------------------
@@ -335,7 +345,12 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
 
     for (const d of docs.value) {
-      const iso = d.startDate || d.endDate;
+      // Notifications don't have startDate/endDate — use deadline then date
+      // (matching the same logic as formatDateRange in shared/utils/date.ts)
+      const isNotification = String(d.schema ?? '').toLowerCase() === 'notification';
+      const iso = isNotification
+        ? (d.deadline || d.date)
+        : (d.startDate || d.endDate);
       const dt = iso ? DateTime.fromISO(String(iso)) : null;
       const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
       const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';

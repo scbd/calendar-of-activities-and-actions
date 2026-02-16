@@ -34,7 +34,7 @@ describe('CalendarNotificationCard', () => {
         title: 'Test Notification',
         actionRequired: false,
         recipients: [],
-        thematicAreas: ['CBD-SUBJECT-TEST', 'CBD-SUBJECT-UNKNOWN'],
+        themes: ['CBD-SUBJECT-TEST', 'CBD-SUBJECT-UNKNOWN'],
         attachments: [],
         link: 'https://www.cbd.int/notifications/2024-099',
       },
