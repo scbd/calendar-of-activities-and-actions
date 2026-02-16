@@ -116,7 +116,7 @@
                       </span>
                     </button>
                   </th>
-                  <th>Location</th>
+                  <th v-if="showLocationColumn">Location</th>
                   <th>
                     <button class="sort-header" @click="toggleSort('status')">
                       Status
@@ -154,7 +154,7 @@
                         <div v-if="getNotificationSymbol(doc)" class="symbol-text">{{ getNotificationSymbol(doc) }}</div>
                       </div>
                     </td>
-                    <td>
+                    <td v-if="showLocationColumn">
                       <span v-if="getMeetingLocation(doc)" class="location-text">{{ getMeetingLocation(doc) }}</span>
                     </td>
                     <td>
@@ -171,9 +171,57 @@
                   <tr v-if="isExpanded(doc)" class="details-row">
                     <td colspan="6" class="details-cell">
                       <div class="details-container">
-                        <CalendarAccordianDetails
+                        <!-- Notification-specific details -->
+                        <CalendarAccordianDetailsNotification
+                          v-if="isNotification(doc)"
+                          :symbol="getDocumentSymbol(doc)"
+                          :description="getDescription(doc)"
+                          :themes="getThemeLabels(doc)"
+                          :subject-labels="getSubjectLabels(doc)"
+                          :subsidiary-bodies="getSubsidiaryBodies(doc)"
+                          :governing-bodies="getGoverningBodies(doc)"
+                          :gbf-sections="getGbfSections(doc)"
+                          :global-targets="getGlobalTargets(doc)"
+                          :decision-entries="getDecisionEntries(doc)"
+                          :recipients="getRecipients(doc)"
+                          :attachments="getAttachments(doc)"
+                          :notification-link="getNotificationLink(doc)"
+                          :action-required="isActionRequired(doc)"
+                          :action-deadline="getActionDeadline(doc)"
+                          :responsible-unit="getResponsibleUnit(doc)"
+                          :responsible-officer="getResponsibleOfficer(doc)"
+                          :show-responsible="Boolean(getResponsibleUnit(doc) || getResponsibleOfficer(doc))"
+                          :related-meetings="getRelatedMeetings(doc)"
+                          :related-activities="getRelatedActivities(doc)"
+                          :unresolved-meeting-refs="getUnresolvedMeetingRefs(doc)"
+                          :unresolved-activity-refs="getUnresolvedActivityRefs(doc)"
+                        />
+
+                        <!-- Meeting-specific details -->
+                        <CalendarAccordianDetailsMeeting
+                          v-else-if="isMeetingDoc(doc)"
                           :status-narrative="getStatusNarrative(doc)"
-                          :symbol="getMeetingSymbol(doc)"
+                          :symbol="getDocumentSymbol(doc)"
+                          :description="getDescription(doc)"
+                          :location="getMeetingLocation(doc)"
+                          :themes="getThemeLabels(doc)"
+                          :subject-labels="getSubjectLabels(doc)"
+                          :subsidiary-bodies="getSubsidiaryBodies(doc)"
+                          :governing-bodies="getGoverningBodies(doc)"
+                          :gbf-sections="getGbfSections(doc)"
+                          :global-targets="getGlobalTargets(doc)"
+                          :decision-entries="getDecisionEntries(doc)"
+                          :meeting-urls="getMeetingUrls(doc)"
+                          :responsible-unit="getResponsibleUnit(doc)"
+                          :responsible-officer="getResponsibleOfficer(doc)"
+                          :show-responsible="Boolean(getResponsibleUnit(doc) || getResponsibleOfficer(doc))"
+                        />
+
+                        <!-- Activity-specific details -->
+                        <CalendarAccordianDetailsActivity
+                          v-else
+                          :status-narrative="getStatusNarrative(doc)"
+                          :symbol="getDocumentSymbol(doc)"
                           :description="getDescription(doc)"
                           :subject-labels="getSubjectLabels(doc)"
                           :subsidiary-bodies="getSubsidiaryBodies(doc)"
@@ -186,93 +234,22 @@
                           :show-responsible="Boolean(getResponsibleUnit(doc) || getResponsibleOfficer(doc))"
                         />
 
-                        <div v-if="getNotificationEntries(doc).length" class="mt-3">
-                          <h6 class="fw-bold">{{ t('calendar.labels.notifications') }}</h6>
-                          <div class="table-responsive">
-                            <table class="table table-sm table-bordered nested-table">
-                              <thead class="table-secondary">
-                                <tr>
-                                  <th>Symbol</th>
-                                  <th>Title</th>
-                                  <th>Date</th>
-                                  <th>Action</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="entry in getNotificationEntries(doc)" :key="entry.key">
-                                  <td>{{ entry.details?.symbol || entry.key }}</td>
-                                  <td>{{ entry.details?.title || '' }}</td>
-                                  <td>{{ entry.details?.publishedOn ? formatGridDate(entry.details.publishedOn) : '' }}</td>
-                                  <td>
-                                    <a v-if="entry.details?.link" :href="entry.details.link" target="_blank" class="btn btn-sm btn-primary">
-                                      View
-                                    </a>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
+                        <!-- Related sections (non-notification docs; notifications render related items inside their details) -->
+                        <template v-if="!isNotification(doc)">
+                          <RelatedActivities
+                            :activities="getRelatedActivities(doc)"
+                            :unresolved-refs="getUnresolvedActivityRefs(doc)"
+                          />
+                          <RelatedMeetings
+                            :meetings="getRelatedMeetings(doc)"
+                            :unresolved-refs="getUnresolvedMeetingRefs(doc)"
+                          />
+                        </template>
 
-                        <div v-if="getRelatedActivities(doc).length" class="mt-3">
-                          <h6 class="fw-bold">{{ t('calendar.labels.relatedActivities') }}</h6>
-                          <div class="table-responsive">
-                            <table class="table table-sm table-bordered nested-table">
-                              <thead class="table-secondary">
-                                <tr>
-                                  <th>Date</th>
-                                  <th>Type</th>
-                                  <th>Title</th>
-                                  <th>Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="activity in getRelatedActivities(doc)" :key="activity.id">
-                                  <td>{{ formatGridDateRange(activity) }}</td>
-                                  <td>
-                                    <span class="type-badge-sm" :style="getTypeStyle(activity)">
-                                      {{ getTypeLabel(activity) }}
-                                    </span>
-                                  </td>
-                                  <td>{{ getTitle(activity) }}</td>
-                                  <td>
-                                    <span v-if="getStatusLabel(activity)" class="badge badge-sm" :class="`bg-${getStatusColor(activity)}`">
-                                      {{ getStatusLabel(activity) }}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-
-                        <div v-if="getRelatedMeetings(doc).length" class="mt-3">
-                          <h6 class="fw-bold">{{ t('calendar.labels.relatedMeetings') }}</h6>
-                          <div class="table-responsive">
-                            <table class="table table-sm table-bordered nested-table">
-                              <thead class="table-secondary">
-                                <tr>
-                                  <th>Date</th>
-                                  <th>Title</th>
-                                  <th>Location</th>
-                                  <th>Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="meeting in getRelatedMeetings(doc)" :key="meeting.id">
-                                  <td>{{ formatGridDateRange(meeting) }}</td>
-                                  <td>{{ getTitle(meeting) }}</td>
-                                  <td>{{ getMeetingLocation(meeting) }}</td>
-                                  <td>
-                                    <span v-if="getStatusLabel(meeting)" class="badge badge-sm" :class="`bg-${getStatusColor(meeting)}`">
-                                      {{ getStatusLabel(meeting) }}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
+                        <RelatedNotifications
+                          :notifications="getAllNotificationEntries(doc)"
+                          :all-docs="docs"
+                        />
                       </div>
                     </td>
                   </tr>
@@ -298,13 +275,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarFilters2 from './calendar-filters-2.vue';
-import CalendarAccordianDetails from './accordian/details.vue';
+import CalendarAccordianDetailsActivity from './accordian/details-activity.vue';
+import CalendarAccordianDetailsMeeting from './accordian/details-meeting.vue';
+import CalendarAccordianDetailsNotification from './accordian/details-notification.vue';
+import RelatedActivities from './accordian/related-activities.vue';
+import RelatedMeetings from './accordian/related-meetings.vue';
+import RelatedNotifications from './accordian/related-notifications.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import {
   configureStatusLocalization,
@@ -327,22 +309,30 @@ import { getTitleFieldForLocale } from 'shared/services/solr';
 import { formatDateRange, formatNotificationDate, formatGridDateRange, formatGridDate } from 'shared/utils/date';
 import {
   getDocBooleanValue,
+  getDocFiles,
+  getDocRaw,
+  getDocRecipients,
   getDocStringValue,
   getDocSubjects,
   getDocSubsidiaryBodies,
   getDocGoverningBodies,
   getDocGbfSections,
   getDocGlobalTargets,
+  getDocThemes,
 } from 'shared/utils/document-processing';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import {
+  buildNotificationLink,
   notificationDisplayEntries,
-  getRelatedActivities as getRelatedActivitiesUtil,
-  getRelatedMeetings as getRelatedMeetingsUtil,
-  getRelatedActivitiesForMeeting,
+  parseNotificationAttachments,
+  resolveNotificationUrl,
+  getRelatedNotificationsForMeeting,
 } from 'shared/utils/notifications';
+import type { NotificationAttachment } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
-import { displaySubjectLabels } from 'shared/utils/subjects';
+import { displaySubjectLabels, resolveSubjectLabel, fallbackSubjectLabel, subjectLabelMap } from 'shared/utils/subjects';
+import { normalizeSolrDocument } from 'shared/services/solr';
+import { fetchRelatedDocsBySchema } from 'shared/services/solr-index';
 import { useBodyLabels } from '~/composables/use-body-labels';
 
 // Props
@@ -441,10 +431,95 @@ const expandedRows = ref<Record<string, boolean>>({});
 const currentSortField = ref<string>('startDate');
 const currentSortDirection = ref<'asc' | 'desc'>('asc');
 
+/**
+ * Show the Location column only when exclusively meetings are displayed.
+ * If no schema types are selected (all shown) or any non-meeting type is
+ * selected, hide the column since only meetings carry location data.
+ */
+const showLocationColumn = computed(() => {
+  const selectedTypes = currentFilters.value?.types ?? [];
+  const tabType = props.activeTabType;
+
+  // Tab selector overrides — show location only when the meeting tab is active
+  if (tabType) {
+    return tabType === 'meeting';
+  }
+
+  // No filter selected means all types visible — show location column
+  if (selectedTypes.length === 0) {
+    return true;
+  }
+
+  // Show only when every selected type is 'meeting'
+  return selectedTypes.every((type) => type === 'meeting');
+});
+
+// ---------------------------------------------------------------------------
+// Fetched related docs (separate SOLR calls per schema, keyed by doc id)
+// ---------------------------------------------------------------------------
+const fetchedRelatedActivities = ref<Record<string, CalendarDoc[]>>({});
+const fetchedRelatedMeetings = ref<Record<string, CalendarDoc[]>>({});
+const fetchedActivityFlags = ref<Record<string, boolean>>({});
+const fetchedMeetingFlags = ref<Record<string, boolean>>({});
+
+/**
+ * When a row is expanded, fetch related activities and meetings via
+ * dedicated SOLR calls (one per schema type). This applies to
+ * notifications and calendarActivity documents so the related docs
+ * don't depend on whether the target is already in the paged docs.
+ */
+const fetchRelatedDocsForRow = async (doc: CalendarDoc) => {
+  const docId = doc.id;
+
+  const activityRefs = doc.activities;
+  const meetingRefs = doc.meetings;
+
+  // Fetch related activities (one call for calendarActivity schema)
+  if (
+    !fetchedActivityFlags.value[docId] &&
+    Array.isArray(activityRefs) &&
+    activityRefs.length > 0
+  ) {
+    fetchedActivityFlags.value[docId] = true;
+
+    try {
+      const results = await fetchRelatedDocsBySchema(activityRefs, 'calendarActivity');
+
+      fetchedRelatedActivities.value = { ...fetchedRelatedActivities.value, [docId]: results };
+    } catch (err) {
+      console.error('Failed to fetch related activities for grid row', err);
+      fetchedRelatedActivities.value = { ...fetchedRelatedActivities.value, [docId]: [] };
+    }
+  }
+
+  // Fetch related meetings (one call for meeting schema)
+  if (
+    !fetchedMeetingFlags.value[docId] &&
+    Array.isArray(meetingRefs) &&
+    meetingRefs.length > 0
+  ) {
+    fetchedMeetingFlags.value[docId] = true;
+
+    try {
+      const results = await fetchRelatedDocsBySchema(meetingRefs, 'meeting');
+
+      fetchedRelatedMeetings.value = { ...fetchedRelatedMeetings.value, [docId]: results };
+    } catch (err) {
+      console.error('Failed to fetch related meetings for grid row', err);
+      fetchedRelatedMeetings.value = { ...fetchedRelatedMeetings.value, [docId]: [] };
+    }
+  }
+};
+
 const isExpanded = (doc: CalendarDoc): boolean => Boolean(expandedRows.value[doc.id]);
 
 const toggleRow = (doc: CalendarDoc) => {
   expandedRows.value[doc.id] = !expandedRows.value[doc.id];
+
+  // Trigger SOLR fetches when expanding
+  if (expandedRows.value[doc.id]) {
+    void fetchRelatedDocsForRow(doc);
+  }
 };
 
 // Sort triggers server-side re-query via FilterState.sort
@@ -474,19 +549,67 @@ const getTitle = (doc: CalendarDoc): string => {
 };
 
 const getTypeLabel = (doc: CalendarDoc): string => {
-  const raw = getDocStringValue(doc, 'type') || getDocStringValue(doc, 'schema');
+  const schema = (doc.schema ?? '').toLowerCase();
+
+  // Meetings and notifications: use the i18n label as-is (no "Activity" suffix)
+  if (schema === 'meeting' || schema === 'notification') {
+    const raw = getDocStringValue(doc, 'type') || getDocStringValue(doc, 'schema');
+    const translationKey = `calendar.types.${normalizeTypeKey(raw)}`;
+
+    if (te(translationKey)) {
+      return t(translationKey) as string;
+    }
+
+    return raw ?? '';
+  }
+
+  // Calendar activities: derive label from CAL-ACTIVITY-TYPE-* identifier + "Activity" suffix
+  const typeValue = getDocStringValue(doc, 'type') ?? '';
+  const activitySuffix = t('calendar.types.activity') as string;
+
+  // Special-case overrides for specific activity type identifiers
+  const activityLabelOverrides: Record<string, string> = {
+    'SUBMISSION-OF-INFORMATION': 'Submission',
+    'NOMINATION-REGISTRATION': 'Nomination / Registration',
+  };
+
+  const stripped = typeValue.replace(/^CAL-ACTIVITY-TYPE-/i, '');
+
+  if (stripped && stripped !== typeValue) {
+    const upperStripped = stripped.toUpperCase();
+
+    // Check for explicit override first
+    if (activityLabelOverrides[upperStripped]) {
+      return `${activityLabelOverrides[upperStripped]} ${activitySuffix}`;
+    }
+
+    // Default: convert hyphens to spaces for display
+    // e.g. "MEETING" → "Meeting Activity", "PEER-REVIEW" → "Peer Review Activity"
+    const humanLabel = stripped
+      .toLowerCase()
+      .split('-')
+      .filter(word => word.length > 0)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    return `${humanLabel} ${activitySuffix}`;
+  }
+
+  // Fallback: try the i18n translation for the type and append "Activity"
+  const raw = typeValue || getDocStringValue(doc, 'schema');
   const translationKey = `calendar.types.${normalizeTypeKey(raw)}`;
 
   if (te(translationKey)) {
-    return t(translationKey) as string;
+    const label = t(translationKey) as string;
+
+    if (label && !label.toLowerCase().endsWith(activitySuffix.toLowerCase())) {
+      return `${label} ${activitySuffix}`;
+    }
+
+    return label;
   }
-  if (te('calendar.types.default')) {
-    return t('calendar.types.default') as string;
-  }
-  if (!raw && te('calendar.types.calendarActivity')) {
-    return t('calendar.types.calendarActivity') as string;
-  }
-  return raw ?? '';
+
+  return activitySuffix;
 };
 
 const getTypeStyle = (doc: CalendarDoc) => {
@@ -517,15 +640,16 @@ const getMeetingLocation = (doc: CalendarDoc): string => {
   if (!isMeetingDoc(doc)) {
     return '';
   }
-  const city = getDocStringValue(doc, 'city', 'cityEn');
-  const rawCountry = getDocStringValue(doc, 'hostCountry', 'hostGovernment', 'country', 'countryCode');
+  const city = getDocStringValue(doc, 'city', 'cityEn', 'eventCity');
+  const rawCountry = getDocStringValue(doc, 'eventCountry', 'hostCountry', 'hostGovernment', 'country', 'countryCode');
   const providedCountry = getDocStringValue(doc, 'hostCountryEn', 'hostGovernmentEn', 'countryEn', 'countryName');
   const hostGovernment = rawCountry
     ? resolveCountryLabel(rawCountry, providedCountry)
     : (providedCountry ?? '');
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+  const result = parts.join(', ');
 
-  return parts.join(', ');
+  return result.toLowerCase() === 'online' ? 'ONLINE' : result;
 };
 
 const getNotificationSymbol = (doc: CalendarDoc): string => {
@@ -640,27 +764,69 @@ const getDecisionEntries = (doc: CalendarDoc): DecisionEntry[] => {
 const getNotificationEntries = (doc: CalendarDoc) => notificationDisplayEntries(doc);
 
 const getRelatedActivities = (doc: CalendarDoc): CalendarDoc[] => {
-  const notificationKey = doc.notificationKey || doc.symbol || null;
-
-  if (isNotification(doc) && notificationKey) {
-    return getRelatedActivitiesUtil(notificationKey, docs.value);
-  }
-
-  if (isMeetingDoc(doc)) {
-    return getRelatedActivitiesForMeeting(doc, docs.value);
-  }
-
-  return [];
+  return fetchedRelatedActivities.value[doc.id] ?? [];
 };
 
 const getRelatedMeetings = (doc: CalendarDoc): CalendarDoc[] => {
-  const notificationKey = doc.notificationKey || doc.symbol || null;
+  return fetchedRelatedMeetings.value[doc.id] ?? [];
+};
 
-  if (!isNotification(doc) || !notificationKey) {
+/**
+ * Activity identifiers from activities_ss that could not be resolved
+ * by the dedicated SOLR fetch. Displayed as simple labels so users
+ * still see that a relation exists.
+ */
+const getUnresolvedActivityRefs = (doc: CalendarDoc): string[] => {
+  const refs = doc.activities;
+
+  if (!refs || !Array.isArray(refs) || refs.length === 0) {
     return [];
   }
 
-  return getRelatedMeetingsUtil(notificationKey, docs.value);
+  // Until the fetch completes, show nothing (not raw IDs)
+  if (!fetchedActivityFlags.value[doc.id]) {
+    return [];
+  }
+
+  const resolved = getRelatedActivities(doc);
+  const resolvedIds = new Set(resolved.map(d => d.id));
+  const resolvedIdentifiers = new Set(resolved.map(d => d.identifier));
+
+  return refs.filter(r => !resolvedIds.has(r) && !resolvedIdentifiers.has(r));
+};
+
+/**
+ * Meeting identifiers from meetings_ss that could not be resolved
+ * by the dedicated SOLR fetch. Displayed as simple labels so users
+ * still see that a relation exists.
+ */
+const getUnresolvedMeetingRefs = (doc: CalendarDoc): string[] => {
+  const refs = doc.meetings;
+
+  if (!refs || !Array.isArray(refs) || refs.length === 0) {
+    return [];
+  }
+
+  // Until the fetch completes, show nothing (not raw IDs)
+  if (!fetchedMeetingFlags.value[doc.id]) {
+    return [];
+  }
+
+  const resolved = getRelatedMeetings(doc);
+  const resolvedIds = new Set(resolved.map(d => d.id));
+  const resolvedIdentifiers = new Set(resolved.map(d => d.identifier));
+  const resolvedCodes = new Set(
+    resolved
+      .map(d => (d as Record<string, unknown>).meetingCode as string | undefined)
+      .filter(Boolean),
+  );
+  const resolvedSymbols = new Set(
+    resolved
+      .map(d => (d as Record<string, unknown>).symbol as string | undefined)
+      .filter(Boolean),
+  );
+
+  return refs.filter(r => !resolvedIds.has(r) && !resolvedIdentifiers.has(r) && !resolvedCodes.has(r) && !resolvedSymbols.has(r));
 };
 
 const getGoverningBodies = (doc: CalendarDoc): string[] => resolveGoverningBodyLabels(getDocGoverningBodies(doc));
@@ -668,6 +834,171 @@ const getGoverningBodies = (doc: CalendarDoc): string[] => resolveGoverningBodyL
 const getGbfSections = (doc: CalendarDoc): string[] => getDocGbfSections(doc);
 
 const getGlobalTargets = (doc: CalendarDoc): string[] => getDocGlobalTargets(doc);
+
+const isActivityDoc = (doc: CalendarDoc): boolean => !isMeetingDoc(doc) && !isNotification(doc);
+
+/** Resolve theme identifiers to human-readable labels (meetings & notifications). */
+const getThemeLabels = (doc: CalendarDoc): string[] => {
+  const identifiers = getDocThemes(doc);
+  const labels = subjectLabelMap.value;
+  const seen = new Set<string>();
+
+  return identifiers
+    .map(id => resolveSubjectLabel(id, labels) || fallbackSubjectLabel(id))
+    .filter(label => {
+      if (!label || !label.trim()) {
+        return false;
+      }
+      const normalized = label.trim();
+
+      if (seen.has(normalized)) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
+    });
+};
+
+/** Notification recipients. */
+const getRecipients = (doc: CalendarDoc): string[] => {
+  if (!isNotification(doc)) {
+    return [];
+  }
+  return getDocRecipients(doc);
+};
+
+/** Notification file attachments. */
+const getAttachments = (doc: CalendarDoc): NotificationAttachment[] => {
+  if (!isNotification(doc)) {
+    return [];
+  }
+  return parseNotificationAttachments(getDocFiles(doc));
+};
+
+/** Direct link to a notification on the CBD website. */
+const getNotificationLink = (doc: CalendarDoc): string => {
+  if (!isNotification(doc)) {
+    return '';
+  }
+  const symbol = getDocStringValue(doc, 'symbol') ?? '';
+
+  return symbol ? buildNotificationLink(symbol) : '';
+};
+
+/** Action deadline for a notification (submission deadline or actionDate). */
+const getActionDeadline = (doc: CalendarDoc): string | null => {
+  if (!isNotification(doc)) {
+    return null;
+  }
+  return getDocStringValue(doc, 'deadline') ?? getDocStringValue(doc, 'actionDate') ?? null;
+};
+
+/** Extract meeting URL links from the document. */
+const meetingLinksCache = new WeakMap<CalendarDoc, string[]>();
+
+const getMeetingUrls = (doc: CalendarDoc): string[] => {
+  if (!isMeetingDoc(doc)) {
+    return [];
+  }
+
+  const cached = meetingLinksCache.get(doc);
+
+  if (cached) {
+    return cached;
+  }
+
+  const record = doc as Record<string, unknown>;
+  const candidateFields = [
+    'links', 'link', 'meetingLinks', 'meetingLink',
+    'meetingUrl', 'meetingUrls', 'url', 'urls', 'documents',
+  ] as const;
+
+  const collected: string[] = [];
+
+  const collectFromSource = (source: Record<string, unknown>) => {
+    candidateFields.forEach(field => {
+      const value = source[field];
+
+      if (!value) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach(entry => {
+          if (typeof entry === 'string') {
+            const trimmed = entry.trim();
+
+            if (trimmed) {
+              collected.push(trimmed);
+            }
+          }
+        });
+      } else if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (trimmed) {
+          collected.push(trimmed);
+        }
+      }
+    });
+  };
+
+  collectFromSource(record);
+
+  const raw = getDocRaw(doc);
+
+  if (raw) {
+    collectFromSource(normalizeSolrDocument(raw));
+  }
+
+  const normalized = Array.from(new Set(
+    collected.map(link => resolveNotificationUrl(link)),
+  )).filter(link => /^https?:/i.test(link));
+
+  meetingLinksCache.set(doc, normalized);
+  return normalized;
+};
+
+/** Document symbol: meeting code, notification symbol, or activity identifier. */
+const getDocumentSymbol = (doc: CalendarDoc): string => {
+  if (isMeetingDoc(doc)) {
+    return getMeetingSymbol(doc);
+  }
+  if (isNotification(doc)) {
+    return getNotificationSymbol(doc);
+  }
+  return getDocStringValue(doc, 'identifier') ?? '';
+};
+
+/** Related notifications for meetings (via getRelatedNotificationsForMeeting). */
+const getRelatedNotifications = (doc: CalendarDoc) => {
+  if (!isMeetingDoc(doc)) {
+    return [];
+  }
+  return getRelatedNotificationsForMeeting(doc, docs.value);
+};
+
+/**
+ * All notification entries combining direct entries and related notification entries.
+ * Used by activities and meetings (notifications show related activities/meetings instead).
+ */
+const getAllNotificationEntries = (doc: CalendarDoc) => {
+  if (isNotification(doc)) {
+    return [];
+  }
+  const direct = notificationDisplayEntries(doc);
+  const related = getRelatedNotifications(doc).flatMap(n => notificationDisplayEntries(n));
+  const combined = [...direct, ...related];
+  const seen = new Set<string>();
+
+  return combined.filter(entry => {
+    if (seen.has(entry.key)) {
+      return false;
+    }
+    seen.add(entry.key);
+    return true;
+  });
+};
 
 const handleFiltersUpdate = (filters: FilterState) => {
   // Preserve the sort from column headers
@@ -748,10 +1079,7 @@ onUnmounted(() => {
 .table thead th {
   font-weight: 600;
   border-bottom: 2px solid #dee2e6;
-  position: sticky;
-  top: var(--pilot-banner-height, 1.95rem);
   background-color: #f8f9fa;
-  z-index: 10;
 }
 
 .sort-header {

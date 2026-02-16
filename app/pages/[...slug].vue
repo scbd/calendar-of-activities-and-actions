@@ -30,7 +30,7 @@
           </div>
 
           <!-- Grid/List View Switcher -->
-          <div v-show="false" class="btn-group" role="group" aria-label="View switcher">
+          <div class="btn-group" role="group" aria-label="View switcher">
             <button
               type="button"
               :aria-label="t('scbd.views.grid')"

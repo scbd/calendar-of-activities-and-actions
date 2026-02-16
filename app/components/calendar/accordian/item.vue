@@ -124,7 +124,7 @@
         />
 
         <!-- Generic details (fallback) -->
-        <CalendarAccordianDetails
+        <!-- <CalendarAccordianDetails
           v-else
           :status-narrative="statusNarrative"
           :symbol="documentSymbol"
@@ -138,7 +138,7 @@
           :responsible-unit="responsibleUnit"
           :responsible-officer="responsibleOfficer"
           :show-responsible="showResponsible"
-        />
+        /> -->
 
         <!-- Related sections (non-notification docs only; notifications render these inside their details component) -->
         <template v-if="!isNotification">
@@ -174,7 +174,6 @@ import { useI18n } from '#imports';
 import { getTitleFieldForLocale, normalizeSolrDocument } from 'shared/services/solr';
 import type { LocaleCode } from 'shared/services/solr';
 import type { CalendarDoc } from 'shared/types/calendar';
-import CalendarAccordianDetails from './details.vue';
 import CalendarAccordianDetailsActivity from './details-activity.vue';
 import CalendarAccordianDetailsMeeting from './details-meeting.vue';
 import CalendarAccordianDetailsNotification from './details-notification.vue';
@@ -439,12 +438,13 @@ const meetingLocation = computed(() => {
     ? resolveCountryLabel(rawCountry, providedCountry)
     : (providedCountry ?? '');
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+  const result = parts.join(', ');
 
-  return parts.join(', ');
+  return result.toLowerCase() === 'online' ? 'ONLINE' : result;
 });
 
 const isOnlineMeeting = computed(() => {
-  return meetingLocation.value.toLowerCase() === 'online';
+  return meetingLocation.value === 'ONLINE';
 });
 
 const notificationSymbol = computed(() => {
@@ -514,6 +514,7 @@ const globalTargets = computed(() => getDocGlobalTargets(props.doc));
 const themes = computed(() => {
   const identifiers = getDocThemes(props.doc);
   const labels = subjectLabelMap.value;
+  
   const seen = new Set<string>();
 
   return identifiers
@@ -942,9 +943,9 @@ const collapseId = computed(() => props.collapseId);
   opacity: 0.2;
 }
 
-.accordion-item--np-highlight {
+/* .accordion-item--np-highlight {
   border-left: 4px solid #756a8e;
-}
+} */
 
 .accordion-item--cpb-highlight {
   z-index: 1;

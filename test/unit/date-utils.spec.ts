@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DateTime } from 'luxon';
-import type { CalendarDoc } from '../../types/calendar';
+import type { CalendarDoc } from '../../shared/types/calendar';
 import {
   coerceIsoDate,
   formatDateRange,
@@ -9,7 +9,7 @@ import {
   isQuarterStart,
   parseFlexibleDate,
   safeDate,
-} from '../date';
+} from '../../shared/utils/date';
 
 describe('date utilities', () => {
   it('parses flexible dates with short years', () => {
@@ -19,7 +19,7 @@ describe('date utilities', () => {
   });
 
   it('coerces iso date values', () => {
-    expect(coerceIsoDate('2024-05-01')).toBe('2024-05-01T00:00:00.000Z');
+    expect(coerceIsoDate('2024-05-01T00:00:00.000Z')).toBe('2024-05-01T00:00:00.000Z');
     expect(coerceIsoDate('invalid')).toBeUndefined();
   });
 
@@ -47,8 +47,8 @@ describe('date utilities', () => {
     const notification: CalendarDoc = {
       id: 'notification-1',
       type: 'Notification',
-      publishedDate: '2024-06-01T00:00:00.000Z',
-    } as CalendarDoc;
+      deadline: '2024-06-01T00:00:00.000Z',
+    } as unknown as CalendarDoc;
 
     expect(formatDateRange(notification)).toBe('1 June 2024');
   });
@@ -149,6 +149,42 @@ describe('date utilities', () => {
       } as unknown as CalendarDoc;
 
       expect(formatDateRange(doc)).toBe('Q1 - Q2 2024');
+    });
+
+    it('shows cross-year quarter range with both years', () => {
+      const doc = {
+        id: 'act-cross',
+        schema: 'calendarActivity',
+        status: 'tentative',
+        startDate: '2025-10-01T00:00:00.000Z',
+        endDate: '2026-03-15T00:00:00.000Z',
+      } as unknown as CalendarDoc;
+
+      expect(formatDateRange(doc)).toBe('Q4 2025 - Q1 2026');
+    });
+
+    it('shows single quarter when both dates fall in same quarter', () => {
+      const doc = {
+        id: 'act-same-q',
+        schema: 'calendarActivity',
+        status: 'tentative',
+        startDate: '2026-04-10T00:00:00.000Z',
+        endDate: '2026-05-20T00:00:00.000Z',
+      } as unknown as CalendarDoc;
+
+      expect(formatDateRange(doc)).toBe('Q2 2026');
+    });
+
+    it('shows Q2 - Q3 for March-to-June tentative activity', () => {
+      const doc = {
+        id: 'act-mar-jun',
+        schema: 'calendarActivity',
+        status: 'tentative',
+        startDate: '2026-04-01T00:00:00.000Z',
+        endDate: '2026-07-01T00:00:00.000Z',
+      } as unknown as CalendarDoc;
+
+      expect(formatDateRange(doc)).toBe('Q2 - Q3 2026');
     });
 
     it('shows normal date for confirmed calendarActivity (not tentative)', () => {

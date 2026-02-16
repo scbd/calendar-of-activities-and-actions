@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import type { CalendarDoc } from '../types/calendar';
 import { normalizeTypeKey } from './type-colors';
 import { getDocStringValue } from './document-processing';
+import { normalizeStatusKey } from './status';
 
 /**
  * Attempt to parse a loosely formatted date string from legacy datasets into ISO.
@@ -132,7 +133,26 @@ export function safeDate(value: unknown): DateTime | null {
 }
 
 /**
+ * Return the quarter number (1–4) for a given DateTime.
+ */
+export function getQuarter(dt: DateTime): number {
+  return Math.ceil(dt.month / 3);
+}
+
+/**
+ * Check whether a DateTime falls on the first day of a calendar quarter.
+ */
+export function isQuarterStart(dt: DateTime): boolean {
+  return [1, 4, 7, 10].includes(dt.month) && dt.day === 1;
+}
+
+/**
  * Format a calendar document date range, handling notifications and meetings.
+ *
+ * Special rules for tentative calendar activities:
+ * - Same quarter → "Q1 2026".
+ * - Different quarters → "Q2 - Q3 2026" (or cross-year: "Q4 2025 - Q1 2026").
+ *
  * @param doc - Calendar document.
  * @returns Human-readable date range string.
  */
@@ -154,15 +174,37 @@ export function formatDateRange(doc: CalendarDoc): string {
   const start = safeDate(getDocStringValue(doc, 'startDate'));
   const end = safeDate(getDocStringValue(doc, 'endDate'));
 
+  // Tentative calendar activities: display quarter labels
+  if (schema === 'calendaractivity' && start && end) {
+    const statusKey = normalizeStatusKey(
+      getDocStringValue(doc, 'statusKey') ?? getDocStringValue(doc, 'status'),
+    );
+
+    if (statusKey === 'TENTATIVE') {
+      const startQ = getQuarter(start);
+      const endQ = getQuarter(end);
+
+      if (startQ === endQ && start.year === end.year) {
+        return `Q${startQ} ${start.year}`;
+      }
+
+      if (start.year === end.year) {
+        return `Q${startQ} - Q${endQ} ${start.year}`;
+      }
+
+      return `Q${startQ} ${start.year} - Q${endQ} ${end.year}`;
+    }
+  }
+
   if (start && end) {
     if (start.hasSame(end, 'day')) return start.toFormat('d LLLL yyyy');
     if (start.month === end.month && start.year === end.year) {
-      return `${start.toFormat('d')}–${end.toFormat('d LLLL yyyy')}`;
+      return `${start.toFormat('d')} - ${end.toFormat('d LLLL yyyy')}`;
     }
     if (start.year === end.year) {
-      return `${start.toFormat('d LLLL')}–${end.toFormat('d LLLL yyyy')}`;
+      return `${start.toFormat('d LLLL')} - ${end.toFormat('d LLLL yyyy')}`;
     }
-    return `${start.toFormat('d LLLL yyyy')}–${end.toFormat('d LLLL yyyy')}`;
+    return `${start.toFormat('d LLLL yyyy')} - ${end.toFormat('d LLLL yyyy')}`;
   }
   if (start) return start.toFormat('d LLLL yyyy');
   if (end) return end.toFormat('d LLLL yyyy');
@@ -191,6 +233,28 @@ export function formatGridDateRange(doc: CalendarDoc): string {
 
   const start = safeDate(getDocStringValue(doc, 'startDate'));
   const end = safeDate(getDocStringValue(doc, 'endDate'));
+
+  // Tentative calendar activities: display quarter labels (same as formatDateRange)
+  if (schema === 'calendaractivity' && start && end) {
+    const statusKey = normalizeStatusKey(
+      getDocStringValue(doc, 'statusKey') ?? getDocStringValue(doc, 'status'),
+    );
+
+    if (statusKey === 'TENTATIVE') {
+      const startQ = getQuarter(start);
+      const endQ = getQuarter(end);
+
+      if (startQ === endQ && start.year === end.year) {
+        return `Q${startQ} ${start.year}`;
+      }
+
+      if (start.year === end.year) {
+        return `Q${startQ} - Q${endQ} ${start.year}`;
+      }
+
+      return `Q${startQ} ${start.year} - Q${endQ} ${end.year}`;
+    }
+  }
 
   if (start && end) {
     if (start.hasSame(end, 'day')) return start.toFormat('yyyy-MM-dd');

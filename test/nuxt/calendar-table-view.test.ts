@@ -188,13 +188,19 @@ vi.mock('../../shared/services/thesaurus', () => ({
 // ---------------------------------------------------------------------------
 // Mock: subjects utility (prevents HTTP calls, safe displaySubjectLabels)
 // ---------------------------------------------------------------------------
-vi.mock('../../shared/utils/subjects', () => ({
-  loadSubjectOptions: vi.fn().mockResolvedValue([]),
-  buildSubjectLabelMap: () => new Map<string, string>(),
-  resolveSubjectLabel: (value: string) => value,
-  setSubjectLabelMap: vi.fn(),
-  displaySubjectLabels: () => [],
-}));
+vi.mock('../../shared/utils/subjects', async () => {
+  const { ref } = await import('vue');
+
+  return {
+    loadSubjectOptions: vi.fn().mockResolvedValue([]),
+    buildSubjectLabelMap: () => new Map<string, string>(),
+    resolveSubjectLabel: (value: string) => value,
+    fallbackSubjectLabel: (identifier: string) => identifier,
+    setSubjectLabelMap: vi.fn(),
+    displaySubjectLabels: () => [],
+    subjectLabelMap: ref<Record<string, string>>({}),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Component import (after mock declarations — Vitest hoists vi.mock)

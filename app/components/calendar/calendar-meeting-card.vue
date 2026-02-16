@@ -135,8 +135,9 @@ const meetingLocation = computed(() => {
     ? resolveCountryLabel(rawCountry, providedCountry)
     : (providedCountry ?? '');
   const parts = [city, hostGovernment].filter((part): part is string => Boolean(part && part.trim()));
+  const result = parts.join(', ');
 
-  return parts.join(', ');
+  return result.toLowerCase() === 'online' ? 'ONLINE' : result;
 });
 
 const statusLabel = computed(() => {
