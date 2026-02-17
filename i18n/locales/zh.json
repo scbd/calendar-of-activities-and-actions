@@ -12,7 +12,9 @@
       "noResults": "未找到与您的筛选条件匹配的结果。",
       "loadError": "无法加载数据，请重试。",
       "retry": "重试",
-      "showingResults": "显示 {count} / {total} 条结果"
+      "loadMore": "加载更多（剩余 {remaining} 条）",
+      "showingResults": "显示 {count} / {total} 条结果",
+      "backToTop": "回到顶部"
     },
     "labels": {
       "decision": "决定",

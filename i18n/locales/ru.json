@@ -12,7 +12,9 @@
       "noResults": "По вашим фильтрам ничего не найдено.",
       "loadError": "Не удалось загрузить данные. Пожалуйста, попробуйте ещё раз.",
       "retry": "Повторить",
-      "showingResults": "Показано {count} из {total} результатов"
+      "loadMore": "Загрузить ещё ({remaining} осталось)",
+      "showingResults": "Показано {count} из {total} результатов",
+      "backToTop": "Наверх"
     },
     "labels": {
       "decision": "Решение",

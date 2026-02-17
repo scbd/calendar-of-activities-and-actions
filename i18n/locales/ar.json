@@ -12,7 +12,9 @@
       "noResults": "لم يتم العثور على نتائج لعوامل التصفية الخاصة بك.",
       "loadError": "تعذّر تحميل البيانات. يُرجى المحاولة مرة أخرى.",
       "retry": "إعادة المحاولة",
-      "showingResults": "عرض {count} من {total} نتيجة"
+      "loadMore": "تحميل المزيد ({remaining} متبقية)",
+      "showingResults": "عرض {count} من {total} نتيجة",
+      "backToTop": "العودة إلى الأعلى"
     },
     "labels": {
       "decision": "القرار",

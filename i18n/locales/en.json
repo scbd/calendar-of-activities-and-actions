@@ -12,7 +12,9 @@
       "noResults": "No results found for your filters.",
       "loadError": "Could not load data. Please try again.",
       "retry": "Retry",
-      "showingResults": "Showing {count} of {total} results"
+      "loadMore": "Load more ({remaining} remaining)",
+      "showingResults": "Showing {count} of {total} results",
+      "backToTop": "Back to top"
     },
     "labels": {
       "decision": "Decision",

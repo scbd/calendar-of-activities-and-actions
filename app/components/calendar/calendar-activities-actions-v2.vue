@@ -73,6 +73,13 @@
           </div>
           <span class="text-muted small">{{ t('calendar.messages.loadingMore') }}</span>
         </div>
+
+        <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
+        <div v-if="hasMore && !loadingMore" class="text-center py-3">
+          <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
+            {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -200,6 +207,26 @@ function setupScrollObserver(el: HTMLElement | null) {
   );
   observer.observe(el);
 }
+
+/** Re-check sentinel visibility after a load-more cycle completes. */
+const checkSentinelVisibility = () => {
+  if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
+    return;
+  }
+
+  const rect = scrollSentinel.value.getBoundingClientRect();
+  const inViewport = rect.top < window.innerHeight + 200;
+
+  if (inViewport) {
+    void loadMore();
+  }
+};
+
+watch(loadingMore, (isLoading, wasLoading) => {
+  if (wasLoading && !isLoading) {
+    nextTick(() => checkSentinelVisibility());
+  }
+});
 
 // The sentinel lives inside a v-else block that only renders after data loads,
 // so it is null at mount time. Watch the ref to attach the observer once the

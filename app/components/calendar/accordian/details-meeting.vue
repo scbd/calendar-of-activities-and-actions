@@ -7,10 +7,10 @@
     </div>
 
     <!-- Symbol -->
-    <div v-if="symbol" class="calendar-detail-section">
+    <!-- <div v-if="symbol" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ t('calendar.meetings.symbol') }}</div>
       <div class="calendar-detail-content">{{ symbol }}</div>
-    </div>
+    </div> -->
 
     <!-- Description -->
     <div v-if="description" class="calendar-detail-section">

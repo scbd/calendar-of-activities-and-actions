@@ -1,5 +1,5 @@
 <template>
-  <section class="activities-table">
+  <section ref="rootEl" class="activities-table">
     <div class="container-fluid py-3">
       <div v-if="!hideFilterCard" class="card mb-3">
         <div class="card-body">
@@ -65,11 +65,6 @@
 
       <!-- Results -->
       <div v-else>
-        <!-- Results count -->
-        <p v-if="total > 0" class="text-muted small mb-3" role="status" aria-live="polite">
-          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
-        </p>
-
         <!-- Re-query loading overlay (filter change, not initial) -->
         <div v-if="loading" class="loading-container loading-container--overlay" role="status" aria-live="polite">
           <div class="spinner-border spinner-large">
@@ -80,7 +75,7 @@
         <div class="card">
           <div class="table-responsive">
             <table class="table table-hover mb-0">
-              <thead class="table-light">
+              <thead ref="theadEl" class="table-light">
                 <tr>
                   <th/>
                   <th style="width: 180px;">
@@ -131,7 +126,24 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="doc in docs" :key="doc.id">
+                <template v-for="group in groupedItems" :key="group.key">
+                  <!-- Month group header row -->
+                  <tr class="month-group-header">
+                    <td :colspan="columnCount">
+                      <div class="month-group-header__content">
+                        <span class="month-group-header__label">{{ groupLabel(group) }}</span>
+                        <span
+                          v-if="total > 0"
+                          class="month-group-header__count"
+                          role="status"
+                          aria-live="polite"
+                        >
+                          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <template v-for="doc in group.items" :key="doc.id">
                   <tr class="main-row" :class="{ 'row-expanded': isExpanded(doc), 'row-cpb-highlight': isCpbHighlighted(doc) }" @click="toggleRow(doc)">
                     <td class="expand-cell">
                       <button class="btn btn-sm btn-link" type="button" :aria-label="isExpanded(doc) ? 'Collapse' : 'Expand'">
@@ -256,6 +268,7 @@
                       </div>
                     </td>
                   </tr>
+                  </template>
                 </template>
               </tbody>
             </table>
@@ -272,13 +285,22 @@
           </div>
           <span class="text-muted small">{{ t('calendar.messages.loadingMore') }}</span>
         </div>
+
+        <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
+        <div v-if="hasMore && !loadingMore" class="text-center py-3">
+          <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
+            {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
+          </button>
+        </div>
       </div>
     </div>
+
+    <BackToTop />
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import { useRoute, useRouter } from '#app';
@@ -306,7 +328,7 @@ import {
   responsibleUnitLabel,
   resolveCountryLabel,
 } from 'shared/utils/labels';
-import type { CalendarDoc, FilterState } from 'shared/types/calendar';
+import type { CalendarDoc, FilterState, GroupedItem } from 'shared/types/calendar';
 import type { LocaleCode } from 'shared/services/solr';
 import { getTitleFieldForLocale, normalizeSolrFieldName } from 'shared/services/solr';
 import { formatDateRange, formatNotificationDate, formatGridDateRange, formatGridDate } from 'shared/utils/date';
@@ -410,6 +432,7 @@ const {
   loadingMore,
   initialLoading,
   docs,
+  groupedItems,
   facets,
   total,
   hasMore,
@@ -433,6 +456,18 @@ setRegionDisplayNames(createRegionDisplayNames(locale.value));
 const expandedRows = ref<Record<string, boolean>>({});
 const currentSortField = ref<string>('startDate');
 const currentSortDirection = ref<'asc' | 'desc'>('asc');
+const rootEl = ref<HTMLElement | null>(null);
+const theadEl = ref<HTMLElement | null>(null);
+
+/** Number of visible columns (varies when Location column is shown). */
+const columnCount = computed(() => showLocationColumn.value ? 6 : 5);
+
+const groupLabel = (group: GroupedItem): string => {
+  if (!group.label || group.label.toLowerCase() === 'unknown date') {
+    return t('calendar.labels.unknownDate') as string;
+  }
+  return group.label;
+};
 
 /**
  * Show the Location column only when exclusively meetings are displayed.
@@ -1063,10 +1098,14 @@ const handleRetry = () => {
 
 // --- Infinite scroll -------------------------------------------------------
 const scrollSentinel = ref<HTMLElement | null>(null);
+
 let observer: IntersectionObserver | null = null;
 
-onMounted(() => {
-  if (!scrollSentinel.value) {
+function setupScrollObserver(el: HTMLElement | null) {
+  observer?.disconnect();
+  observer = null;
+
+  if (!el) {
     return;
   }
 
@@ -1080,18 +1119,109 @@ onMounted(() => {
     },
     { rootMargin: '200px' },
   );
-  observer.observe(scrollSentinel.value);
+  observer.observe(el);
+}
+
+/** Re-check sentinel visibility after a load-more cycle completes. */
+const checkSentinelVisibility = () => {
+  if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
+    return;
+  }
+
+  const rect = scrollSentinel.value.getBoundingClientRect();
+  const inViewport = rect.top < window.innerHeight + 200;
+
+  if (inViewport) {
+    void loadMore();
+  }
+};
+
+watch(loadingMore, (isLoading, wasLoading) => {
+  if (wasLoading && !isLoading) {
+    // After a load-more finishes, check if we need to keep loading
+    nextTick(() => checkSentinelVisibility());
+  }
+});
+
+/**
+ * Measure the pilot banner and thead heights, then set CSS custom properties
+ * on the root element so sticky offsets are always pixel-accurate.
+ */
+const updateStickyOffsets = () => {
+  if (!rootEl.value) {
+    return;
+  }
+
+  const banner = document.querySelector('.pilot-banner') as HTMLElement | null;
+  const bannerH = banner ? banner.getBoundingClientRect().height : 0;
+  const theadH = theadEl.value ? theadEl.value.getBoundingClientRect().height : 0;
+
+  rootEl.value.style.setProperty('--calendar-group-header-offset', `${bannerH}px`);
+  rootEl.value.style.setProperty('--calendar-thead-height', `${theadH}px`);
+};
+
+// Re-measure whenever the thead appears (it lives inside a v-else block)
+watch(theadEl, () => {
+  nextTick(() => updateStickyOffsets());
+});
+
+// The sentinel lives inside a v-else block that only renders after data loads,
+// so it is null at mount time. Watch the ref to attach the observer once the
+// element actually appears in the DOM.
+watch(scrollSentinel, (el) => {
+  setupScrollObserver(el);
+});
+
+onMounted(() => {
+  // Handle the (rare) case where the element already exists at mount time.
+  setupScrollObserver(scrollSentinel.value);
+  updateStickyOffsets();
+  window.addEventListener('resize', updateStickyOffsets);
 });
 
 onUnmounted(() => {
   observer?.disconnect();
   observer = null;
+  window.removeEventListener('resize', updateStickyOffsets);
 });
 </script>
 
 <style scoped>
 .activities-table {
   --calendar-primary: #0d6efd;
+  --calendar-group-header-offset: 1.95rem;
+  --calendar-thead-height: 2.55rem;
+}
+
+.month-group-header td {
+  position: sticky;
+  top: calc(var(--calendar-group-header-offset) + var(--calendar-thead-height));
+  z-index: 3;
+  padding: 0 !important;
+  border: none;
+  background-color: #6c757d;
+}
+
+.month-group-header__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  color: #fff;
+}
+
+.month-group-header__label {
+  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.month-group-header__count {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #fff;
+  white-space: nowrap;
 }
 
 .loading-container {
@@ -1121,7 +1251,8 @@ onUnmounted(() => {
 }
 
 .table-responsive {
-  overflow-x: auto;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .table {
@@ -1129,6 +1260,9 @@ onUnmounted(() => {
 }
 
 .table thead th {
+  position: sticky;
+  top: var(--calendar-group-header-offset);
+  z-index: 4;
   font-weight: 600;
   border-bottom: 2px solid #dee2e6;
   background-color: #f8f9fa;

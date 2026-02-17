@@ -12,7 +12,9 @@
       "noResults": "Aucun résultat trouvé pour vos filtres.",
       "loadError": "Impossible de charger les données. Veuillez réessayer.",
       "retry": "Réessayer",
-      "showingResults": "{count} sur {total} résultats affichés"
+      "loadMore": "Charger plus ({remaining} restants)",
+      "showingResults": "{count} sur {total} résultats affichés",
+      "backToTop": "Retour en haut"
     },
     "labels": {
       "decision": "Décision",
