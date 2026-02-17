@@ -163,7 +163,7 @@ export function formatDateRange(doc: CalendarDoc): string {
 
   if (isNotification) {
     const notifDate = safeDate(
-      getDocStringValue(doc, 'deadline', 'date'),
+      getDocStringValue(doc, 'actionDate', 'date'),
     );
 
     if (notifDate) {
@@ -223,7 +223,7 @@ export function formatGridDateRange(doc: CalendarDoc): string {
 
   if (isNotification) {
     const notifDate = safeDate(
-      getDocStringValue(doc, 'deadline', 'date'),
+      getDocStringValue(doc, 'actionDate', 'date'),
     );
 
     if (notifDate) {

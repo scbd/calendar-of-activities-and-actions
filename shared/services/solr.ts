@@ -241,7 +241,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     searchText,
     start = 0,
     rows = 50,
-    sort = 'def(startDate_dt,deadline_dt) asc',
+    sort = 'def(startDate_dt,actionDate_dt) asc',
     fl = CALENDAR_LIST_FIELDS,
   } = params;
 
@@ -299,14 +299,14 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   // pulling in documents whose primary date is in the past.
   //
   //   meetings / activities → startDate_dt  (fallback: endDate_dt)
-  //   notifications         → deadline_dt   (fallback: date_dt)
+  //   notifications         → actionDate_dt → endDate_dt → startDate_dt → date_dt
   //
   // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
   {
     const sd = toSolrDateString(filters.startDate || '2024-01-01');
 
     const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[${sd} TO *] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[${sd} TO *])))`;
-    const notif = `(schema_s:notification AND (deadline_dt:[${sd} TO *] OR ((*:* NOT deadline_dt:*) AND date_dt:[${sd} TO *])))`;
+    const notif = `(schema_s:notification AND (actionDate_dt:[${sd} TO *] OR ((*:* NOT actionDate_dt:*) AND endDate_dt:[${sd} TO *]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND startDate_dt:[${sd} TO *]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND (*:* NOT startDate_dt:*) AND date_dt:[${sd} TO *])))`;
 
     fq.push(`{!tag=startDate}(${nonNotif} OR ${notif})`);
   }
@@ -314,7 +314,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     const ed = toSolrDateString(filters.endDate);
 
     const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[* TO ${ed}] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[* TO ${ed}])))`;
-    const notif = `(schema_s:notification AND (deadline_dt:[* TO ${ed}] OR ((*:* NOT deadline_dt:*) AND date_dt:[* TO ${ed}])))`;
+    const notif = `(schema_s:notification AND (actionDate_dt:[* TO ${ed}] OR ((*:* NOT actionDate_dt:*) AND endDate_dt:[* TO ${ed}]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND startDate_dt:[* TO ${ed}]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND (*:* NOT startDate_dt:*) AND date_dt:[* TO ${ed}])))`;
 
     fq.push(`{!tag=endDate}(${nonNotif} OR ${notif})`);
   }

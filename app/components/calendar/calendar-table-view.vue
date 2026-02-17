@@ -151,7 +151,7 @@
                     <td>
                       <div class="title-cell">
                         <span class="title-text">{{ getTitle(doc) }}</span>
-                        <div v-if="getNotificationSymbol(doc)" class="symbol-text">{{ getNotificationSymbol(doc) }}</div>
+                        <div v-if="getDocumentSymbol(doc)" class="symbol-text">{{ getDocumentSymbol(doc) }}</div>
                       </div>
                     </td>
                     <td v-if="showLocationColumn">
@@ -159,8 +159,11 @@
                     </td>
                     <td>
                       <div class="status-cell">
-                        <span v-if="isActionRequired(doc)" class="badge bg-danger me-1">
+                        <span v-if="showActionBadge(doc)" class="badge bg-danger me-1">
                           {{ t('calendar.labels.actionRequiredByParties') }}
+                        </span>
+                        <span v-else-if="isNotification(doc) && isActionDeadlinePast(doc)" class="badge bg-success me-1">
+                          {{ t('calendar.status.completed') }}
                         </span>
                         <span v-if="getStatusLabel(doc)" class="badge" :class="`bg-${getStatusColor(doc)}`">
                           {{ getStatusLabel(doc) }}
@@ -305,7 +308,7 @@ import {
 } from 'shared/utils/labels';
 import type { CalendarDoc, FilterState } from 'shared/types/calendar';
 import type { LocaleCode } from 'shared/services/solr';
-import { getTitleFieldForLocale } from 'shared/services/solr';
+import { getTitleFieldForLocale, normalizeSolrFieldName } from 'shared/services/solr';
 import { formatDateRange, formatNotificationDate, formatGridDateRange, formatGridDate } from 'shared/utils/date';
 import {
   getDocBooleanValue,
@@ -539,6 +542,11 @@ const getSortClass = (field: string): string => {
 
 const titleField = computed(() => getTitleFieldForLocale(locale.value as LocaleCode));
 
+/** Locale-aware normalized description field name (e.g. `descriptionEn`). */
+const descriptionField = computed(() =>
+  normalizeSolrFieldName(`description_${(locale.value as string).toUpperCase()}_t`),
+);
+
 const getTitle = (doc: CalendarDoc): string => {
   const value = getDocStringValue(doc, titleField.value, 'title', 'titleEn');
 
@@ -693,7 +701,34 @@ const getStatusLabel = (doc: CalendarDoc): string => {
 
 const getStatusColor = (doc: CalendarDoc): string => statusColor(doc);
 
-const isActionRequired = (doc: CalendarDoc): boolean => getDocBooleanValue(doc, 'actionRequired', 'actionRequiredByParties') === true;
+const isActionRequired = (doc: CalendarDoc): boolean => {
+  // Notifications don't have actionRequiredByParties_b — infer from actionDate
+  if (isNotification(doc)) {
+    return Boolean(getDocStringValue(doc, 'actionDate'));
+  }
+
+  return getDocBooleanValue(doc, 'actionRequired', 'actionRequiredByParties') === true;
+};
+
+/** True when the notification action deadline is in the past. */
+const isActionDeadlinePast = (doc: CalendarDoc): boolean => {
+  if (!isNotification(doc)) {
+    return false;
+  }
+
+  const deadline = getDocStringValue(doc, 'actionDate') ?? getDocStringValue(doc, 'deadline');
+
+  if (!deadline) {
+    return false;
+  }
+
+  const dt = DateTime.fromISO(String(deadline));
+
+  return dt.isValid && dt.toUTC().endOf('day') < DateTime.utc();
+};
+
+/** Show action badge only when the deadline is still active (not past). */
+const showActionBadge = (doc: CalendarDoc): boolean => isActionRequired(doc) && !isActionDeadlinePast(doc);
 
 const isCpbHighlighted = (doc: CalendarDoc): boolean => {
   const subjects = getDocSubjects(doc);
@@ -723,7 +758,22 @@ const getStatusNarrative = (doc: CalendarDoc): string => {
   return getDocStringValue(doc, 'statusNarrative') ?? '';
 };
 
-const getDescription = (doc: CalendarDoc): string => getDocStringValue(doc, 'description', 'descriptionTxt', 'descriptionText') ?? '';
+const getDescription = (doc: CalendarDoc): string => {
+  // For notifications, mirror the list-view logic: use fulltext (first 3 sentences)
+  // then fall back to locale-specific description fields.
+  if (isNotification(doc)) {
+    const fulltext = getDocStringValue(doc, 'fulltext');
+
+    if (fulltext) {
+      const sentences = fulltext.match(/[^.!?]+[.!?]+/g) || [];
+      const firstThree = sentences.slice(0, 3).join(' ').trim();
+
+      return firstThree || '';
+    }
+  }
+
+  return getDocStringValue(doc, descriptionField.value, 'description', 'descriptionTxt', 'descriptionText') ?? '';
+};
 
 const getSubjectLabels = (doc: CalendarDoc): string[] => displaySubjectLabels(doc);
 
@@ -885,12 +935,12 @@ const getNotificationLink = (doc: CalendarDoc): string => {
   return symbol ? buildNotificationLink(symbol) : '';
 };
 
-/** Action deadline for a notification (submission deadline or actionDate). */
+/** Action deadline for a notification (actionDate or submission deadline). */
 const getActionDeadline = (doc: CalendarDoc): string | null => {
   if (!isNotification(doc)) {
     return null;
   }
-  return getDocStringValue(doc, 'deadline') ?? getDocStringValue(doc, 'actionDate') ?? null;
+  return getDocStringValue(doc, 'actionDate') ?? getDocStringValue(doc, 'deadline') ?? null;
 };
 
 /** Extract meeting URL links from the document. */
@@ -965,7 +1015,9 @@ const getDocumentSymbol = (doc: CalendarDoc): string => {
     return getMeetingSymbol(doc);
   }
   if (isNotification(doc)) {
-    return getNotificationSymbol(doc);
+    const symbol = getNotificationSymbol(doc);
+
+    return symbol ? `NTF-${symbol}` : '';
   }
   return getDocStringValue(doc, 'identifier') ?? '';
 };

@@ -365,7 +365,7 @@ const isActionDeadlinePast = computed(() => {
     return false;
   }
 
-  const deadline = getDocStringValue(props.doc, 'deadline') ?? getDocStringValue(props.doc, 'actionDate');
+  const deadline = getDocStringValue(props.doc, 'actionDate') ?? getDocStringValue(props.doc, 'deadline');
 
   if (!deadline) {
     return false;
@@ -615,8 +615,8 @@ const notificationActionDeadline = computed(() => {
     return null;
   }
 
-  // Prefer deadline field (submission deadline), fall back to actionDate
-  return getDocStringValue(props.doc, 'deadline') ?? getDocStringValue(props.doc, 'actionDate') ?? null;
+  // Prefer actionDate field, fall back to deadline (submission deadline)
+  return getDocStringValue(props.doc, 'actionDate') ?? getDocStringValue(props.doc, 'deadline') ?? null;
 });
 
 const notificationDirectLink = computed(() => {

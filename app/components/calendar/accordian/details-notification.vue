@@ -18,10 +18,10 @@
       </span>
     </div>
     <!-- Symbol -->
-    <div v-if="symbol" class="calendar-detail-section mb-3">
+    <!-- <div v-if="symbol" class="calendar-detail-section mb-3">
       <div class="calendar-detail-label">{{ t('calendar.labels.symbol') }}</div>
       <div class="calendar-detail-content">{{ symbol }}</div>
-    </div>
+    </div> -->
 
         <!-- Description -->
     <div v-if="description" class="calendar-detail-section mb-3">

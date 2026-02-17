@@ -47,7 +47,7 @@ describe('date utilities', () => {
     const notification: CalendarDoc = {
       id: 'notification-1',
       type: 'Notification',
-      deadline: '2024-06-01T00:00:00.000Z',
+      date: '2024-06-01T00:00:00.000Z',
     } as unknown as CalendarDoc;
 
     expect(formatDateRange(notification)).toBe('1 June 2024');

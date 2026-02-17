@@ -37,8 +37,8 @@ const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
 
-/** Solr function sort that picks startDate_dt for meetings/activities, deadline_dt for notifications. */
-const SOLR_DEFAULT_SORT = 'def(startDate_dt,deadline_dt) asc';
+/** Solr function sort that picks startDate_dt for meetings/activities, actionDate_dt for notifications. */
+const SOLR_DEFAULT_SORT = 'def(startDate_dt,actionDate_dt) asc';
 
 const defaultFilters: FilterState = {
   types: [],
@@ -145,10 +145,10 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
         const [field, dir] = v.split(':');
         const direction = dir === 'desc' ? 'desc' : 'asc';
 
-        // startDate uses def() so notifications (deadline_dt) interleave
+        // startDate uses def() so notifications (actionDate_dt) interleave
         // correctly with meetings/activities (startDate_dt)
         if (field === 'startDate') {
-          return `def(startDate_dt,deadline_dt) ${direction}`;
+          return `def(startDate_dt,actionDate_dt) ${direction}`;
         }
 
         const solrField = field === 'endDate' ? 'endDate_dt'
@@ -345,11 +345,11 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
 
     for (const d of docs.value) {
-      // Notifications don't have startDate/endDate — use deadline then date
+      // Notifications don't have startDate/endDate — use actionDate then date
       // (matching the same logic as formatDateRange in shared/utils/date.ts)
       const isNotification = String(d.schema ?? '').toLowerCase() === 'notification';
       const iso = isNotification
-        ? (d.deadline || d.date)
+        ? (d.actionDate || d.date)
         : (d.startDate || d.endDate);
       const dt = iso ? DateTime.fromISO(String(iso)) : null;
       const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
