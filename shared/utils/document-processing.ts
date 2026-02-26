@@ -123,7 +123,7 @@ export function getDocSubjects(doc: CalendarDoc): string[] {
  * @returns Array of subsidiary body identifiers.
  */
 export function getDocSubsidiaryBodies(doc: CalendarDoc): string[] {
-  return readStringArray(doc, 'subsidiaryBody', 'subsidiaryBodies');
+  return readStringArray(doc, 'subsidiaryBody', 'subsidiaryBodies', 'subsidiaryBodiesCOA');
 }
 
 /**
@@ -132,7 +132,7 @@ export function getDocSubsidiaryBodies(doc: CalendarDoc): string[] {
  * @returns Array of governing body identifiers.
  */
 export function getDocGoverningBodies(doc: CalendarDoc): string[] {
-  return readStringArray(doc, 'governingBody', 'governingBodies');
+  return readStringArray(doc, 'governingBody', 'governingBodies', 'governingBodiesCOA');
 }
 
 /**

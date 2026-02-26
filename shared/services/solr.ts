@@ -156,16 +156,16 @@ export function localizeFields(fields?: string | string[], locale?: LocaleCode):
 export const CALENDAR_LIST_FIELDS = [
   'id', '_id', 'schema_s', 'identifier_s',
   'title_EN_t', 'title_FR_t', 'title_ES_t', 'title_AR_t', 'title_RU_t', 'title_ZH_t',
-  'startDate_dt', 'endDate_dt', 'status_s', 'activityStatus_s',
+  'startDateCOA_dt', 'endDateCOA_dt', 'status_s', 'activityStatus_s',
   'eventCity_s', 'eventCountry_s', 'meetingCode_s',
   'type_s', 'subType_s',
   'symbol_s', 'date_dt', 'actionDate_dt',
-  'subjects_ss', 'governingBody_ss', 'subsidiaryBody_ss',
+  'subjects_ss', 'governingBodiesCOA_ss', 'subsidiaryBodiesCOA_ss',
   'gbfTargets_ss', 'gbfSections_ss', 'decisions_ss',
   'themes_ss',
   'notifications_ss', 'meetings_ss', 'activities_ss',
   'url_ss',
-  'actionRequiredByParties_b',
+  'actionRequiredByPartiesCOA_b',
   // Notification-specific fields
   'recipient_ss', 'files_ss', 'sender_s', 'reference_s', 'fulltext_s', 'deadline_dt',
 ].join(',');
@@ -179,7 +179,7 @@ export const CALENDAR_DETAIL_FIELDS = [
   'statusNarrative_AR_t', 'statusNarrative_RU_t', 'statusNarrative_ZH_t',
   'fulltext_EN_t', 'fulltext_FR_t', 'fulltext_ES_t',
   'fulltext_AR_t', 'fulltext_RU_t', 'fulltext_ZH_t',
-  'actionRequiredByParties_b',
+  'actionRequiredByPartiesCOA_b',
   'agendaItems_ss', 'responsibleUnitsAndOfficers_ss',
   'hostGovernments_ss',
   'reference_s', 'sender_s', 'recipient_ss', 'files_ss',
@@ -205,7 +205,7 @@ export interface CalendarQueryParams {
   start?: number;
   /** Page size (default 50). */
   rows?: number;
-  /** SOLR sort expression (default `'startDate_dt asc'`). */
+  /** SOLR sort expression (default `'startDateCOA_dt asc'`). */
   sort?: string;
   /** SOLR field list — defaults to `CALENDAR_LIST_FIELDS`. */
   fl?: string;
@@ -241,7 +241,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     searchText,
     start = 0,
     rows = 50,
-    sort = 'def(startDate_dt,actionDate_dt) asc',
+    sort = 'startDateCOA_dt asc',
     fl = CALENDAR_LIST_FIELDS,
   } = params;
 
@@ -260,8 +260,8 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   // Multi-value array filters
   const multiValueFilters: Array<{ key: keyof FilterState; field: string; tag: string }> = [
     { key: 'subjects', field: 'subjects_ss', tag: 'subjects' },
-    { key: 'governingBodies', field: 'governingBody_ss', tag: 'governingBody' },
-    { key: 'subsidiaryBodies', field: 'subsidiaryBody_ss', tag: 'subsidiaryBody' },
+    { key: 'governingBodies', field: 'governingBodiesCOA_ss', tag: 'governingBody' },
+    { key: 'subsidiaryBodies', field: 'subsidiaryBodiesCOA_ss', tag: 'subsidiaryBody' },
     { key: 'activityTypes', field: 'type_s', tag: 'activityType' },
     { key: 'globalTargets', field: 'gbfTargets_ss', tag: 'gbfTargets' },
     { key: 'gbfSections', field: 'gbfSections_ss', tag: 'gbfSections' },
@@ -292,36 +292,56 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     fq.push(`{!tag=status}(${stripTag(statusClause)} OR ${stripTag(activityStatusClause)})`);
   }
 
-  // Date range filters — schema-aware
-  // Each schema type is filtered on its PRIMARY date field only (the same
-  // field used for grouping and display), with a fallback when the primary
-  // field is absent.  This prevents a future endDate or actionDate from
-  // pulling in documents whose primary date is in the past.
+  // Date range filters — behaviour changes depending on `initialLoad`:
   //
-  //   meetings / activities → startDate_dt  (fallback: endDate_dt)
-  //   notifications         → actionDate_dt → endDate_dt → startDate_dt → date_dt
+  // Initial load (auto-applied today date, no user interaction yet):
+  //   Strict start-date only — only records whose startDateCOA_dt (or
+  //   date_dt fallback) is on or after today are included. The endDate
+  //   fallback is intentionally excluded so that past events whose end
+  //   date happens to be in the future are not shown.
+  //
+  // Normal filtering (user has interacted):
+  //   A record is "active" when its startDateCOA_dt OR endDateCOA_dt
+  //   is on or after the filter date (range still open), OR it has
+  //   neither COA field and date_dt is on or after the filter date.
   //
   // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
   {
     const sd = toSolrDateString(filters.startDate || '2024-01-01');
 
-    const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[${sd} TO *] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[${sd} TO *])))`;
-    const notif = `(schema_s:notification AND (actionDate_dt:[${sd} TO *] OR ((*:* NOT actionDate_dt:*) AND endDate_dt:[${sd} TO *]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND startDate_dt:[${sd} TO *]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND (*:* NOT startDate_dt:*) AND date_dt:[${sd} TO *])))`;
-
-    fq.push(`{!tag=startDate}(${nonNotif} OR ${notif})`);
+    if (filters.initialLoad) {
+      // Strict: only startDateCOA_dt >= today (no endDate fallback)
+      fq.push(
+        `{!tag=startDate}(`
+        + `startDateCOA_dt:[${sd} TO *]`
+        + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
+        + `)`,
+      );
+    } else {
+      fq.push(
+        `{!tag=startDate}(`
+        + `startDateCOA_dt:[${sd} TO *]`
+        + ` OR endDateCOA_dt:[${sd} TO *]`
+        + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
+        + `)`,
+      );
+    }
   }
   if (filters.endDate) {
     const ed = toSolrDateString(filters.endDate);
 
-    const nonNotif = `((*:* NOT schema_s:notification) AND (startDate_dt:[* TO ${ed}] OR ((*:* NOT startDate_dt:*) AND endDate_dt:[* TO ${ed}])))`;
-    const notif = `(schema_s:notification AND (actionDate_dt:[* TO ${ed}] OR ((*:* NOT actionDate_dt:*) AND endDate_dt:[* TO ${ed}]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND startDate_dt:[* TO ${ed}]) OR ((*:* NOT actionDate_dt:*) AND (*:* NOT endDate_dt:*) AND (*:* NOT startDate_dt:*) AND date_dt:[* TO ${ed}])))`;
-
-    fq.push(`{!tag=endDate}(${nonNotif} OR ${notif})`);
+    fq.push(
+      `{!tag=endDate}(`
+      + `startDateCOA_dt:[* TO ${ed}]`
+      + ` OR ((*:* NOT startDateCOA_dt:*) AND endDateCOA_dt:[* TO ${ed}])`
+      + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[* TO ${ed}])`
+      + `)`,
+    );
   }
 
   // Action required flag
   if (filters.actionRequired) {
-    fq.push('{!tag=actionRequired}actionRequiredByParties_b:true');
+    fq.push('{!tag=actionRequired}actionRequiredByPartiesCOA_b:true');
   }
 
   // Text search — use edismax with locale-specific text + title fields
@@ -413,6 +433,7 @@ export function parseFacets(facetCounts?: SolrFacetCounts): ParsedFacets {
 const CALENDAR_ARRAY_FIELDS: ReadonlySet<string> = new Set([
   'notifications', 'meetings', 'activities',
   'subjects', 'governingBody', 'subsidiaryBody',
+  'governingBodiesCOA', 'subsidiaryBodiesCOA',
   'gbfTargets', 'gbfSections', 'decisions',
   'agendaItems', 'responsibleUnitsAndOfficers',
   'hostGovernments', 'themes', 'url', 'recipients', 'files',
@@ -433,6 +454,31 @@ export function normalizeCalendarDoc(raw: Record<string, unknown>): CalendarDoc 
   // Ensure id
   if (!doc.id && doc._id) {
     doc.id = doc._id;
+  }
+
+  // Alias COA-suffixed fields to canonical property names so the rest of the
+  // codebase can continue using `doc.startDate`, `doc.endDate`, etc.
+  if (doc.startDateCOA !== undefined && doc.startDate === undefined) {
+    doc.startDate = doc.startDateCOA;
+  }
+  if (doc.endDateCOA !== undefined && doc.endDate === undefined) {
+    doc.endDate = doc.endDateCOA;
+  }
+
+  // Notifications use `date_dt` (normalized to `date`) instead of
+  // startDateCOA_dt / endDateCOA_dt. Promote `date` to `startDate` so
+  // grouping, sorting, and display logic works uniformly across schemas.
+  if (doc.schema === 'notification' && doc.date && !doc.startDate) {
+    doc.startDate = doc.date;
+  }
+  if (doc.actionRequiredByPartiesCOA !== undefined && doc.actionRequiredByParties === undefined) {
+    doc.actionRequiredByParties = doc.actionRequiredByPartiesCOA;
+  }
+  if (doc.governingBodiesCOA !== undefined && doc.governingBody === undefined) {
+    doc.governingBody = doc.governingBodiesCOA;
+  }
+  if (doc.subsidiaryBodiesCOA !== undefined && doc.subsidiaryBody === undefined) {
+    doc.subsidiaryBody = doc.subsidiaryBodiesCOA;
   }
 
   // calendarActivity docs store status in `activityStatus_s` (thesaurus ID)

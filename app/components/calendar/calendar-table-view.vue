@@ -737,12 +737,12 @@ const getStatusLabel = (doc: CalendarDoc): string => {
 const getStatusColor = (doc: CalendarDoc): string => statusColor(doc);
 
 const isActionRequired = (doc: CalendarDoc): boolean => {
-  // Notifications don't have actionRequiredByParties_b — infer from actionDate
+  // All record types now have actionRequiredByPartiesCOA_b (aliased to actionRequiredByParties)
   if (isNotification(doc)) {
     return Boolean(getDocStringValue(doc, 'actionDate'));
   }
 
-  return getDocBooleanValue(doc, 'actionRequired', 'actionRequiredByParties') === true;
+  return getDocBooleanValue(doc, 'actionRequired', 'actionRequiredByParties', 'actionRequiredByPartiesCOA') === true;
 };
 
 /** True when the notification action deadline is in the past. */

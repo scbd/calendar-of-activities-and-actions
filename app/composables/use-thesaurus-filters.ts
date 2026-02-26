@@ -339,14 +339,14 @@ export function useThesaurusFilters(options: UseThesaurusFiltersOptions) {
     mergeTermsWithFacets(subjectTerms.value, facetsRef.value.subjects, localeRef.value),
   );
 
-  /** Governing body options — GOVERNING-BODIES thesaurus merged with `governingBody` facet. */
+  /** Governing body options — GOVERNING-BODIES thesaurus merged with `governingBodiesCOA` facet. */
   const governingBodyOptions = computed<FilterOption[]>(() =>
-    mergeTermsWithFacets(governingBodyTerms.value, facetsRef.value.governingBody, localeRef.value),
+    mergeTermsWithFacets(governingBodyTerms.value, facetsRef.value.governingBodiesCOA, localeRef.value),
   );
 
-  /** Subsidiary body options — SUBSIDIARY-BODIES thesaurus merged with `subsidiaryBody` facet. */
+  /** Subsidiary body options — SUBSIDIARY-BODIES thesaurus merged with `subsidiaryBodiesCOA` facet. */
   const subsidiaryBodyOptions = computed<FilterOption[]>(() =>
-    mergeTermsWithFacets(subsidiaryBodyTerms.value, facetsRef.value.subsidiaryBody, localeRef.value),
+    mergeTermsWithFacets(subsidiaryBodyTerms.value, facetsRef.value.subsidiaryBodiesCOA, localeRef.value),
   );
 
   /** Activity type options — CALENDAR-OF-ACTIVITY-TYPES thesaurus merged with `type` facet. */

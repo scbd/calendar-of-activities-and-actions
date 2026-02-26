@@ -16,7 +16,7 @@
  *   prod    → https://api.cbd.int
  */
 
-const DEFAULT_API_BASE = 'https://api.cbddev.xyz';
+const DEFAULT_API_BASE = 'https://api.cbd.int';
 
 // ---------------------------------------------------------------------------
 // Core resolver
@@ -58,7 +58,7 @@ export function getApiBase(): string {
  * SOLR calls always point to **dev** (`api.cbddev.xyz`) because the
  * production SOLR endpoint returns bad-request errors.
  */
-const SOLR_API_BASE = 'https://api.cbddev.xyz';
+const SOLR_API_BASE = 'https://api.cbd.int';
 
 /** SOLR select endpoint — used by `useCalendarData` and `fetchNotificationDetails`. */
 export function getSolrSelectUrl(): string {

@@ -114,10 +114,7 @@
         "startDateAsc": "开始日期（最早的在前）",
         "startDateDesc": "开始日期（最新的优先）",
         "endDateAsc": "结束日期（最早的在前）",
-        "endDateDesc": "结束日期（最新的优先）",
-        "titleAsc": "标题（从A到Z）",
-        "schemaAsc": "记录类型（A 到 Z）",
-        "actionRequired": "首先是需要采取行动的物品"
+        "endDateDesc": "结束日期（最新的优先）"
       },
       "typeLabel": "类型",
       "typePlaceholder": "选择类型",

@@ -8,8 +8,8 @@
 export const SOLR_FACET_FIELDS = {
   schema: '{!ex=schema}schema_s',
   subjects: '{!ex=subjects}subjects_ss',
-  governingBody: '{!ex=governingBody}governingBody_ss',
-  subsidiaryBody: '{!ex=subsidiaryBody}subsidiaryBody_ss',
+  governingBody: '{!ex=governingBody}governingBodiesCOA_ss',
+  subsidiaryBody: '{!ex=subsidiaryBody}subsidiaryBodiesCOA_ss',
   status: '{!ex=status}status_s',
   activityStatus: '{!ex=status}activityStatus_s',
   activityType: '{!ex=activityType}type_s',

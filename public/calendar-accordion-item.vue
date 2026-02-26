@@ -275,7 +275,7 @@ const statusNarrative = computed(() => {
   return getDocStringValue(props.doc, 'statusNarrative');
 });
 
-const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties') === true);
+const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties', 'actionRequiredByPartiesCOA') === true);
 
 const isCpbDoc = computed(() => {
   const subjects = getDocSubjects(props.doc);

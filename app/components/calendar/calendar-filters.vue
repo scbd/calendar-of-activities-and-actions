@@ -10,6 +10,7 @@
           type="search"
           :placeholder="t('calendar.filters.placeholders.search')"
           class="form-control form-control-lg"
+          @change="onManualFilterChange"
         >
       </div>
 
@@ -27,6 +28,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.schemas')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -56,6 +59,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.activityTypes')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -87,6 +92,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.gbfTargetsAndSections')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -121,6 +128,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.countries')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -150,6 +159,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.subjects')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -179,6 +190,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.statuses')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -210,6 +223,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.governingAndSubsidiaryBodies')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -244,6 +259,8 @@
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.decisions')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
         >
           <template #tag="{ option, remove }">
             <span class="multiselect__tag">
@@ -269,7 +286,7 @@
               type="date"
               class="form-control form-control-sm"
               :placeholder="t('calendar.filters.labels.startDate')"
-              @input="updateFilters"
+              @input="onStartDateManualInput"
             >
           </div>
           <div class="col-12">
@@ -293,7 +310,7 @@
             v-model="actionRequired"
             class="form-check-input"
             type="checkbox"
-            @change="updateFilters"
+            @change="onActionRequiredChange"
           >
           <label class="form-check-label" for="action-required-filter">
             {{ t('calendar.filters.toggles.actionRequiredOnly') }}
@@ -306,15 +323,14 @@
         <label for="sort-filter" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
         <Multiselect
           id="sort-filter"
-          v-model="selectedSorts"
+          v-model="selectedSort"
           :options="sortOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
+          :multiple="false"
+          :allow-empty="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.sort')"
+          @select="onManualFilterChange"
         />
       </div>
 
@@ -415,7 +431,7 @@ interface GbfFilterGroup {
   options: GbfFilterOption[];
 }
 
-const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
+const DEFAULT_SORT_VALUE = 'startDate:asc';
 
 // ---------------------------------------------------------------------------
 // Reactive filter selections
@@ -429,7 +445,7 @@ const selectedCopDecisions = ref<FilterSelectionValue[]>([]);
 const selectedActivityTypes = ref<FilterSelectionValue[]>([]);
 const selectedGbfItems = ref<GbfFilterOption[]>([]);
 const selectedCountries = ref<FilterSelectionValue[]>([]);
-const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
+const selectedSort = ref<FilterOption | null>(null);
 const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
@@ -437,6 +453,11 @@ const searchText = ref<string>('');
 
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
+
+// Track if the start date was automatically applied (default today or initial
+// URL match). On the first manual filter interaction the auto-applied date is
+// cleared so that users see all results once they start actively filtering.
+const startDateIsAutoApplied = ref<boolean>(true);
 
 // Track if we are loading from URL to prevent circular updates
 const isLoadingFromUrl = ref<boolean>(false);
@@ -450,7 +471,7 @@ const hasCompletedInitialMount = ref<boolean>(false);
 
 /** Check if any filters are active (controls Clear button state). */
 const hasActiveFilters = computed<boolean>(() => {
-  const activeSorts = extractSelectedValues(selectedSorts.value);
+  const activeSort = selectedSort.value?.value ?? DEFAULT_SORT_VALUE;
 
   return (
     selectedTypes.value.length > 0 ||
@@ -465,7 +486,7 @@ const hasActiveFilters = computed<boolean>(() => {
     endDate.value !== '' ||
     actionRequired.value ||
     searchText.value.trim().length > 0 ||
-    !areSortSelectionsDefault(activeSorts)
+    activeSort !== DEFAULT_SORT_VALUE
   );
 });
 
@@ -526,35 +547,13 @@ const gbfFilterOptions = computed<GbfFilterGroup[]>(() => {
   return groups;
 });
 
-/** Sort options — mutually exclusive directions for each date field. */
-const sortOptions = computed<FilterOption[]>(() => {
-  const selectedValues = extractSelectedValues(selectedSorts.value);
-  const hasStartDateAsc = selectedValues.includes('startDate:asc');
-  const hasStartDateDesc = selectedValues.includes('startDate:desc');
-  const hasEndDateAsc = selectedValues.includes('endDate:asc');
-  const hasEndDateDesc = selectedValues.includes('endDate:desc');
-
-  const options: FilterOption[] = [];
-
-  if (!hasStartDateDesc) {
-    options.push({ value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string });
-  }
-  if (!hasStartDateAsc) {
-    options.push({ value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string });
-  }
-  if (!hasEndDateDesc) {
-    options.push({ value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string });
-  }
-  if (!hasEndDateAsc) {
-    options.push({ value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string });
-  }
-
-  options.push({ value: 'title:asc', label: t('calendar.filters.sortOptions.titleAsc') as string });
-  options.push({ value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string });
-  options.push({ value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string });
-
-  return options;
-});
+/** Sort options — single select with four date-based choices. */
+const sortOptions = computed<FilterOption[]>(() => [
+  { value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string },
+  { value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string },
+  { value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string },
+  { value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string },
+]);
 
 // ---------------------------------------------------------------------------
 // Value extraction & matching
@@ -583,10 +582,8 @@ function findOptionsFromValues(values: string[], availableOptions: FilterOption[
     .filter((option): option is FilterOption => Boolean(option));
 }
 
-function areSortSelectionsDefault(values: string[]): boolean {
-  if (values.length !== DEFAULT_SORT_VALUES.length) return false;
-
-  return values.every((value, index) => value === DEFAULT_SORT_VALUES[index]);
+function isSortDefault(value: string | undefined | null): boolean {
+  return !value || value === DEFAULT_SORT_VALUE;
 }
 
 /**
@@ -690,15 +687,13 @@ function updateUrlQuery(): void {
 
   if (countries.length > 0) query.countries = countries.join(',');
 
-  const sortSelections = extractSelectedValues(selectedSorts.value);
+  const sortValue = selectedSort.value?.value ?? DEFAULT_SORT_VALUE;
 
-  if (!areSortSelectionsDefault(sortSelections)) {
-    query.sort = sortSelections.join(',');
+  if (!isSortDefault(sortValue)) {
+    query.sort = String(sortValue);
   }
 
-  if (startDate.value && startDate.value !== props.initialStartDate) {
-    query.startDate = startDate.value;
-  }
+  if (startDate.value) query.startDate = startDate.value;
 
   if (endDate.value) query.endDate = endDate.value;
 
@@ -781,10 +776,12 @@ function loadFiltersFromUrl(): void {
 
   // Sort options are local computed — always available immediately
   if (sortOrder.length > 0) {
-    selectedSorts.value = findOptionsFromValues(sortOrder, sortOptions.value);
+    const matched = findOptionsFromValues([sortOrder[0]], sortOptions.value);
+
+    selectedSort.value = matched[0] ?? sortOptions.value[0];
     hasUserInteracted.value = true;
   } else {
-    selectedSorts.value = [...DEFAULT_SORT_VALUES];
+    selectedSort.value = sortOptions.value[0] ?? null;
   }
 
   if (searchParam) {
@@ -798,9 +795,12 @@ function loadFiltersFromUrl(): void {
   if (query.startDate && typeof query.startDate === 'string') {
     startDate.value = query.startDate;
     hasUserInteracted.value = true;
+    // Don't change startDateIsAutoApplied here — it is managed by
+    // onManualFilterChange / onStartDateManualInput exclusively.
   } else if (!hasCompletedInitialMount.value) {
     // First mount: use the initial start date prop (today) if no URL param
     startDate.value = props.initialStartDate || '';
+    startDateIsAutoApplied.value = true;
   }
   // After initial mount, leave startDate unchanged when URL has no startDate param.
   // clearFilters() handles resetting startDate to '' explicitly.
@@ -846,7 +846,8 @@ function updateFilters(): void {
     endDate: endDate.value,
     actionRequired: actionRequired.value,
     searchText: normalizedSearch,
-    sort: extractSelectedValues(selectedSorts.value),
+    sort: [selectedSort.value?.value ?? DEFAULT_SORT_VALUE] as string[],
+    initialLoad: startDateIsAutoApplied.value,
   };
 
   emit('update:filters', filters);
@@ -862,13 +863,40 @@ function clearFilters(): void {
   selectedActivityTypes.value = [];
   selectedGbfItems.value = [];
   selectedCountries.value = [];
-  selectedSorts.value = [...DEFAULT_SORT_VALUES];
+  selectedSort.value = sortOptions.value[0] ?? null;
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;
   searchText.value = '';
   hasUserInteracted.value = false;
+  startDateIsAutoApplied.value = false;
 
+  updateFilters();
+}
+
+/**
+ * Called by explicit user interactions (select/remove in multiselect,
+ * input change, checkbox toggle). If the start date was auto-applied
+ * (default today), clear it on the first manual filter change.
+ */
+function onManualFilterChange(): void {
+  if (startDateIsAutoApplied.value && startDate.value) {
+    startDate.value = '';
+    startDateIsAutoApplied.value = false;
+  }
+  hasUserInteracted.value = true;
+}
+
+/** Handler for the start-date date-picker input. */
+function onStartDateManualInput(): void {
+  startDateIsAutoApplied.value = false;
+  hasUserInteracted.value = true;
+  updateFilters();
+}
+
+/** Handler for the action-required checkbox. */
+function onActionRequiredChange(): void {
+  onManualFilterChange();
   updateFilters();
 }
 
@@ -996,7 +1024,7 @@ watch(
   { immediate: true },
 );
 syncSelectionWithOptions(selectedCountries, countryOptions);
-syncSelectionWithOptions(selectedSorts, sortOptions);
+// Sort is single-select with static options — no sync needed.
 
 // ---------------------------------------------------------------------------
 // Lifecycle & watchers
@@ -1012,47 +1040,10 @@ watch(() => route.query, () => {
   loadFiltersFromUrl();
 }, { deep: true });
 
-// Watch for first user interaction with any filter
-watch(
-  [
-    selectedTypes,
-    selectedSubjects,
-    selectedStatuses,
-    selectedBodies,
-    selectedCopDecisions,
-    selectedActivityTypes,
-    selectedGbfItems,
-    selectedCountries,
-    selectedSorts,
-    actionRequired,
-    searchText,
-  ],
-  () => {
-    if (!hasUserInteracted.value) {
-      const hasAnySelection =
-        selectedTypes.value.length > 0 ||
-        selectedSubjects.value.length > 0 ||
-        selectedStatuses.value.length > 0 ||
-        selectedBodies.value.length > 0 ||
-        selectedCopDecisions.value.length > 0 ||
-        selectedActivityTypes.value.length > 0 ||
-        selectedGbfItems.value.length > 0 ||
-        selectedCountries.value.length > 0 ||
-        searchText.value.trim().length > 0 ||
-        !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
-        actionRequired.value;
-
-      if (hasAnySelection) {
-        hasUserInteracted.value = true;
-        // Clear the default start date on first interaction
-        if (startDate.value === props.initialStartDate) {
-          startDate.value = '';
-        }
-      }
-    }
-  },
-  { deep: true },
-);
+// NOTE: The auto-applied startDate clearing logic is handled by
+// onManualFilterChange() which is called from explicit template event
+// handlers (@select, @remove, @input, @change). This avoids false
+// triggers from programmatic changes (URL sync, option syncing, etc.).
 
 // Emit updates whenever relevant filter state changes
 watchEffect(() => {
@@ -1065,7 +1056,7 @@ watchEffect(() => {
   void selectedActivityTypes.value;
   void selectedGbfItems.value;
   void selectedCountries.value;
-  void selectedSorts.value;
+  void selectedSort.value;
   void startDate.value;
   void endDate.value;
   void actionRequired.value;

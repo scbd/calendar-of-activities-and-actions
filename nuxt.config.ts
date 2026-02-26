@@ -44,7 +44,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      scbdApiBase: process.env.NUXT_PUBLIC_SCBD_API_BASE || 'https://api.cbddev.xyz'
+      scbdApiBase: process.env.NUXT_PUBLIC_SCBD_API_BASE || 'https://api.cbdd.int'
     }
   },
 

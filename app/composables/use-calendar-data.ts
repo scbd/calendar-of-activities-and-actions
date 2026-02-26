@@ -37,8 +37,8 @@ const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
 
-/** Solr function sort that picks startDate_dt for meetings/activities, actionDate_dt for notifications. */
-const SOLR_DEFAULT_SORT = 'def(startDate_dt,actionDate_dt) asc';
+/** Solr sort expression using startDateCOA_dt for all record types. */
+const SOLR_DEFAULT_SORT = 'startDateCOA_dt asc';
 
 const defaultFilters: FilterState = {
   types: [],
@@ -93,6 +93,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     ...defaultFilters,
     startDate: options.initialStartDate ?? '',
     sort: [...DEFAULT_SORT_VALUES],
+    initialLoad: true,
   });
 
   // --- Derived state -------------------------------------------------------
@@ -145,17 +146,12 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
         const [field, dir] = v.split(':');
         const direction = dir === 'desc' ? 'desc' : 'asc';
 
-        // startDate uses def() so notifications (actionDate_dt) interleave
-        // correctly with meetings/activities (startDate_dt)
-        if (field === 'startDate') {
-          return `def(startDate_dt,actionDate_dt) ${direction}`;
-        }
+        // All record types use startDateCOA_dt / endDateCOA_dt for sorting
+        const solrField = field === 'startDate' ? 'startDateCOA_dt'
+          : field === 'endDate' ? 'endDateCOA_dt'
+            : null;
 
-        const solrField = field === 'endDate' ? 'endDate_dt'
-          : field === 'title' ? 'title_EN_t'
-            : field === 'schema' ? 'schema_s'
-              : field === 'actionRequired' ? 'actionRequiredByParties_b'
-                : `${field}_s`;
+        if (!solrField) return '';
 
         return `${solrField} ${direction}`;
       })
@@ -257,13 +253,27 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   }
 
   // --- Debounced filter watcher --------------------------------------------
+  // This is the SOLE trigger for executeQuery when filters change,
+  // preventing duplicate/racing queries that cause facets and totals to
+  // fall out of sync.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let hasReceivedFilters = false;
 
   watch(
     currentFilters,
     () => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
+      }
+
+      // Execute immediately on the first filter change (from the filter
+      // component's watchEffect) to avoid a 300 ms delay before the user
+      // sees data.
+      if (!hasReceivedFilters) {
+        hasReceivedFilters = true;
+        void executeQuery();
+
+        return;
       }
       debounceTimer = setTimeout(() => {
         void executeQuery();
@@ -345,12 +355,8 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
 
     for (const d of docs.value) {
-      // Notifications don't have startDate/endDate — use actionDate then date
-      // (matching the same logic as formatDateRange in shared/utils/date.ts)
-      const isNotification = String(d.schema ?? '').toLowerCase() === 'notification';
-      const iso = isNotification
-        ? (d.actionDate || d.date)
-        : (d.startDate || d.endDate);
+      // All record types now use startDate / endDate (aliased from startDateCOA_dt / endDateCOA_dt)
+      const iso = d.startDate || d.endDate;
       const dt = iso ? DateTime.fromISO(String(iso)) : null;
       const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
       const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';
@@ -372,7 +378,13 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       ? [...filters.sort]
       : Array.from(DEFAULT_SORT_VALUES);
 
-    currentFilters.value = { ...filters, sort: normalizedSort };
+    // Preserve the initialLoad flag from the incoming filters so the caller
+    // (calendar-filters) controls when strict date filtering is active.
+    currentFilters.value = {
+      ...filters,
+      sort: normalizedSort,
+      initialLoad: filters.initialLoad ?? false,
+    };
   }
 
   function resetFilters(): void {
@@ -385,7 +397,13 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
   // --- Init ----------------------------------------------------------------
   onMounted(() => {
-    void executeQuery();
+    // If no external code (e.g. calendar-filters watchEffect) has called
+    // setFilters during setup, fire the initial query with the composable's
+    // default filters (standalone usage).
+    if (!hasReceivedFilters) {
+      hasReceivedFilters = true;
+      void executeQuery();
+    }
     void ensureSubjectLabels();
   });
 

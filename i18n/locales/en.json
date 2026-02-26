@@ -115,10 +115,7 @@
         "startDateAsc": "Start date (oldest first)",
         "startDateDesc": "Start date (newest first)",
         "endDateAsc": "End date (oldest first)",
-        "endDateDesc": "End date (newest first)",
-        "titleAsc": "Title (A to Z)",
-        "schemaAsc": "Record Type (A to Z)",
-        "actionRequired": "Action required items first"
+        "endDateDesc": "End date (newest first)"
       },
       "typeLabel": "Type",
       "typePlaceholder": "Select types",

@@ -114,10 +114,7 @@
         "startDateAsc": "Date de début (la plus ancienne en premier)",
         "startDateDesc": "Date de début (la plus récente en premier)",
         "endDateAsc": "Date de fin (la plus ancienne en premier)",
-        "endDateDesc": "Date de fin (la plus récente en premier)",
-        "titleAsc": "Titre (A à Z)",
-        "schemaAsc": "Type d'enregistrement (A à Z)",
-        "actionRequired": "Action requise : éléments d'abord"
+        "endDateDesc": "Date de fin (la plus récente en premier)"
       },
       "typeLabel": "Tapez",
       "typePlaceholder": "Sélectionnez les types",

@@ -114,10 +114,7 @@
         "startDateAsc": "Fecha de inicio (la más antigua primero)",
         "startDateDesc": "Fecha de inicio (la más reciente primero)",
         "endDateAsc": "Fecha de finalización (la más antigua primero)",
-        "endDateDesc": "Fecha de finalización (la más reciente primero)",
-        "titleAsc": "Título (de la A a la Z)",
-        "schemaAsc": "Tipo de registro (de la A a la Z)",
-        "actionRequired": "La acción requiere primero los elementos"
+        "endDateDesc": "Fecha de finalización (la más reciente primero)"
       },
       "typeLabel": "Tipo",
       "typePlaceholder": "Seleccione los tipos",

@@ -127,7 +127,7 @@ const cardBackgroundStyle = computed(() => {
   };
 });
 
-const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties') === true);
+const isActionRequired = computed(() => getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties', 'actionRequiredByPartiesCOA') === true);
 
 const isCpbHighlighted = computed(() => {
   const subjects = getDocSubjects(props.doc);

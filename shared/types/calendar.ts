@@ -31,6 +31,22 @@ export interface BaseCalendarDoc {
   createdDate?: string;
   updatedDate?: string;
 
+  /** COA-suffixed date fields (aliased to startDate / endDate during normalization) */
+  startDateCOA?: string;
+  endDateCOA?: string;
+
+  /** Action required flag — present on all record types */
+  actionRequiredByParties?: boolean;
+  actionRequiredByPartiesCOA?: boolean;
+
+  /** Governing bodies — present on all record types */
+  governingBody?: string[];
+  governingBodiesCOA?: string[];
+
+  /** Subsidiary bodies — present on all record types */
+  subsidiaryBody?: string[];
+  subsidiaryBodiesCOA?: string[];
+
   status?: string;
   statusKey?: string;
   url?: string[];
@@ -97,8 +113,6 @@ export interface CalendarActivityDoc extends BaseCalendarDoc {
   descriptionRu?: string;
   descriptionZh?: string;
 
-  actionRequiredByParties?: boolean;
-
   /** Localized status narrative */
   statusNarrativeEn?: string;
   statusNarrativeFr?: string;
@@ -109,8 +123,6 @@ export interface CalendarActivityDoc extends BaseCalendarDoc {
 
   agendaItems?: string[];
   subjects?: string[];
-  governingBody?: string[];
-  subsidiaryBody?: string[];
   decisions?: string[];
   responsibleUnitsAndOfficers?: string[];
   gbfTargets?: string[];
@@ -149,6 +161,13 @@ export interface FilterState {
   actionRequired: boolean;
   searchText: string;
   sort: string[];
+  /**
+   * When `true` the start-date filter uses strict "startDate >= today" logic
+   * without the endDate fall-back (records whose end date is still in the
+   * future are excluded). Set automatically on initial page load and cleared
+   * on the first manual filter interaction.
+   */
+  initialLoad?: boolean;
 }
 
 /** Single option in a filter dropdown (thesaurus term + optional facet count). */

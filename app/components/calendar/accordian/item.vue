@@ -351,12 +351,12 @@ const statusNarrative = computed(() => {
 });
 
 const isActionRequired = computed(() => {
-  // Notifications don't have actionRequiredByParties_b — infer from actionDate
+  // All record types now have actionRequiredByPartiesCOA_b
   if (isNotification.value) {
     return Boolean(getDocStringValue(props.doc, 'actionDate'));
   }
 
-  return getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties') === true;
+  return getDocBooleanValue(props.doc, 'actionRequired', 'actionRequiredByParties', 'actionRequiredByPartiesCOA') === true;
 });
 
 /** True when the notification action deadline is in the past. */
@@ -383,12 +383,14 @@ const isCpbDoc = computed(() => {
   const subjects = getDocSubjects(props.doc);
   const governingBodies = getDocGoverningBodies(props.doc);
   const targets = getDocGlobalTargets(props.doc);
+  const unit = getDocStringValue(props.doc, 'responsibleUnit') ?? '';
 
   return (
     subjects.includes('CBD-SUBJECT-CPB') ||
     governingBodies.includes('CBD-SUBJECT-CPB') ||
     targets.includes('GBF-TARGET-17') ||
-    subjects.includes('CBD-SUBJECT-SYNBIO')
+    subjects.includes('CBD-SUBJECT-SYNBIO') || 
+    unit.includes('CBD-UNIT-BIOSAFETY')
   );
 });
 
@@ -400,6 +402,7 @@ const isNpDoc = computed(() => {
 
   return (
     subjects.includes('CBD-SUBJECT-NPABS') ||
+        subjects.includes('CBD-SUBJECT-DSI') ||
     governingBodies.includes('CBD-SUBJECT-NPABS') ||
     targets.includes('GBF-TARGET-13') ||
     unit.includes('CBD-UNIT-ABS')
