@@ -27,7 +27,20 @@
             :key="ref"
             class="calendar-unresolved-ref mb-2"
           >
-            <span class="calendar-unresolved-ref__label">{{ ref }}</span>
+            <span class="calendar-unresolved-ref__icon">
+              <FontAwesomeIcon icon="link" />
+            </span>
+            <a
+              :href="`https://www.cbd.int/meetings/${ref}`"
+              target="_blank"
+              rel="noopener"
+              class="calendar-unresolved-ref__link"
+            >
+              {{ t('calendar.labels.meetingRef', { ref }) }}
+            </a>
+            <span class="calendar-unresolved-ref__hint">
+              {{ t('calendar.labels.meetingRefHint') }}
+            </span>
           </div>
         </div>
       </Transition>
@@ -138,15 +151,34 @@ const sortedMeetings = computed(() =>
 .calendar-unresolved-ref {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   border: 1px dashed #dee2e6;
   border-radius: 0.375rem;
   background-color: #f8f9fa;
 }
 
-.calendar-unresolved-ref__label {
+.calendar-unresolved-ref__icon {
+  font-size: 0.75rem;
+  color: #6c757d;
+  flex-shrink: 0;
+}
+
+.calendar-unresolved-ref__link {
   font-size: 0.875rem;
-  color: #495057;
+  color: #0f7abd;
   font-weight: 500;
+  text-decoration: none;
+}
+
+.calendar-unresolved-ref__link:hover {
+  text-decoration: underline;
+}
+
+.calendar-unresolved-ref__hint {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-left: auto;
 }
 </style>

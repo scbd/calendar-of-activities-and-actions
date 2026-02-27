@@ -7,11 +7,10 @@
  */
 export const SOLR_FACET_FIELDS = {
   schema: '{!ex=schema}schema_s',
-  subjects: '{!ex=subjects}subjects_ss',
+  subjects: '{!ex=subjects}thematicArea_ss',
   governingBody: '{!ex=governingBody}governingBodiesCOA_ss',
   subsidiaryBody: '{!ex=subsidiaryBody}subsidiaryBodiesCOA_ss',
-  status: '{!ex=status}status_s',
-  activityStatus: '{!ex=status}activityStatus_s',
+  statusCOA: '{!ex=status}statusCOA_s',
   activityType: '{!ex=activityType}type_s',
   gbfTargets: '{!ex=gbfTargets}gbfTargets_ss',
   gbfSections: '{!ex=gbfSections}gbfSections_ss',

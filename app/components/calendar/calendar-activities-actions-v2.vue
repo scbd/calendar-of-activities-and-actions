@@ -246,26 +246,47 @@ onUnmounted(() => {
 });
 
 // --- Auto-expand from query parameter --------------------------------------
-const autoExpandId = route.query.autoExpand as string;
+// Reactive: re-triggers when route.query.autoExpand changes (e.g. clicking a
+// notification title link while the component is already mounted).
+watch(
+  () => route.query.autoExpand as string | undefined,
+  (autoExpandId) => {
+    if (!autoExpandId) return;
 
-if (autoExpandId) {
-  const stopWatch = watch(
-    () => ({ isLoading: loading.value, docsCount: docs.value.length }),
-    ({ isLoading, docsCount }) => {
-      if (!isLoading && docsCount > 0) {
+    // Track whether a loading cycle has started so we don't act on stale data
+    // from a previous query.
+    let seenLoading = loading.value;
+
+    const stopWatch = watch(
+      () => ({ isLoading: loading.value, docsCount: docs.value.length }),
+      ({ isLoading, docsCount }) => {
+        if (isLoading) {
+          seenLoading = true;
+          return;
+        }
+
+        if (!seenLoading || docsCount === 0) return;
+
         stopWatch();
 
         const visibleDocs = groupedItems.value.flatMap(group => group.items);
 
         nextTick(() => {
           setTimeout(() => {
-            const docExists = visibleDocs.some(doc => String(doc.id) === autoExpandId);
+            // Match by id, symbol, or identifier so notification keys also work
+            const matchedDoc = visibleDocs.find(doc =>
+              String(doc.id) === autoExpandId
+              || doc.symbol === autoExpandId
+              || (doc.identifier && doc.identifier.includes(autoExpandId)),
+            );
 
-            if (docExists) {
-              openItems.value[autoExpandId] = true;
+            if (matchedDoc) {
+              const docKey = String(matchedDoc.id);
+
+              openItems.value[docKey] = true;
 
               setTimeout(() => {
-                const element = document.getElementById(`heading-${autoExpandId}`);
+                const element = document.getElementById(`heading-${docKey}`);
 
                 if (element) {
                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -274,11 +295,12 @@ if (autoExpandId) {
             }
           }, 200);
         });
-      }
-    },
-    { immediate: true },
-  );
-}
+      },
+      { immediate: true },
+    );
+  },
+  { immediate: true },
+);
 </script>
 
 <style lang="scss">

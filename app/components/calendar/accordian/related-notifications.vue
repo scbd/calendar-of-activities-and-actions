@@ -31,7 +31,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import CalendarNotificationCard from '../calendar-notification-card.vue';
 import type { NotificationDisplayEntry } from 'shared/utils/notifications';
@@ -49,13 +48,13 @@ const hasItems = computed(() => props.notifications.length > 0);
 
 const totalCount = computed(() => props.notifications.length);
 
-/** Notifications sorted by publishedOn date, newest first. */
+/** Notifications sorted by symbol (key), newest first (descending). */
 const sortedNotifications = computed(() =>
   [...props.notifications].sort((a, b) => {
-    const da = a.details?.publishedOn ? DateTime.fromISO(String(a.details.publishedOn)) : DateTime.fromMillis(0);
-    const db = b.details?.publishedOn ? DateTime.fromISO(String(b.details.publishedOn)) : DateTime.fromMillis(0);
+    const keyA = a.key ?? '';
+    const keyB = b.key ?? '';
 
-    return db.toMillis() - da.toMillis();
+    return keyB.localeCompare(keyA);
   }),
 );
 </script>

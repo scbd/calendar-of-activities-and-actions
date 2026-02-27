@@ -32,7 +32,7 @@ import { getSolrSelectUrl } from 'shared/utils/api-config';
 // Constants
 // ---------------------------------------------------------------------------
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
@@ -177,6 +177,9 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     });
 
     const endpoint = getSolrEndpoint();
+
+    // eslint-disable-next-line no-console -- temporary debug
+    console.log('[SOLR DEBUG] endpoint:', endpoint, 'body:', JSON.stringify(body, null, 2));
 
     const response = await $fetch<SolrResponse>(endpoint, {
       method: 'POST',

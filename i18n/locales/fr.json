@@ -46,6 +46,8 @@
       "notifications": "Notifications",
       "relatedActivities": "Activités connexes",
       "relatedMeetings": "Réunions connexes",
+      "meetingRef": "Réunion {ref}",
+      "meetingRefHint": "Détails non disponibles",
       "relatedNotifications": "Notifications associées",
       "untitled": "Sans titre",
       "unknownDate": "Date inconnue",
@@ -71,7 +73,7 @@
         "activityTypes": "Type (s) d'activité",
         "globalTargets": "Cible (s) GBF",
         "countries": "Partie (s)",
-        "subjects": "Sujet (s)",
+        "subjects": "Domaine(s) thématique(s)",
         "statuses": "Statut (s)",
         "subsidiaryBodies": "Organe(s) subsidiaire(s)",
         "governingBodies": "Organe(s) directeur(s)",
@@ -92,7 +94,7 @@
         "activityTypes": "Sélectionnez les types d'activités",
         "globalTargets": "Sélectionnez les cibles GBF",
         "countries": "Sélectionnez les fêtes",
-        "subjects": "Sélectionnez des sujets",
+        "subjects": "Sélectionnez des domaines thématiques",
         "statuses": "Sélectionnez les statuts",
         "subsidiaryBodies": "Sélectionnez les organes subsidiaires",
         "governingBodies": "Sélectionnez les organes directeurs",
@@ -108,7 +110,8 @@
         "actionRequiredOnly": "Afficher uniquement les éléments nécessitant une action"
       },
       "actions": {
-        "clearAll": "Effacer tous les filtres"
+        "clearAll": "Effacer tous les filtres",
+        "appliedFilters": "Filtres appliqués"
       },
       "sortOptions": {
         "startDateAsc": "Date de début (la plus ancienne en premier)",
@@ -124,8 +127,8 @@
       "globalTargetPlaceholder": "Sélectionnez GBF Targets",
       "countryLabel": "Parties",
       "countryPlaceholder": "Sélectionnez les fêtes",
-      "subjectLabel": "Sujet",
-      "subjectPlaceholder": "Sélectionnez des sujets",
+      "subjectLabel": "Domaine(s) thématique(s)",
+      "subjectPlaceholder": "Sélectionnez des domaines thématiques",
       "statusLabel": "État",
       "statusPlaceholder": "Sélectionnez les statuts",
       "subsidiaryBodyLabel": "Organe subsidiaire",

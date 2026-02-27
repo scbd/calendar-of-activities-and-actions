@@ -37,7 +37,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { DateTime } from 'luxon';
 import { useI18n } from '#imports';
 import CalendarActivityCard from '../calendar-activity-card.vue';
 import type { CalendarDoc } from 'shared/types/calendar';
@@ -58,13 +57,13 @@ const totalCount = computed(
   () => props.activities.length + (props.unresolvedRefs?.length ?? 0),
 );
 
-/** Activities sorted by startDate, newest first. */
+/** Activities sorted by identifier, newest first (descending). */
 const sortedActivities = computed(() =>
   [...props.activities].sort((a, b) => {
-    const da = a.startDate ? DateTime.fromISO(String(a.startDate)) : DateTime.fromMillis(0);
-    const db = b.startDate ? DateTime.fromISO(String(b.startDate)) : DateTime.fromMillis(0);
+    const idA = a.identifier ?? '';
+    const idB = b.identifier ?? '';
 
-    return db.toMillis() - da.toMillis();
+    return idB.localeCompare(idA);
   }),
 );
 </script>

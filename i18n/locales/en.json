@@ -46,6 +46,8 @@
       "notifications": "Notifications",
       "relatedActivities": "Related Activities",
       "relatedMeetings": "Related Meetings",
+      "meetingRef": "Meeting {ref}",
+      "meetingRefHint": "Details unavailable",
       "relatedNotifications": "Related Notifications",
       "untitled": "Untitled",
       "unknownDate": "Unknown date",
@@ -72,7 +74,7 @@
         "activityTypes": "Activity type(s)",
         "globalTargets": "GBF Target(s)",
         "countries": "Party(ies)",
-        "subjects": "Subject(s)",
+        "subjects": "Thematic Area(s)",
     "statuses": "Status(es)",
     "subsidiaryBodies": "Subsidiary body(ies)",
     "governingBodies": "Governing body(ies)",
@@ -93,7 +95,7 @@
     "activityTypes": "Select activity types",
     "globalTargets": "Select GBF targets",
     "countries": "Select parties",
-    "subjects": "Select subjects",
+    "subjects": "Select thematic areas",
     "statuses": "Select statuses",
     "subsidiaryBodies": "Select subsidiary bodies",
     "governingBodies": "Select governing bodies",
@@ -109,7 +111,8 @@
         "actionRequiredOnly": "Show only items requiring action"
       },
       "actions": {
-        "clearAll": "Clear all filters"
+        "clearAll": "Clear all filters",
+        "appliedFilters": "Applied Filters"
       },
       "sortOptions": {
         "startDateAsc": "Start date (oldest first)",
@@ -125,8 +128,8 @@
       "globalTargetPlaceholder": "Select GBF Targets",
       "countryLabel": "Parties",
       "countryPlaceholder": "Select parties",
-      "subjectLabel": "Subject",
-      "subjectPlaceholder": "Select subjects",
+      "subjectLabel": "Thematic Area(s)",
+      "subjectPlaceholder": "Select thematic areas",
       "statusLabel": "Status",
       "statusPlaceholder": "Select statuses",
       "subsidiaryBodyLabel": "Subsidiary body",

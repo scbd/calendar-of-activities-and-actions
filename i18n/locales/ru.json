@@ -46,6 +46,8 @@
       "notifications": "Уведомления",
       "relatedActivities": "Сопутствующие виды деятельности",
       "relatedMeetings": "Связанные встречи",
+      "meetingRef": "Совещание {ref}",
+      "meetingRefHint": "Подробности недоступны",
       "relatedNotifications": "Похожие уведомления",
       "untitled": "Без названия",
       "unknownDate": "Неизвестная дата",
@@ -71,7 +73,7 @@
         "activityTypes": "Тип (ы) активности",
         "globalTargets": "Цель (ы) GBF",
         "countries": "Вечеринка (ы)",
-        "subjects": "Тема (ы)",
+        "subjects": "Тематическая(ие) область(и)",
         "statuses": "Статус (ы)",
         "subsidiaryBodies": "Вспомогательный(е) орган(ы)",
         "governingBodies": "Руководящий(е) орган(ы)",
@@ -92,7 +94,7 @@
         "activityTypes": "Выберите типы активности",
         "globalTargets": "Выберите цели GBF",
         "countries": "Выберите вечеринки",
-        "subjects": "Выберите темы",
+        "subjects": "Выберите тематические области",
         "statuses": "Выберите статусы",
         "subsidiaryBodies": "Выберите вспомогательные органы",
         "governingBodies": "Выберите руководящие органы",
@@ -108,7 +110,8 @@
         "actionRequiredOnly": "Показывать только предметы, требующие действий"
       },
       "actions": {
-        "clearAll": "Очистить все фильтры"
+        "clearAll": "Очистить все фильтры",
+        "appliedFilters": "Примененные фильтры"
       },
       "sortOptions": {
         "startDateAsc": "Дата начала (сначала самая старая)",
@@ -124,8 +127,8 @@
       "globalTargetPlaceholder": "Выберите цели GBF",
       "countryLabel": "Стороны",
       "countryPlaceholder": "Выберите вечеринки",
-      "subjectLabel": "Предмет",
-      "subjectPlaceholder": "Выберите темы",
+      "subjectLabel": "Тематическая(ие) область(и)",
+      "subjectPlaceholder": "Выберите тематические области",
       "statusLabel": "Статус",
       "statusPlaceholder": "Выберите статусы",
       "subsidiaryBodyLabel": "Вспомогательный орган",

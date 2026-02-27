@@ -46,6 +46,8 @@
       "notifications": "通知",
       "relatedActivities": "相关活动",
       "relatedMeetings": "相关会议",
+      "meetingRef": "会议 {ref}",
+      "meetingRefHint": "详细信息不可用",
       "relatedNotifications": "相关通知",
       "untitled": "无标题",
       "unknownDate": "未知日期",
@@ -71,7 +73,7 @@
         "activityTypes": "活动类型",
         "globalTargets": "GBF 目标",
         "countries": "派对",
-        "subjects": "主题",
+        "subjects": "专题领域",
         "statuses": "状态（es）",
         "subsidiaryBodies": "附属机构",
         "governingBodies": "理事机构",
@@ -92,7 +94,7 @@
         "activityTypes": "选择活动类型",
         "globalTargets": "选择 GBF 目标",
         "countries": "选择派对",
-        "subjects": "选择科目",
+        "subjects": "选择专题领域",
         "statuses": "选择状态",
         "subsidiaryBodies": "选择附属机构",
         "governingBodies": "选择理事机构",
@@ -108,7 +110,8 @@
         "actionRequiredOnly": "仅显示需要操作的项目"
       },
       "actions": {
-        "clearAll": "清除所有筛选条件"
+        "clearAll": "清除所有筛选条件",
+        "appliedFilters": "已应用的筛选条件"
       },
       "sortOptions": {
         "startDateAsc": "开始日期（最早的在前）",
@@ -124,8 +127,8 @@
       "globalTargetPlaceholder": "选择 GBF 目标",
       "countryLabel": "各方",
       "countryPlaceholder": "选择派对",
-      "subjectLabel": "主题",
-      "subjectPlaceholder": "选择科目",
+      "subjectLabel": "专题领域",
+      "subjectPlaceholder": "选择专题领域",
       "statusLabel": "状态",
       "statusPlaceholder": "选择状态",
       "subsidiaryBodyLabel": "附属机构",

@@ -73,12 +73,28 @@
         </div>
 
         <div v-for="(group, groupIndex) in groupedItems" :key="group.key" class="mb-4">
+          <!-- Sentinel to detect when the sticky header becomes stuck -->
+          <div
+            :ref="(el) => trackStickySentinel(groupIndex, el as HTMLElement | null)"
+            :data-group-index="groupIndex"
+            class="sticky-sentinel"
+            aria-hidden="true"
+          />
           <div class="dg-sep text-bg-secondary text">
-            <h3 class="m-0">
-              {{ groupLabel(group) }}
+            <h3 class="m-0 d-flex align-items-center">
+              <span class="pe-5 me-5">{{ groupLabel(group) }}</span>
               <span
-                v-if="total > 0"
-                class="dg-sep__results-count float-end"
+                v-if="groupIndex === stickyGroupIndex && visibleLoadingMore"
+                class="dg-sep__loading-more mx-auto me-5 "
+                role="status"
+                aria-live="polite"
+              > &nbsp; &nbsp;
+                <span class="spinner-border spinner-border-md me-2" />
+              
+              </span>
+              <span
+                v-if="groupIndex === stickyGroupIndex && total > 0"
+                class="dg-sep__results-count ms-auto"
                 role="status"
                 aria-live="polite"
               >
@@ -105,20 +121,44 @@
         <!-- Infinite scroll sentinel -->
         <div ref="scrollSentinel" class="scroll-sentinel" aria-hidden="true" />
 
-        <!-- Loading more indicator -->
-        <div v-if="loadingMore" class="text-center py-3" role="status" aria-live="polite">
-          <div class="spinner-border spinner-border-sm me-2">
-            <span class="visually-hidden">{{ t('calendar.messages.loadingMore') }}</span>
-          </div>
-          <span class="text-muted small">{{ t('calendar.messages.loadingMore') }}</span>
-        </div>
-
         <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
         <div v-if="hasMore && !loadingMore" class="text-center py-3">
           <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
             {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Loading more indicator (fixed center overlay) -->
+    <div
+      v-show="visibleLoadingMore"
+      :style="{
+        position: 'fixed',
+        bottom: '2rem',
+        left: 'calc(50% + 200px)',
+        transform: 'translateX(-50%)',
+        zIndex: 99999,
+        pointerEvents: 'none',
+      }"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        :style="{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '0.75rem 1.5rem',
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          color: '#fff',
+          borderRadius: '999px',
+          fontSize: '0.95rem',
+          fontWeight: '500',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+        }"
+      >
+        <div class="spinner-border spinner-border-sm me-2" />
+        <span>Loading....</span>
       </div>
     </div>
 
@@ -232,12 +272,87 @@ const {
 
 const allDocsFlat = computed(() => docs.value);
 
+// --- Delayed loading-more flag (stays visible for 1 s after data loads) ----
+const visibleLoadingMore = ref(false);
+
+let loadingMoreTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(loadingMore, (isLoading) => {
+  if (isLoading) {
+    if (loadingMoreTimer) {
+      clearTimeout(loadingMoreTimer);
+      loadingMoreTimer = null;
+    }
+    visibleLoadingMore.value = true;
+  } else {
+    loadingMoreTimer = setTimeout(() => {
+      visibleLoadingMore.value = false;
+      loadingMoreTimer = null;
+    }, 1000);
+  }
+});
+
 setRegionDisplayNames(createRegionDisplayNames(locale.value));
 
 watch(() => locale.value, (nextLocale) => {
   calendarLocale.value = nextLocale as LocaleCode;
   setRegionDisplayNames(createRegionDisplayNames(nextLocale));
 });
+
+// --- Sticky group tracking -------------------------------------------------
+// Detects which group header is currently stuck at the top via position:sticky
+// so the results count / loading spinner appear only on that header.
+const stickyGroupIndex = ref(0);
+const stickySentinelMap = new Map<number, HTMLElement>();
+let stickyObserver: IntersectionObserver | null = null;
+const passedGroupIndices = new Set<number>();
+
+const trackStickySentinel = (index: number, el: HTMLElement | null) => {
+  if (el) {
+    stickySentinelMap.set(index, el);
+  } else {
+    stickySentinelMap.delete(index);
+  }
+};
+
+const setupStickyObserver = () => {
+  stickyObserver?.disconnect();
+  passedGroupIndices.clear();
+
+  stickyObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const idx = Number((entry.target as HTMLElement).dataset.groupIndex);
+
+        if (Number.isNaN(idx)) continue;
+
+        // Sentinel scrolled above the viewport → its group header is now stuck
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          passedGroupIndices.add(idx);
+        } else {
+          passedGroupIndices.delete(idx);
+        }
+      }
+
+      stickyGroupIndex.value = passedGroupIndices.size > 0
+        ? Math.max(...passedGroupIndices)
+        : 0;
+    },
+    { threshold: [0] },
+  );
+
+  for (const el of stickySentinelMap.values()) {
+    stickyObserver.observe(el);
+  }
+};
+
+// Re-observe whenever the group list changes (load-more adds groups)
+watch(
+  () => groupedItems.value.length,
+  () => {
+    nextTick(() => setupStickyObserver());
+  },
+);
 
 // --- Accordion state -------------------------------------------------------
 const openItems = ref<Record<string, boolean>>({});
@@ -324,34 +439,62 @@ watch(scrollSentinel, (el) => {
 onMounted(() => {
   // Handle the (rare) case where the element already exists at mount time.
   setupScrollObserver(scrollSentinel.value);
+  nextTick(() => setupStickyObserver());
 });
 
 onUnmounted(() => {
   observer?.disconnect();
   observer = null;
+  stickyObserver?.disconnect();
+  stickyObserver = null;
+  if (loadingMoreTimer) {
+    clearTimeout(loadingMoreTimer);
+    loadingMoreTimer = null;
+  }
 });
 
 // --- Auto-expand from query parameter --------------------------------------
-const autoExpandId = route.query.autoExpand as string;
+// Reactive: re-triggers when route.query.autoExpand changes (e.g. clicking a
+// notification title link while the component is already mounted).
+watch(
+  () => route.query.autoExpand as string | undefined,
+  (autoExpandId) => {
+    if (!autoExpandId) return;
 
-if (autoExpandId) {
-  const stopWatch = watch(
-    () => ({ isLoading: loading.value, docsCount: docs.value.length }),
-    ({ isLoading, docsCount }) => {
-      if (!isLoading && docsCount > 0) {
+    // Track whether a loading cycle has started so we don't act on stale data
+    // from a previous query.
+    let seenLoading = loading.value;
+
+    const stopWatch = watch(
+      () => ({ isLoading: loading.value, docsCount: docs.value.length }),
+      ({ isLoading, docsCount }) => {
+        if (isLoading) {
+          seenLoading = true;
+          return;
+        }
+
+        if (!seenLoading || docsCount === 0) return;
+
         stopWatch();
 
         const visibleDocs = groupedItems.value.flatMap(group => group.items);
 
         nextTick(() => {
           setTimeout(() => {
-            const docExists = visibleDocs.some(doc => String(doc.id) === autoExpandId);
+            // Match by id, symbol, or identifier so notification keys also work
+            const matchedDoc = visibleDocs.find(doc =>
+              String(doc.id) === autoExpandId
+              || doc.symbol === autoExpandId
+              || (doc.identifier && doc.identifier.includes(autoExpandId)),
+            );
 
-            if (docExists) {
-              openItems.value[autoExpandId] = true;
+            if (matchedDoc) {
+              const docKey = String(matchedDoc.id);
+
+              openItems.value[docKey] = true;
 
               setTimeout(() => {
-                const element = document.getElementById(`heading-${autoExpandId}`);
+                const element = document.getElementById(`heading-${docKey}`);
 
                 if (element) {
                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -360,11 +503,12 @@ if (autoExpandId) {
             }
           }, 200);
         });
-      }
-    },
-    { immediate: true },
-  );
-}
+      },
+      { immediate: true },
+    );
+  },
+  { immediate: true },
+);
 </script>
 
 <style lang="scss">

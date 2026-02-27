@@ -46,6 +46,8 @@
       "notifications": "Notificaciones",
       "relatedActivities": "Actividades relacionadas",
       "relatedMeetings": "Reuniones relacionadas",
+      "meetingRef": "Reunión {ref}",
+      "meetingRefHint": "Detalles no disponibles",
       "relatedNotifications": "Notificaciones relacionadas",
       "untitled": "Sin título",
       "unknownDate": "Fecha desconocida",
@@ -71,7 +73,7 @@
         "activityTypes": "Tipo (s) de actividad",
         "globalTargets": "Objetivo (s) de GBF",
         "countries": "Partido (s)",
-        "subjects": "Asunto (s)",
+        "subjects": "Área(s) temática(s)",
         "statuses": "Estado (es)",
         "subsidiaryBodies": "Órgano(s) subsidiario(s)",
         "governingBodies": "Órgano(s) rector(es)",
@@ -92,7 +94,7 @@
         "activityTypes": "Seleccione los tipos de actividad",
         "globalTargets": "Seleccione los objetivos de GBF",
         "countries": "Selecciona partidos",
-        "subjects": "Selecciona asignaturas",
+        "subjects": "Selecciona áreas temáticas",
         "statuses": "Seleccione los estados",
         "subsidiaryBodies": "Seleccione los órganos subsidiarios",
         "governingBodies": "Seleccione los órganos rectores",
@@ -108,7 +110,8 @@
         "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
       },
       "actions": {
-        "clearAll": "Borrar todos los filtros"
+        "clearAll": "Borrar todos los filtros",
+        "appliedFilters": "Filtros aplicados"
       },
       "sortOptions": {
         "startDateAsc": "Fecha de inicio (la más antigua primero)",
@@ -124,8 +127,8 @@
       "globalTargetPlaceholder": "Seleccione objetivos de GBF",
       "countryLabel": "Fiestas",
       "countryPlaceholder": "Selecciona partidos",
-      "subjectLabel": "Sujeto",
-      "subjectPlaceholder": "Selecciona asignaturas",
+      "subjectLabel": "Área(s) temática(s)",
+      "subjectPlaceholder": "Selecciona áreas temáticas",
       "statusLabel": "Estado",
       "statusPlaceholder": "Seleccione los estados",
       "subsidiaryBodyLabel": "Órgano subsidiario",

@@ -126,14 +126,31 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="group in groupedItems" :key="group.key">
+                <template v-for="(group, groupIndex) in groupedItems" :key="group.key">
+                  <!-- Sentinel to detect when the sticky header becomes stuck -->
+                  <tr
+                    :ref="(el) => trackStickySentinel(groupIndex, el as HTMLElement | null)"
+                    :data-group-index="groupIndex"
+                    class="sticky-sentinel"
+                    aria-hidden="true"
+                  >
+                    <td :colspan="columnCount" />
+                  </tr>
                   <!-- Month group header row -->
                   <tr class="month-group-header">
                     <td :colspan="columnCount">
                       <div class="month-group-header__content">
                         <span class="month-group-header__label">{{ groupLabel(group) }}</span>
                         <span
-                          v-if="total > 0"
+                          v-if="groupIndex === stickyGroupIndex && visibleLoadingMore"
+                          class="month-group-header__loading"
+                          role="status"
+                          aria-live="polite"
+                        >
+                          <span class="spinner-border spinner-border-sm ms-5" />
+                        </span>
+                        <span
+                          v-if="groupIndex === stickyGroupIndex && total > 0"
                           class="month-group-header__count"
                           role="status"
                           aria-live="polite"
@@ -357,7 +374,7 @@ import type { NotificationAttachment } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels, resolveSubjectLabel, fallbackSubjectLabel, subjectLabelMap } from 'shared/utils/subjects';
 import { normalizeSolrDocument } from 'shared/services/solr';
-import { fetchRelatedDocsBySchema } from 'shared/services/solr-index';
+import { fetchRelatedDocsBySchema, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
 import { useBodyLabels } from '~/composables/use-body-labels';
 
 // Props
@@ -458,6 +475,83 @@ const currentSortField = ref<string>('startDate');
 const currentSortDirection = ref<'asc' | 'desc'>('asc');
 const rootEl = ref<HTMLElement | null>(null);
 const theadEl = ref<HTMLElement | null>(null);
+
+// --- Delayed loading-more flag (stays visible for 1 s after data loads) ----
+const visibleLoadingMore = ref(false);
+
+let loadingMoreTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(loadingMore, (isLoading) => {
+  if (isLoading) {
+    if (loadingMoreTimer) {
+      clearTimeout(loadingMoreTimer);
+      loadingMoreTimer = null;
+    }
+    visibleLoadingMore.value = true;
+  } else {
+    loadingMoreTimer = setTimeout(() => {
+      visibleLoadingMore.value = false;
+      loadingMoreTimer = null;
+    }, 1000);
+  }
+});
+
+// --- Sticky group tracking -------------------------------------------------
+// Detects which group header is currently stuck at the top via position:sticky
+// so the results count / loading spinner appear only on that header.
+const stickyGroupIndex = ref(0);
+const stickySentinelMap = new Map<number, HTMLElement>();
+
+let stickyObserver: IntersectionObserver | null = null;
+const passedGroupIndices = new Set<number>();
+
+const trackStickySentinel = (index: number, el: HTMLElement | null) => {
+  if (el) {
+    stickySentinelMap.set(index, el);
+  } else {
+    stickySentinelMap.delete(index);
+  }
+};
+
+const setupStickyObserver = () => {
+  stickyObserver?.disconnect();
+  passedGroupIndices.clear();
+
+  stickyObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const idx = Number((entry.target as HTMLElement).dataset.groupIndex
+          ?? (entry.target.closest('[data-group-index]') as HTMLElement | null)?.dataset.groupIndex);
+
+        if (Number.isNaN(idx)) continue;
+
+        // Sentinel scrolled above the viewport → its group header is now stuck
+        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
+          passedGroupIndices.add(idx);
+        } else {
+          passedGroupIndices.delete(idx);
+        }
+      }
+
+      stickyGroupIndex.value = passedGroupIndices.size > 0
+        ? Math.max(...passedGroupIndices)
+        : 0;
+    },
+    { threshold: [0] },
+  );
+
+  for (const el of stickySentinelMap.values()) {
+    stickyObserver.observe(el);
+  }
+};
+
+// Re-observe whenever the group list changes (load-more adds groups)
+watch(
+  () => groupedItems.value.length,
+  () => {
+    nextTick(() => setupStickyObserver());
+  },
+);
 
 /** Number of visible columns (varies when Location column is shown). */
 const columnCount = computed(() => showLocationColumn.value ? 6 : 5);
@@ -762,8 +856,17 @@ const isActionDeadlinePast = (doc: CalendarDoc): boolean => {
   return dt.isValid && dt.toUTC().endOf('day') < DateTime.utc();
 };
 
-/** Show action badge only when the deadline is still active (not past). */
-const showActionBadge = (doc: CalendarDoc): boolean => isActionRequired(doc) && !isActionDeadlinePast(doc);
+/** True when the document's effective status is "completed". */
+const isStatusCompleted = (doc: CalendarDoc): boolean => {
+  const rawStatus = getDocStringValue(doc, 'status');
+  const statusKey = getDocStringValue(doc, 'statusKey');
+  const normalizedKey = normalizeStatusKey(statusKey ?? rawStatus);
+
+  return normalizedKey === 'COMPLETED' || shouldDisplayCompleted(doc, normalizedKey, rawStatus ?? undefined);
+};
+
+/** Show action badge only when the deadline is still active (not past) and status is not completed. */
+const showActionBadge = (doc: CalendarDoc): boolean => isActionRequired(doc) && !isActionDeadlinePast(doc) && !isStatusCompleted(doc);
 
 const isCpbHighlighted = (doc: CalendarDoc): boolean => {
   const subjects = getDocSubjects(doc);
@@ -911,7 +1014,19 @@ const getUnresolvedMeetingRefs = (doc: CalendarDoc): string[] => {
       .filter(Boolean),
   );
 
-  return refs.filter(r => !resolvedIds.has(r) && !resolvedIdentifiers.has(r) && !resolvedCodes.has(r) && !resolvedSymbols.has(r));
+  return refs.filter(r => {
+    if (resolvedIds.has(r) || resolvedIdentifiers.has(r) || resolvedCodes.has(r) || resolvedSymbols.has(r)) {
+      return false;
+    }
+
+    const mapped = LEGACY_MEETING_ID_MAP[r];
+
+    if (mapped && (resolvedIds.has(mapped) || resolvedIdentifiers.has(mapped) || resolvedCodes.has(mapped) || resolvedSymbols.has(mapped))) {
+      return false;
+    }
+
+    return true;
+  });
 };
 
 const getGoverningBodies = (doc: CalendarDoc): string[] => resolveGoverningBodyLabels(getDocGoverningBodies(doc));
@@ -1176,12 +1291,19 @@ onMounted(() => {
   // Handle the (rare) case where the element already exists at mount time.
   setupScrollObserver(scrollSentinel.value);
   updateStickyOffsets();
+  nextTick(() => setupStickyObserver());
   window.addEventListener('resize', updateStickyOffsets);
 });
 
 onUnmounted(() => {
   observer?.disconnect();
   observer = null;
+  stickyObserver?.disconnect();
+  stickyObserver = null;
+  if (loadingMoreTimer) {
+    clearTimeout(loadingMoreTimer);
+    loadingMoreTimer = null;
+  }
   window.removeEventListener('resize', updateStickyOffsets);
 });
 </script>
@@ -1222,6 +1344,21 @@ onUnmounted(() => {
   font-weight: 400;
   color: #fff;
   white-space: nowrap;
+}
+
+.month-group-header__loading {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 auto;
+  color: #fff;
+}
+
+.sticky-sentinel td {
+  padding: 0 !important;
+  border: none;
+  height: 0;
+  line-height: 0;
+  font-size: 0;
 }
 
 .loading-container {

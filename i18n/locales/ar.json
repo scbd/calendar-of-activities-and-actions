@@ -46,6 +46,8 @@
       "notifications": "الإشعارات",
       "relatedActivities": "أنشطة ذات صلة",
       "relatedMeetings": "اجتماعات ذات صلة",
+      "meetingRef": "الاجتماع {ref}",
+      "meetingRefHint": "التفاصيل غير متوفرة",
       "relatedNotifications": "إشعارات ذات صلة",
       "untitled": "بدون عنوان",
       "unknownDate": "تاريخ غير معروف",
@@ -71,7 +73,7 @@
         "activityTypes": "نوع (أنواع) النشاط",
         "globalTargets": "هدف (أهداف) GBF",
         "countries": "حفلة (حفلات)",
-        "subjects": "الموضوع (الموضوعات)",
+        "subjects": "المجال(ات) المواضيعية",
         "statuses": "الحالة (الحالات)",
         "subsidiaryBodies": "الهيئة (الهيئات) الفرعية",
         "governingBodies": "الهيئة (الهيئات) الإدارية",
@@ -92,7 +94,7 @@
         "activityTypes": "حدد أنواع الأنشطة",
         "globalTargets": "حدد أهداف GBF",
         "countries": "حدد الأحزاب",
-        "subjects": "حدد الموضوعات",
+        "subjects": "حدد المجالات المواضيعية",
         "statuses": "حدد الحالات",
         "subsidiaryBodies": "حدد الهيئات الفرعية",
         "governingBodies": "حدد الهيئات الإدارية",
@@ -108,7 +110,8 @@
         "actionRequiredOnly": "عرض العناصر التي تتطلب إجراءً فقط"
       },
       "actions": {
-        "clearAll": "مسح جميع الفلاتر"
+        "clearAll": "مسح جميع الفلاتر",
+        "appliedFilters": "الفلاتر المطبقة"
       },
       "sortOptions": {
         "startDateAsc": "تاريخ البدء (الأقدم أولاً)",
@@ -124,8 +127,8 @@
       "globalTargetPlaceholder": "حدد أهداف GBF",
       "countryLabel": "الأطراف",
       "countryPlaceholder": "حدد الأحزاب",
-      "subjectLabel": "الموضوع",
-      "subjectPlaceholder": "حدد الموضوعات",
+      "subjectLabel": "المجال(ات) المواضيعية",
+      "subjectPlaceholder": "حدد المجالات المواضيعية",
       "statusLabel": "الحالة",
       "statusPlaceholder": "حدد الحالات",
       "subsidiaryBodyLabel": "هيئة فرعية",

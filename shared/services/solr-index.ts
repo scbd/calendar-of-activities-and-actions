@@ -18,6 +18,20 @@ import type { CalendarDoc } from '../types/calendar';
 import type { SolrResponse } from '../types/solr';
 
 /**
+ * Map of legacy Drupal node IDs → current SOLR meeting symbols.
+ *
+ * Some activities reference meetings by legacy numeric IDs (e.g. "006672")
+ * that don't match any SOLR field (`identifier_s`, `meetingCode_s`, or
+ * `symbol_s`). This map translates them so the query can resolve them.
+ *
+ * Add entries here when a legacy numeric meeting reference is discovered
+ * that cannot be resolved by SOLR.
+ */
+export const LEGACY_MEETING_ID_MAP: Record<string, string> = {
+  '006672': 'MMDSI-SC-03',
+};
+
+/**
  * Generic record describing SOLR query parameters.
  */
 export type SolrQueryParameters = Record<string, string | number | boolean | Array<string | number> | undefined>;
@@ -218,10 +232,18 @@ export async function fetchRelatedDocsBySchema(
     return [];
   }
 
+  const normalizedIdentifiers = identifiers.map(id =>
+    (schema === 'meeting' && LEGACY_MEETING_ID_MAP[id]) ? LEGACY_MEETING_ID_MAP[id] : id,
+  );
+
+  // De-duplicate after mapping (in case the same meeting is referenced
+  // by both its legacy ID and its symbol).
+  const uniqueIdentifiers = [...new Set(normalizedIdentifiers)];
+
   // Build an OR query across identifier_s, meetingCode_s and symbol_s
   // (meetings use short codes like "CP-MOP-11" stored in meetingCode_s
   // and symbols like "SBI-06" stored in symbol_s).
-  const escaped = identifiers.map(id => `"${id}"`);
+  const escaped = uniqueIdentifiers.map(id => `"${id}"`);
   const identifierClause = `identifier_s:(${escaped.join(' OR ')})`;
   const meetingCodeClause = schema === 'meeting'
     ? ` OR meetingCode_s:(${escaped.join(' OR ')}) OR symbol_s:(${escaped.join(' OR ')})`
@@ -234,7 +256,7 @@ export async function fetchRelatedDocsBySchema(
   const body = {
     q,
     wt: 'json',
-    rows: identifiers.length,
+    rows: uniqueIdentifiers.length,
     start: 0,
     fl: CALENDAR_LIST_FIELDS,
     fq: [

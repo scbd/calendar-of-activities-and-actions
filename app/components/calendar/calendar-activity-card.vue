@@ -12,7 +12,6 @@
     <div class="calendar-activity-card__content">
       <NuxtLink
         :to="activityLink"
-        target="_blank"
         class="calendar-activity-card__title"
       >
         {{ title }}

@@ -25,17 +25,18 @@
       <div class="calendar-notification-card__header-right">
         <span
           v-if="entry.details?.actionRequired"
-          class="calendar-notification-card__badge"
-          :class="{ 'calendar-notification-card__badge--completed': isDeadlinePast }"
+          class="badge"
+          :class="isDeadlinePast ? 'bg-success' : 'bg-warning'"
         >
           <template v-if="isDeadlinePast">
-            {{ t('calendar.notifications.completedOn', { date: formattedDeadline }) }}
+            <span class="calendar-notification-card__badge-status">{{ t('calendar.status.completed') }}</span>
+            <span v-if="formattedDeadline" class="calendar-notification-card__badge-sep">&bull;</span>
+            <span v-if="formattedDeadline" class="calendar-notification-card__badge-date">{{ formattedDeadline }}</span>
           </template>
           <template v-else>
-            {{ t('calendar.labels.actionRequired') }}
-            <span v-if="entry.details?.actionDeadline" class="calendar-notification-card__badge-deadline">
-              {{ t('calendar.notifications.deadline', { date: formattedDeadline }) }}
-            </span>
+            <span class="calendar-notification-card__badge-status">{{ t('calendar.labels.actionRequired') }}</span>
+            <span v-if="formattedDeadline" class="calendar-notification-card__badge-sep">&bull;</span>
+            <span v-if="formattedDeadline" class="calendar-notification-card__badge-date">{{ formattedDeadline }}</span>
           </template>
         </span>
       </div>
@@ -49,22 +50,11 @@
     </div>
     <div v-else-if="entry.details" class="calendar-notification-card__content">
       <NuxtLink
-        v-if="notificationCalendarLink"
         :to="notificationCalendarLink"
-        target="_blank"
         class="calendar-notification-card__title"
       >
         {{ entry.details.title }}
       </NuxtLink>
-      <a
-        v-else
-        :href="entry.details.link"
-        target="_blank"
-        rel="noopener"
-        class="calendar-notification-card__title"
-      >
-        {{ entry.details.title }}
-      </a>
 
       <div v-if="entry.details.recipients.length" class="calendar-notification-card__section">
         <span class="calendar-pill-label">{{ t('calendar.notifications.recipients') }}</span>
@@ -77,6 +67,28 @@
           :items="thematicLabels"
           pill-class="calendar-pill calendar-pill--muted"
         />
+      </div>
+
+      <div v-if="governingBodyLabels.length" class="calendar-notification-card__body-section">
+        <span class="calendar-pill-label">{{ t('calendar.labels.governingBodies') }}</span>
+        <span
+          v-for="label in governingBodyLabels"
+          :key="label"
+          class="calendar-notification-card__body-pill"
+        >
+          {{ label }}
+        </span>
+      </div>
+
+      <div v-if="subsidiaryBodyLabels.length" class="calendar-notification-card__body-section">
+        <span class="calendar-pill-label">{{ t('calendar.labels.subsidiaryBodies') }}</span>
+        <span
+          v-for="label in subsidiaryBodyLabels"
+          :key="label"
+          class="calendar-notification-card__body-pill"
+        >
+          {{ label }}
+        </span>
       </div>
 
       <div
@@ -120,6 +132,8 @@ import type { NotificationDisplayEntry } from 'shared/utils/notifications';
 import type { CalendarDoc } from 'shared/types/calendar';
 import { subjectLabelMap, resolveSubjectLabel, fallbackSubjectLabel } from 'shared/utils/subjects';
 import { getTypeColor } from 'shared/utils/type-colors';
+import { getDocGoverningBodies, getDocSubsidiaryBodies } from 'shared/utils/document-processing';
+import { useBodyLabels } from '../../composables/use-body-labels';
 
 const props = defineProps<{
   entry: NotificationDisplayEntry;
@@ -127,6 +141,8 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+
+const { resolveGoverningBodyLabels, resolveSubsidiaryBodyLabels } = useBodyLabels();
 
 const notificationLink = computed(() => buildNotificationLink(props.entry.key));
 const formattedDeadline = computed(() => formatNotificationDate(props.entry.details?.actionDeadline) || '');
@@ -149,33 +165,29 @@ const isDeadlinePast = computed(() => {
 });
 
 const notificationCalendarLink = computed(() => {
-  // Find the notification doc in allDocs to link to it in the main calendar view
-  if (!props.allDocs) {
-    return null;
-  }
+  const query: Record<string, string> = {};
 
-  const notificationDoc = props.allDocs.find(doc => {
-    if (doc.schema !== 'notification') {
-      return false;
+  // Try to find the notification doc in allDocs so we can auto-expand it
+  const matchedDoc = notificationDoc.value;
+
+  if (matchedDoc) {
+    const docId = matchedDoc.id || '';
+
+    if (docId) {
+      query.autoExpand = docId;
     }
-    // Match by notificationKey or symbol
-    return doc.notificationKey === props.entry.key || doc.symbol === props.entry.key;
-  });
 
-  if (!notificationDoc) {
-    return null;
+    if (matchedDoc.startDate) {
+      query.startDate = matchedDoc.startDate;
+    }
+  } else if (props.entry.details?.publishedOn) {
+    // Fallback: navigate to the calendar around the notification's published date
+    // and set autoExpand to the notification key so the auto-expand logic can
+    // match by symbol/identifier once the data loads.
+    query.startDate = props.entry.details.publishedOn;
+    query.autoExpand = props.entry.key;
   }
 
-  const startDate = notificationDoc.startDate;
-  const docId = notificationDoc.id || '';
-  const query: Record<string, string> = {
-    autoExpand: docId,
-  };
-  
-  if (startDate) {
-    query.startDate = startDate;
-  }
-  
   return {
     path: '/',
     query,
@@ -206,6 +218,51 @@ const thematicLabels = computed(() => {
       seen.add(normalized);
       return true;
     });
+});
+
+const notificationDoc = computed(() => {
+  if (!props.allDocs) {
+    return null;
+  }
+
+  const key = props.entry.key;
+
+  return props.allDocs.find(doc => {
+    if (doc.schema !== 'notification') {
+      return false;
+    }
+
+    // Match by symbol (primary), reference, or identifier containing the key
+    if (doc.symbol === key) {
+      return true;
+    }
+
+    if ('reference' in doc && doc.reference === key) {
+      return true;
+    }
+
+    if (doc.identifier && doc.identifier.includes(key)) {
+      return true;
+    }
+
+    return false;
+  }) ?? null;
+});
+
+const governingBodyLabels = computed(() => {
+  if (!notificationDoc.value) {
+    return [] as string[];
+  }
+
+  return resolveGoverningBodyLabels(getDocGoverningBodies(notificationDoc.value));
+});
+
+const subsidiaryBodyLabels = computed(() => {
+  if (!notificationDoc.value) {
+    return [] as string[];
+  }
+
+  return resolveSubsidiaryBodyLabels(getDocSubsidiaryBodies(notificationDoc.value));
 });
 
 const cardBackgroundStyle = computed(() => {
@@ -287,24 +344,21 @@ const isCpbHighlighted = computed(() => {
   color: #fff;
   font-weight: 600;
   text-decoration: none;
+  text-transform: uppercase;
 }
 
-.calendar-notification-card__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  background-color: #fef3c7; /* warm light yellow */
-  color: #92400e;
+.calendar-notification-card__badge-status {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   font-weight: 600;
 }
 
-.calendar-notification-card__badge-deadline { font-weight: 400; }
+.calendar-notification-card__badge-sep {
+  opacity: 0.7;
+}
 
-.calendar-notification-card__badge--completed {
-  background-color: #d1fae5; /* green tint */
-  color: #065f46;
+.calendar-notification-card__badge-date {
+  font-weight: 500;
 }
 
 .calendar-notification-card__status { margin-top: 0.75rem; font-weight: 600; }
@@ -345,6 +399,23 @@ const isCpbHighlighted = computed(() => {
 }
 
 .calendar-notification-card :deep(.calendar-pill--muted) { background-color: #eef2f6; color: #4b5563; }
+
+.calendar-notification-card__body-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.calendar-notification-card__body-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #eef2f6;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
 
 .calendar-notification-card__attachments { gap: 0.25rem; }
 

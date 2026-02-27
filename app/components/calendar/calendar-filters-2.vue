@@ -109,6 +109,29 @@
         </button>
       </div>
     </div>
+
+    <!-- Applied Filters Pills -->
+    <template v-if="appliedFilterPills.length > 0">
+      <hr class="mt-3 mb-2">
+      <div class="applied-filters" role="region" :aria-label="t('calendar.filters.actions.appliedFilters')">
+        <span class="applied-filters__label fw-semibold me-2">{{ t('calendar.filters.actions.appliedFilters') }}:</span>
+        <span
+          v-for="pill in appliedFilterPills"
+          :key="pill.key"
+          class="badge applied-filter-pill me-1 mb-1"
+          role="button"
+          tabindex="0"
+          :aria-label="`Remove ${pill.label}`"
+          @click="pill.remove()"
+          @keydown.enter="pill.remove()"
+          @keydown.space.prevent="pill.remove()"
+        >
+          {{ pill.label }}
+          <FontAwesomeIcon icon="xmark" class="applied-filter-pill__icon" />
+        </span>
+      </div>
+      <hr class="mt-2 mb-0">
+    </template>
   </div>
 </template>
 
@@ -375,13 +398,126 @@ const filterOptions = computed<FilterGroup[]>(() => {
 const hasActiveFilters = computed<boolean>(() => {
   const activeSorts = extractSelectedValues(selectedSorts.value);
 
+  // In tab view, don't count the tab's own type filter as an active filter
+  const nonTabFilters = props.activeTabType
+    ? selectedFilters.value.filter(
+        (item) => !(typeof item === 'object' && item.group === 'schemas' && item.value === props.activeTabType),
+      )
+    : selectedFilters.value;
+
   return (
-    selectedFilters.value.length > 0 ||
+    nonTabFilters.length > 0 ||
     startDate.value !== '' ||
     endDate.value !== '' ||
     actionRequired.value ||
     !areSortSelectionsDefault(activeSorts)
   );
+});
+
+// ---------------------------------------------------------------------------
+// Applied filter pills — flat list of badges with individual remove handlers
+// ---------------------------------------------------------------------------
+
+interface AppliedFilterPill {
+  key: string;
+  label: string;
+  remove: () => void;
+}
+
+const appliedFilterPills = computed<AppliedFilterPill[]>(() => {
+  const pills: AppliedFilterPill[] = [];
+  const isTabView = props.activeTabType !== '';
+
+  for (const item of selectedFilters.value) {
+    if (typeof item === 'string') {
+      // Search tags or plain strings
+      if (item.startsWith('search:')) {
+        const term = item.replace('search:', '');
+
+        pills.push({
+          key: `search:${term}`,
+          label: `${t('calendar.filters.labels.search')}: ${term}`,
+          remove: () => {
+            selectedFilters.value = selectedFilters.value.filter((f) => f !== item);
+            hasUserInteracted.value = true;
+          },
+        });
+      }
+    } else if (item && typeof item === 'object') {
+      // In tab view, skip record type pills for the active tab
+      if (isTabView && item.group === 'schemas' && item.value === props.activeTabType) {
+        continue;
+      }
+      // In tab view, hide all record type pills
+      if (isTabView && item.group === 'schemas') {
+        continue;
+      }
+      // Skip search tags (handled above)
+      if (item.value.startsWith('search:')) {
+        const term = item.value.replace('search:', '');
+
+        pills.push({
+          key: `search:${term}`,
+          label: `${t('calendar.filters.labels.search')}: ${term}`,
+          remove: () => {
+            selectedFilters.value = selectedFilters.value.filter(
+              (f) => f !== item,
+            );
+            hasUserInteracted.value = true;
+          },
+        });
+        continue;
+      }
+
+      pills.push({
+        key: `${item.group}:${item.value}`,
+        label: item.label ?? item.value,
+        remove: () => {
+          selectedFilters.value = selectedFilters.value.filter(
+            (f) => f !== item,
+          );
+          hasUserInteracted.value = true;
+        },
+      });
+    }
+  }
+
+  // Date range
+  if (startDate.value) {
+    pills.push({
+      key: 'startDate',
+      label: `${t('calendar.filters.labels.startDate')}: ${startDate.value}`,
+      remove: () => {
+        startDate.value = '';
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  if (endDate.value) {
+    pills.push({
+      key: 'endDate',
+      label: `${t('calendar.filters.labels.endDate')}: ${endDate.value}`,
+      remove: () => {
+        endDate.value = '';
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  // Action required
+  if (actionRequired.value) {
+    pills.push({
+      key: 'actionRequired',
+      label: t('calendar.filters.labels.actionRequired') as string,
+      remove: () => {
+        actionRequired.value = false;
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  return pills;
 });
 
 // ---------------------------------------------------------------------------
@@ -515,6 +651,13 @@ function addTag(newTag: string): void {
 // URL query string management
 // ---------------------------------------------------------------------------
 
+// Keys managed by this component — everything else in the URL is preserved.
+const MANAGED_QUERY_KEYS = new Set([
+  'types', 'subjects', 'statuses', 'subsidiaryBodies', 'governingBodies',
+  'copDecisions', 'activityTypes', 'globalTargets', 'gbfSections',
+  'countries', 'sort', 'startDate', 'endDate', 'actionRequired', 'search',
+]);
+
 function parseQueryArray(param: string | string[] | undefined): string[] {
   if (!param) return [];
   if (Array.isArray(param)) return param.filter(Boolean);
@@ -525,10 +668,26 @@ function parseQueryArray(param: string | string[] | undefined): string[] {
 function updateUrlQuery(): void {
   if (isLoadingFromUrl.value) return;
 
-  const query: Record<string, string | undefined> = {};
+  // Preserve query params not managed by this component (e.g. tab-view-toggle)
+  const preserved: Record<string, string | string[]> = {};
+
+  for (const [key, value] of Object.entries(route.query)) {
+    if (!MANAGED_QUERY_KEYS.has(key) && value != null) {
+      preserved[key] = value as string | string[];
+    }
+  }
+
+  const query: Record<string, string | undefined> = { ...preserved } as Record<string, string | undefined>;
   const filtersByGroup = extractFiltersByGroup(selectedFilters.value);
 
-  if (filtersByGroup.types.length > 0) query.types = filtersByGroup.types.join(',');
+  // In tab view, use the activeTabType prop as the authoritative type filter.
+  // This prevents syncFiltersWithOptions from clearing the type when
+  // schema options exclude types with 0 facet count.
+  const types = props.activeTabType
+    ? [props.activeTabType]
+    : filtersByGroup.types;
+
+  if (types.length > 0) query.types = types.join(',');
   if (filtersByGroup.subjects.length > 0) query.subjects = filtersByGroup.subjects.join(',');
   if (filtersByGroup.statuses.length > 0) query.statuses = filtersByGroup.statuses.join(',');
   if (filtersByGroup.subsidiaryBodies.length > 0) query.subsidiaryBodies = filtersByGroup.subsidiaryBodies.join(',');
@@ -657,8 +816,15 @@ function loadFiltersFromUrl(): void {
 function updateFilters(): void {
   const filtersByGroup = extractFiltersByGroup(selectedFilters.value);
 
+  // In tab view, use the activeTabType prop as the authoritative type filter.
+  // This prevents syncFiltersWithOptions from clearing the type when
+  // schema options exclude types with 0 facet count.
+  const types = props.activeTabType
+    ? [props.activeTabType]
+    : filtersByGroup.types;
+
   const filters: FilterState = {
-    types: filtersByGroup.types,
+    types,
     subjects: filtersByGroup.subjects,
     statuses: filtersByGroup.statuses,
     subsidiaryBodies: filtersByGroup.subsidiaryBodies,
@@ -680,7 +846,18 @@ function updateFilters(): void {
 }
 
 function clearFilters(): void {
-  selectedFilters.value = [];
+  // In tab view, preserve schema filters that match the active tab type;
+  // otherwise clear all filters including types.
+  const isTabView = route.query['tab-view-toggle'] === 'true';
+
+  if (isTabView && props.activeTabType) {
+    selectedFilters.value = selectedFilters.value.filter(
+      (item) => typeof item === 'object' && item.group === 'schemas' && item.value === props.activeTabType,
+    );
+  } else {
+    selectedFilters.value = [];
+  }
+
   selectedSorts.value = [...DEFAULT_SORT_VALUES];
   startDate.value = '';
   endDate.value = '';
@@ -824,5 +1001,39 @@ watchEffect(() => {
 .facet-count {
   color: #6c757d;
   font-size: 0.85em;
+}
+
+.applied-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.applied-filters__label {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.applied-filter-pill {
+  background-color: var(--cbd-green);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35em 0.65em;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.applied-filter-pill__icon {
+  margin-left: 0.4em;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 </style>

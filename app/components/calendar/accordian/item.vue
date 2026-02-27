@@ -180,7 +180,7 @@ import CalendarAccordianDetailsNotification from './details-notification.vue';
 import RelatedActivities from './related-activities.vue';
 import RelatedMeetings from './related-meetings.vue';
 import RelatedNotifications from './related-notifications.vue';
-import { fetchRelatedDocsBySchema } from 'shared/services/solr-index';
+import { fetchRelatedDocsBySchema, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
 import { formatDateRange } from 'shared/utils/date';
 import { DateTime } from 'luxon';
 import {
@@ -376,8 +376,17 @@ const isActionDeadlinePast = computed(() => {
   return dt.isValid && dt.toUTC().endOf('day') < DateTime.utc();
 });
 
-/** Show the action badge in the summary only when the deadline is still active. */
-const showActionBadge = computed(() => isActionRequired.value && !isActionDeadlinePast.value);
+/** True when the document's effective status is "completed". */
+const isStatusCompleted = computed(() => {
+  const rawStatus = getDocStringValue(props.doc, 'status');
+  const statusKey = getDocStringValue(props.doc, 'statusKey');
+  const normalizedKey = normalizeStatusKey(statusKey ?? rawStatus);
+
+  return normalizedKey === 'COMPLETED' || shouldDisplayCompleted(props.doc, normalizedKey, rawStatus ?? undefined);
+});
+
+/** Show the action badge in the summary only when the deadline is still active and status is not completed. */
+const showActionBadge = computed(() => isActionRequired.value && !isActionDeadlinePast.value && !isStatusCompleted.value);
 
 const isCpbDoc = computed(() => {
   const subjects = getDocSubjects(props.doc);
@@ -655,8 +664,8 @@ watch(
       return;
     }
 
-    // Only notifications and activities have cross-reference arrays
-    if (!isNotification.value && !isActivityDoc.value) {
+    // Skip schemas that never carry cross-reference arrays
+    if (!isNotification.value && !isActivityDoc.value && !isMeetingDoc.value) {
       return;
     }
 
@@ -703,18 +712,19 @@ watch(
 );
 
 const relatedActivities = computed(() => {
-  // For notifications and activities, use the separately-fetched documents
-  if (isNotification.value || isActivityDoc.value) {
+  // For notifications, activities, and meetings, prefer the separately-fetched documents
+  if (isNotification.value || isActivityDoc.value || isMeetingDoc.value) {
+    // If SOLR fetch returned results, use those
+    if (fetchedRelatedActivities.value.length > 0) {
+      return fetchedRelatedActivities.value;
+    }
+
+    // Fallback: try resolving from the in-memory paged list
+    if (isMeetingDoc.value && props.allDocs) {
+      return getRelatedActivitiesForMeeting(props.doc, props.allDocs);
+    }
+
     return fetchedRelatedActivities.value;
-  }
-
-  if (!props.allDocs) {
-    return [];
-  }
-
-  // For meetings, show activities referenced in the meeting's activities array
-  if (isMeetingDoc.value) {
-    return getRelatedActivitiesForMeeting(props.doc, props.allDocs);
   }
 
   return [];
@@ -736,7 +746,7 @@ const relatedMeetings = computed(() => {
  * still see that a relation exists.
  */
 const unresolvedActivityRefs = computed<string[]>(() => {
-  if (!isNotification.value && !isActivityDoc.value) {
+  if (!isNotification.value && !isActivityDoc.value && !isMeetingDoc.value) {
     return [];
   }
 
@@ -763,7 +773,7 @@ const unresolvedActivityRefs = computed<string[]>(() => {
  * still see that a relation exists.
  */
 const unresolvedMeetingRefs = computed<string[]>(() => {
-  if (!isNotification.value && !isActivityDoc.value) {
+  if (!isNotification.value && !isActivityDoc.value && !isMeetingDoc.value) {
     return [];
   }
 
@@ -791,7 +801,21 @@ const unresolvedMeetingRefs = computed<string[]>(() => {
       .filter(Boolean)
   );
 
-  return refs.filter(ref => !resolvedIds.has(ref) && !resolvedIdentifiers.has(ref) && !resolvedCodes.has(ref) && !resolvedSymbols.has(ref));
+  return refs.filter(ref => {
+    // Check if the ref itself matches a resolved doc
+    if (resolvedIds.has(ref) || resolvedIdentifiers.has(ref) || resolvedCodes.has(ref) || resolvedSymbols.has(ref)) {
+      return false;
+    }
+
+    // Check if the ref is a legacy ID that was mapped to a resolved symbol
+    const mapped = LEGACY_MEETING_ID_MAP[ref];
+
+    if (mapped && (resolvedIds.has(mapped) || resolvedIdentifiers.has(mapped) || resolvedCodes.has(mapped) || resolvedSymbols.has(mapped))) {
+      return false;
+    }
+
+    return true;
+  });
 });
 
 const relatedNotifications = computed(() => {

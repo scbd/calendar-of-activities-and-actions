@@ -246,7 +246,7 @@
       </div>
 
       <!-- COP Decision Filter -->
-      <div v-show="false" class="col-12 col-md-6 col-lg-3">
+      <div v-show="true" class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
@@ -346,6 +346,29 @@
         </button>
       </div>
     </div>
+
+    <!-- Applied Filters Pills -->
+    <template v-if="appliedFilterPills.length > 0">
+      <hr class="mt-3 mb-2">
+      <div class="applied-filters" role="region" :aria-label="t('calendar.filters.actions.appliedFilters')">
+        <span class="applied-filters__label fw-semibold me-2">{{ t('calendar.filters.actions.appliedFilters') }}:</span>
+        <span
+          v-for="pill in appliedFilterPills"
+          :key="pill.key"
+          class="badge applied-filter-pill me-1 mb-1"
+          role="button"
+          tabindex="0"
+          :aria-label="`Remove ${pill.label}`"
+          @click="pill.remove()"
+          @keydown.enter="pill.remove()"
+          @keydown.space.prevent="pill.remove()"
+        >
+          {{ pill.label }}
+          <FontAwesomeIcon icon="xmark" class="applied-filter-pill__icon" />
+        </span>
+      </div>
+      <hr class="mt-2 mb-0">
+    </template>
   </div>
 </template>
 
@@ -473,8 +496,16 @@ const hasCompletedInitialMount = ref<boolean>(false);
 const hasActiveFilters = computed<boolean>(() => {
   const activeSort = selectedSort.value?.value ?? DEFAULT_SORT_VALUE;
 
+  // In tab view, don't count the tab's own type filter as an active filter
+  const hasNonTabTypes = props.activeTabType
+    ? selectedTypes.value.some((t) => {
+        const val = typeof t === 'string' ? t : (t as FilterOption).value;
+        return val !== props.activeTabType;
+      })
+    : selectedTypes.value.length > 0;
+
   return (
-    selectedTypes.value.length > 0 ||
+    hasNonTabTypes ||
     selectedSubjects.value.length > 0 ||
     selectedStatuses.value.length > 0 ||
     selectedBodies.value.length > 0 ||
@@ -488,6 +519,209 @@ const hasActiveFilters = computed<boolean>(() => {
     searchText.value.trim().length > 0 ||
     activeSort !== DEFAULT_SORT_VALUE
   );
+});
+
+// ---------------------------------------------------------------------------
+// Applied filter pills — flat list of badges with individual remove handlers
+// ---------------------------------------------------------------------------
+
+interface AppliedFilterPill {
+  key: string;
+  label: string;
+  remove: () => void;
+}
+
+function pillLabel(item: FilterSelectionValue): string {
+  if (typeof item === 'string') return item;
+
+  return item?.label ?? item?.value ?? '';
+}
+
+const appliedFilterPills = computed<AppliedFilterPill[]>(() => {
+  const pills: AppliedFilterPill[] = [];
+  const isTabView = props.activeTabType !== '';
+
+  // Record types — hide in tab view
+  if (!isTabView) {
+    for (const item of selectedTypes.value) {
+      const label = pillLabel(item);
+      const value = typeof item === 'string' ? item : item.value;
+
+      pills.push({
+        key: `type:${value}`,
+        label,
+        remove: () => {
+          selectedTypes.value = selectedTypes.value.filter(
+            (i) => (typeof i === 'string' ? i : i.value) !== value,
+          );
+          onManualFilterChange();
+        },
+      });
+    }
+  }
+
+  // Activity types
+  for (const item of selectedActivityTypes.value) {
+    const label = pillLabel(item);
+    const value = typeof item === 'string' ? item : item.value;
+
+    pills.push({
+      key: `activityType:${value}`,
+      label,
+      remove: () => {
+        selectedActivityTypes.value = selectedActivityTypes.value.filter(
+          (i) => (typeof i === 'string' ? i : i.value) !== value,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // Subjects
+  for (const item of selectedSubjects.value) {
+    const label = pillLabel(item);
+    const value = typeof item === 'string' ? item : item.value;
+
+    pills.push({
+      key: `subject:${value}`,
+      label,
+      remove: () => {
+        selectedSubjects.value = selectedSubjects.value.filter(
+          (i) => (typeof i === 'string' ? i : i.value) !== value,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // Statuses
+  for (const item of selectedStatuses.value) {
+    const label = pillLabel(item);
+    const value = typeof item === 'string' ? item : item.value;
+
+    pills.push({
+      key: `status:${value}`,
+      label,
+      remove: () => {
+        selectedStatuses.value = selectedStatuses.value.filter(
+          (i) => (typeof i === 'string' ? i : i.value) !== value,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // Bodies (governing + subsidiary combined)
+  for (const item of selectedBodies.value) {
+    pills.push({
+      key: `body:${item.bodyGroup}:${item.value}`,
+      label: item.label ?? item.value,
+      remove: () => {
+        selectedBodies.value = selectedBodies.value.filter(
+          (i) => i.value !== item.value || i.bodyGroup !== item.bodyGroup,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // COP Decisions
+  for (const item of selectedCopDecisions.value) {
+    const label = pillLabel(item);
+    const value = typeof item === 'string' ? item : item.value;
+
+    pills.push({
+      key: `copDecision:${value}`,
+      label,
+      remove: () => {
+        selectedCopDecisions.value = selectedCopDecisions.value.filter(
+          (i) => (typeof i === 'string' ? i : i.value) !== value,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // GBF items (sections + targets combined)
+  for (const item of selectedGbfItems.value) {
+    pills.push({
+      key: `gbf:${item.gbfGroup}:${item.value}`,
+      label: item.label ?? item.value,
+      remove: () => {
+        selectedGbfItems.value = selectedGbfItems.value.filter(
+          (i) => i.value !== item.value || i.gbfGroup !== item.gbfGroup,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // Countries
+  for (const item of selectedCountries.value) {
+    const label = pillLabel(item);
+    const value = typeof item === 'string' ? item : item.value;
+
+    pills.push({
+      key: `country:${value}`,
+      label,
+      remove: () => {
+        selectedCountries.value = selectedCountries.value.filter(
+          (i) => (typeof i === 'string' ? i : i.value) !== value,
+        );
+        onManualFilterChange();
+      },
+    });
+  }
+
+  // Date range
+  if (startDate.value) {
+    pills.push({
+      key: 'startDate',
+      label: `${t('calendar.filters.labels.startDate')}: ${startDate.value}`,
+      remove: () => {
+        startDate.value = '';
+        startDateIsAutoApplied.value = false;
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  if (endDate.value) {
+    pills.push({
+      key: 'endDate',
+      label: `${t('calendar.filters.labels.endDate')}: ${endDate.value}`,
+      remove: () => {
+        endDate.value = '';
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  // Action required
+  if (actionRequired.value) {
+    pills.push({
+      key: 'actionRequired',
+      label: t('calendar.filters.labels.actionRequired') as string,
+      remove: () => {
+        actionRequired.value = false;
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  // Search text
+  if (searchText.value.trim()) {
+    pills.push({
+      key: 'search',
+      label: `${t('calendar.filters.labels.search')}: ${searchText.value.trim()}`,
+      remove: () => {
+        searchText.value = '';
+        hasUserInteracted.value = true;
+      },
+    });
+  }
+
+  return pills;
 });
 
 /**
@@ -647,7 +881,12 @@ function updateUrlQuery(): void {
 
   const query: Record<string, string | undefined> = { ...preserved } as Record<string, string | undefined>;
 
-  const types = extractSelectedValues(selectedTypes.value);
+  // In tab view, use the activeTabType prop as the authoritative type filter.
+  // This prevents syncSelectionWithOptions from clearing the type when
+  // recordTypeOptions excludes types with 0 facet count.
+  const types = props.activeTabType
+    ? [props.activeTabType]
+    : extractSelectedValues(selectedTypes.value);
 
   if (types.length > 0) query.types = types.join(',');
 
@@ -831,8 +1070,15 @@ function loadFiltersFromUrl(): void {
 function updateFilters(): void {
   const normalizedSearch = searchText.value.trim();
 
+  // In tab view, use the activeTabType prop as the authoritative type filter.
+  // This prevents syncSelectionWithOptions from clearing the type when
+  // recordTypeOptions excludes types with 0 facet count.
+  const types = props.activeTabType
+    ? [props.activeTabType]
+    : extractSelectedValues(selectedTypes.value);
+
   const filters: FilterState = {
-    types: extractSelectedValues(selectedTypes.value),
+    types,
     subjects: extractSelectedValues(selectedSubjects.value),
     statuses: extractSelectedValues(selectedStatuses.value),
     subsidiaryBodies: extractBodyValuesByGroup(selectedBodies.value, 'subsidiaryBodies'),
@@ -855,7 +1101,14 @@ function updateFilters(): void {
 }
 
 function clearFilters(): void {
-  selectedTypes.value = [];
+  // In tab view, preserve the type filter for the active tab;
+  // otherwise clear types along with all other filters.
+  const isTabView = route.query['tab-view-toggle'] === 'true';
+
+  if (!isTabView) {
+    selectedTypes.value = [];
+  }
+
   selectedSubjects.value = [];
   selectedStatuses.value = [];
   selectedBodies.value = [];
@@ -1089,5 +1342,39 @@ watchEffect(() => {
 
 #search-filter.form-control-lg {
   height: calc(var(--bs-body-line-height) * 1em + 1rem + calc(var(--bs-border-width) * 2) - 5px);
+}
+
+.applied-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.applied-filters__label {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.applied-filter-pill {
+  background-color: var(--cbd-green);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35em 0.65em;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.applied-filter-pill__icon {
+  margin-left: 0.4em;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 </style>
