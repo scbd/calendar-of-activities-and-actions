@@ -88,7 +88,7 @@ import type { LocaleCode } from 'shared/services/solr';
 import { formatDateRange, formatNotificationDate } from 'shared/utils/date';
 import { getDocStringValue, getDocGoverningBodies, getDocSubsidiaryBodies } from 'shared/utils/document-processing';
 import { resolveCountryLabel } from 'shared/utils/labels';
-import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
+import { normalizeStatusKey, normalizeStatusLabel, statusColor } from 'shared/utils/status';
 import { getTypeColor } from 'shared/utils/type-colors';
 import { resolveSubjectLabel, fallbackSubjectLabel, subjectLabelMap } from 'shared/utils/subjects';
 import ExpandablePillList from '../expandable-pill-list.vue';
@@ -169,10 +169,6 @@ const statusLabel = computed(() => {
   const statusKey = getDocStringValue(props.doc, 'statusKey');
 
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
-
-  if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
-    return t('calendar.status.completed') as string;
-  }
 
   if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED' || normalizedStatusKey === 'NODATE') {
     return '';

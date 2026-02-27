@@ -107,7 +107,7 @@
         "search": "输入关键词"
       },
       "toggles": {
-        "actionRequiredOnly": "仅显示需要操作的项目"
+        "actionRequiredOnly": "仅显示需要操作且未完成的项目"
       },
       "actions": {
         "clearAll": "清除所有筛选条件",
@@ -139,7 +139,7 @@
       "startDateLabel": "开始日期",
       "endDateLabel": "结束日期",
       "actionRequiredLabel": "需要采取行动",
-      "actionRequiredHint": "仅显示需要操作的项目",
+      "actionRequiredHint": "仅显示需要操作且未完成的项目",
       "clearAll": "清除所有筛选条件"
     },
     "types": {

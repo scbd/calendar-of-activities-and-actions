@@ -107,7 +107,7 @@
         "search": "Entrez des mots clés"
       },
       "toggles": {
-        "actionRequiredOnly": "Afficher uniquement les éléments nécessitant une action"
+        "actionRequiredOnly": "Afficher uniquement les éléments nécessitant une action qui ne sont pas terminés"
       },
       "actions": {
         "clearAll": "Effacer tous les filtres",
@@ -139,7 +139,7 @@
       "startDateLabel": "Date de début",
       "endDateLabel": "Date de fin",
       "actionRequiredLabel": "Action requise",
-      "actionRequiredHint": "Afficher uniquement les éléments nécessitant une action",
+      "actionRequiredHint": "Afficher uniquement les éléments nécessitant une action qui ne sont pas terminés",
       "clearAll": "Effacer tous les filtres"
     },
     "types": {

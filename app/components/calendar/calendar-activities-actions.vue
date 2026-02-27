@@ -73,27 +73,20 @@
         </div>
 
         <div v-for="(group, groupIndex) in groupedItems" :key="group.key" class="mb-4">
-          <!-- Sentinel to detect when the sticky header becomes stuck -->
-          <div
-            :ref="(el) => trackStickySentinel(groupIndex, el as HTMLElement | null)"
-            :data-group-index="groupIndex"
-            class="sticky-sentinel"
-            aria-hidden="true"
-          />
           <div class="dg-sep text-bg-secondary text">
             <h3 class="m-0 d-flex align-items-center">
-              <span class="pe-5 me-5">{{ groupLabel(group) }}</span>
+              <span>{{ groupLabel(group) }}</span>
               <span
-                v-if="groupIndex === stickyGroupIndex && visibleLoadingMore"
-                class="dg-sep__loading-more mx-auto me-5 "
+                v-if="visibleLoadingMore"
+                class="dg-sep__loading-more mx-auto"
                 role="status"
                 aria-live="polite"
-              > &nbsp; &nbsp;
-                <span class="spinner-border spinner-border-md me-2" />
-              
+              >
+                <span class="spinner-border spinner-border-sm me-2" />
+                Loading....
               </span>
               <span
-                v-if="groupIndex === stickyGroupIndex && total > 0"
+                v-if="total > 0"
                 class="dg-sep__results-count ms-auto"
                 role="status"
                 aria-live="polite"
@@ -299,61 +292,6 @@ watch(() => locale.value, (nextLocale) => {
   setRegionDisplayNames(createRegionDisplayNames(nextLocale));
 });
 
-// --- Sticky group tracking -------------------------------------------------
-// Detects which group header is currently stuck at the top via position:sticky
-// so the results count / loading spinner appear only on that header.
-const stickyGroupIndex = ref(0);
-const stickySentinelMap = new Map<number, HTMLElement>();
-let stickyObserver: IntersectionObserver | null = null;
-const passedGroupIndices = new Set<number>();
-
-const trackStickySentinel = (index: number, el: HTMLElement | null) => {
-  if (el) {
-    stickySentinelMap.set(index, el);
-  } else {
-    stickySentinelMap.delete(index);
-  }
-};
-
-const setupStickyObserver = () => {
-  stickyObserver?.disconnect();
-  passedGroupIndices.clear();
-
-  stickyObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        const idx = Number((entry.target as HTMLElement).dataset.groupIndex);
-
-        if (Number.isNaN(idx)) continue;
-
-        // Sentinel scrolled above the viewport → its group header is now stuck
-        if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
-          passedGroupIndices.add(idx);
-        } else {
-          passedGroupIndices.delete(idx);
-        }
-      }
-
-      stickyGroupIndex.value = passedGroupIndices.size > 0
-        ? Math.max(...passedGroupIndices)
-        : 0;
-    },
-    { threshold: [0] },
-  );
-
-  for (const el of stickySentinelMap.values()) {
-    stickyObserver.observe(el);
-  }
-};
-
-// Re-observe whenever the group list changes (load-more adds groups)
-watch(
-  () => groupedItems.value.length,
-  () => {
-    nextTick(() => setupStickyObserver());
-  },
-);
-
 // --- Accordion state -------------------------------------------------------
 const openItems = ref<Record<string, boolean>>({});
 
@@ -439,14 +377,11 @@ watch(scrollSentinel, (el) => {
 onMounted(() => {
   // Handle the (rare) case where the element already exists at mount time.
   setupScrollObserver(scrollSentinel.value);
-  nextTick(() => setupStickyObserver());
 });
 
 onUnmounted(() => {
   observer?.disconnect();
   observer = null;
-  stickyObserver?.disconnect();
-  stickyObserver = null;
   if (loadingMoreTimer) {
     clearTimeout(loadingMoreTimer);
     loadingMoreTimer = null;

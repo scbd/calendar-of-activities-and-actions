@@ -32,7 +32,7 @@ import { getSolrSelectUrl } from 'shared/utils/api-config';
 // Constants
 // ---------------------------------------------------------------------------
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 50;
 const DEBOUNCE_MS = 300;
 
 const DEFAULT_SORT_VALUES = ['startDate:asc'] as const;
@@ -93,7 +93,6 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
     ...defaultFilters,
     startDate: options.initialStartDate ?? '',
     sort: [...DEFAULT_SORT_VALUES],
-    initialLoad: true,
   });
 
   // --- Derived state -------------------------------------------------------
@@ -178,9 +177,6 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
     const endpoint = getSolrEndpoint();
 
-    // eslint-disable-next-line no-console -- temporary debug
-    console.log('[SOLR DEBUG] endpoint:', endpoint, 'body:', JSON.stringify(body, null, 2));
-
     const response = await $fetch<SolrResponse>(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -256,27 +252,13 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   }
 
   // --- Debounced filter watcher --------------------------------------------
-  // This is the SOLE trigger for executeQuery when filters change,
-  // preventing duplicate/racing queries that cause facets and totals to
-  // fall out of sync.
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  let hasReceivedFilters = false;
 
   watch(
     currentFilters,
     () => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
-      }
-
-      // Execute immediately on the first filter change (from the filter
-      // component's watchEffect) to avoid a 300 ms delay before the user
-      // sees data.
-      if (!hasReceivedFilters) {
-        hasReceivedFilters = true;
-        void executeQuery();
-
-        return;
       }
       debounceTimer = setTimeout(() => {
         void executeQuery();
@@ -381,13 +363,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
       ? [...filters.sort]
       : Array.from(DEFAULT_SORT_VALUES);
 
-    // Preserve the initialLoad flag from the incoming filters so the caller
-    // (calendar-filters) controls when strict date filtering is active.
-    currentFilters.value = {
-      ...filters,
-      sort: normalizedSort,
-      initialLoad: filters.initialLoad ?? false,
-    };
+    currentFilters.value = { ...filters, sort: normalizedSort };
   }
 
   function resetFilters(): void {
@@ -400,13 +376,7 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
   // --- Init ----------------------------------------------------------------
   onMounted(() => {
-    // If no external code (e.g. calendar-filters watchEffect) has called
-    // setFilters during setup, fire the initial query with the composable's
-    // default filters (standalone usage).
-    if (!hasReceivedFilters) {
-      hasReceivedFilters = true;
-      void executeQuery();
-    }
+    void executeQuery();
     void ensureSubjectLabels();
   });
 

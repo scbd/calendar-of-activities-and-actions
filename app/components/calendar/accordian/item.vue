@@ -202,7 +202,7 @@ import {
   responsibleUnitLabel,
   resolveCountryLabel,
 } from 'shared/utils/labels';
-import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
+import { normalizeStatusKey, normalizeStatusLabel, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import {
   buildNotificationLink,
@@ -382,7 +382,7 @@ const isStatusCompleted = computed(() => {
   const statusKey = getDocStringValue(props.doc, 'statusKey');
   const normalizedKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  return normalizedKey === 'COMPLETED' || shouldDisplayCompleted(props.doc, normalizedKey, rawStatus ?? undefined);
+  return normalizedKey === 'COMPLETED';
 });
 
 /** Show the action badge in the summary only when the deadline is still active and status is not completed. */
@@ -506,10 +506,6 @@ const statusLabel = computed(() => {
 
   if (normalizedStatusKey === 'NOT_SET') {
     return '';
-  }
-
-  if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
-    return t('calendar.status.completed') as string;
   }
 
   return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);

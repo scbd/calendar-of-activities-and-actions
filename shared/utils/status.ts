@@ -216,37 +216,16 @@ export function normalizeStatusLabel(key: string | null | undefined, fallback?: 
  * @param rawStatus - Optional raw status label.
  * @returns True when the item should appear as completed.
  */
+/**
+ * @deprecated Auto-completion promotion has been removed. The status shown
+ * is now always the actual SOLR status. Kept as a no-op stub so existing
+ * imports do not break.
+ */
 export function shouldDisplayCompleted(
-  doc: CalendarDoc,
-  statusKey: string | undefined | null,
-  rawStatus?: string,
+  _doc: CalendarDoc,
+  _statusKey: string | undefined | null,
+  _rawStatus?: string,
 ): boolean {
-  const normalizedStatus = normalizeStatusKey(statusKey ?? rawStatus);
-
-  // Statuses eligible for "past-date → completed" promotion
-  const eligibleStatuses = new Set(['CONFIRMED', 'NOT_SET', 'NODATE']);
-
-  if (!normalizedStatus || !eligibleStatuses.has(normalizedStatus)) {
-    return false;
-  }
-
-  const now = DateTime.now().toUTC().startOf('day');
-  const endDate = safeDate(getDocStringValue(doc, 'endDate'));
-
-  if (endDate && now > endDate.toUTC().endOf('day')) {
-    return true;
-  }
-
-  const startDate = safeDate(getDocStringValue(doc, 'startDate'));
-
-  if (startDate) {
-    const completionThreshold = startDate.toUTC().plus({ days: 1 }).endOf('day');
-
-    if (now > completionThreshold) {
-      return true;
-    }
-  }
-
   return false;
 }
 
@@ -258,10 +237,6 @@ export function shouldDisplayCompleted(
 export function statusColor(doc: CalendarDoc): string {
   const rawStatus = getDocStringValue(doc, 'status');
   const keyRaw = getDocStringValue(doc, 'statusKey');
-
-  if (shouldDisplayCompleted(doc, keyRaw, rawStatus)) {
-    return 'success';
-  }
 
   const normalizedKey = keyRaw?.toUpperCase() ?? normalizeStatusKey(rawStatus) ?? '';
 

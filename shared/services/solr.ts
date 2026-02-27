@@ -9,52 +9,14 @@
 import { useQueryIndex } from '../../app/composables/use-query-index';
 import type { SolrSelectBody, SolrFacetCounts } from '../types/solr';
 import type { CalendarDoc, FilterState, ParsedFacets } from '../types/calendar';
-// expandStatusValuesForQuery no longer needed — all types use statusCOA_s
-// with thesaurus identifiers directly.
+import { expandStatusValuesForQuery } from '../utils/status';
 import { SOLR_FACET_FIELDS } from '../constants/solr-fields';
-import { COMPLETED_QUERY_ALIASES } from '../utils/status';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
 
 const solrSuffixes = ['_ss', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l'];
 
 const isAllUpperCase = (segment: string): boolean => segment.toUpperCase() === segment && segment.toLowerCase() !== segment;
-
-/**
- * Convert whitespace-delimited tokens that contain Solr tokenizer
- * separators (hyphens, slashes) into phrase queries so that they match
- * the adjacent tokens produced by the standard tokenizer at index time.
- *
- * Solr's standard tokenizer splits on `-` and `/`, so:
- *   "2026-039"  → tokens ["2026", "039"]
- *   "15/4/9"    → tokens ["15", "4", "9"]
- *
- * Without quoting, the individual numbers scatter-match many unrelated
- * documents.  Converting them to phrase queries ensures positional
- * adjacency:
- *   "2026-039" → '"2026 039"'   (phrase query)
- *   "15/4/9"   → '"15 4 9"'     (phrase query)
- *   "SBI-6 climate" → '"SBI 6" climate'
- *
- * Already-quoted tokens are left untouched.
- */
-export function quoteHyphenatedTokens(text: string): string {
-  // Characters the standard Solr tokenizer splits on that users commonly
-  // type as part of a single logical token (identifiers, decision numbers).
-  const SEPARATOR_RE = /[-/]/;
-
-  return text
-    .split(/\s+/)
-    .map((token) => {
-      // Already quoted — leave as-is
-      if (token.startsWith('"') && token.endsWith('"')) return token;
-      // Contains a separator — replace separators with spaces and wrap
-      // in double quotes for Solr phrase matching.
-      if (SEPARATOR_RE.test(token)) return `"${token.replace(/[-/]+/g, ' ')}"`;
-      return token;
-    })
-    .join(' ');
-}
 
 const stripSolrSuffix = (field: string): string => {
   const lowerField = field.toLowerCase();
@@ -194,11 +156,11 @@ export function localizeFields(fields?: string | string[], locale?: LocaleCode):
 export const CALENDAR_LIST_FIELDS = [
   'id', '_id', 'schema_s', 'identifier_s',
   'title_EN_t', 'title_FR_t', 'title_ES_t', 'title_AR_t', 'title_RU_t', 'title_ZH_t',
-  'startDateCOA_dt', 'endDateCOA_dt', 'status_s', 'activityStatus_s', 'statusCOA_s',
+  'startDateCOA_dt', 'endDateCOA_dt', 'status_s', 'activityStatus_s',
   'eventCity_s', 'eventCountry_s', 'meetingCode_s',
   'type_s', 'subType_s',
   'symbol_s', 'date_dt', 'actionDate_dt',
-  'subjects_ss', 'thematicArea_ss', 'governingBodiesCOA_ss', 'subsidiaryBodiesCOA_ss',
+  'subjects_ss', 'governingBodiesCOA_ss', 'subsidiaryBodiesCOA_ss',
   'gbfTargets_ss', 'gbfSections_ss', 'decisions_ss',
   'themes_ss',
   'notifications_ss', 'meetings_ss', 'activities_ss',
@@ -206,7 +168,6 @@ export const CALENDAR_LIST_FIELDS = [
   'actionRequiredByPartiesCOA_b',
   // Notification-specific fields
   'recipient_ss', 'files_ss', 'sender_s', 'reference_s', 'fulltext_s', 'deadline_dt',
-  'createdDate_dt',
 ].join(',');
 
 /** All fields requested for expanded detail view. */
@@ -298,7 +259,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
 
   // Multi-value array filters
   const multiValueFilters: Array<{ key: keyof FilterState; field: string; tag: string }> = [
-    { key: 'subjects', field: 'thematicArea_ss', tag: 'subjects' },
+    { key: 'subjects', field: 'subjects_ss', tag: 'subjects' },
     { key: 'governingBodies', field: 'governingBodiesCOA_ss', tag: 'governingBody' },
     { key: 'subsidiaryBodies', field: 'subsidiaryBodiesCOA_ss', tag: 'subsidiaryBody' },
     { key: 'activityTypes', field: 'type_s', tag: 'activityType' },
@@ -315,46 +276,35 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     }
   }
 
-  // All record types now use statusCOA_s with thesaurus identifiers
-  // (e.g. NCHM-EVENT-STATUS-CONFIRMED). Filter directly on that field.
+  // Status filter — meetings/notifications use `status_s` (short codes like
+  // CONFIRM), calendarActivity uses `activityStatus_s` (thesaurus IDs like
+  // NCHM-EVENT-STATUS-CONFIRMED). Expand each selected value to both forms
+  // and OR across both fields so all matching documents are found.
   if (filters.statuses?.length) {
-    fq.push(buildFilterQuery('statusCOA_s', 'status', filters.statuses));
+    const expandedStatuses = expandStatusValuesForQuery(filters.statuses);
+    const statusClause = buildFilterQuery('status_s', 'status', expandedStatuses);
+    const activityStatusClause = buildFilterQuery('activityStatus_s', 'status', expandedStatuses);
+
+    // Strip the {!tag=status} prefix from the individual clauses and wrap
+    // with a single tag so facet exclusion still works correctly.
+    const stripTag = (clause: string): string => clause.replace(/^\{!tag=[^}]+\}/, '');
+
+    fq.push(`{!tag=status}(${stripTag(statusClause)} OR ${stripTag(activityStatusClause)})`);
   }
 
-  // Date range filters — behaviour changes depending on `initialLoad`:
-  //
-  // Initial load (auto-applied today date, no user interaction yet):
-  //   Strict start-date only — only records whose startDateCOA_dt (or
-  //   date_dt fallback) is on or after today are included. The endDate
-  //   fallback is intentionally excluded so that past events whose end
-  //   date happens to be in the future are not shown.
-  //
-  // Normal filtering (user has interacted):
-  //   A record is "active" when its startDateCOA_dt OR endDateCOA_dt
-  //   is on or after the filter date (range still open), OR it has
-  //   neither COA field and date_dt is on or after the filter date.
-  //
+  // Date range filters — prefer startDateCOA_dt / endDateCOA_dt, but fall back
+  // to date_dt for notifications that haven't been back-filled yet.
   // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
   {
     const sd = toSolrDateString(filters.startDate || '2024-01-01');
 
-    if (filters.initialLoad) {
-      // Strict: only startDateCOA_dt >= today (no endDate fallback)
-      fq.push(
-        `{!tag=startDate}(`
-        + `startDateCOA_dt:[${sd} TO *]`
-        + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
-        + `)`,
-      );
-    } else {
-      fq.push(
-        `{!tag=startDate}(`
-        + `startDateCOA_dt:[${sd} TO *]`
-        + ` OR endDateCOA_dt:[${sd} TO *]`
-        + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
-        + `)`,
-      );
-    }
+    fq.push(
+      `{!tag=startDate}(`
+      + `startDateCOA_dt:[${sd} TO *]`
+      + ` OR ((*:* NOT startDateCOA_dt:*) AND endDateCOA_dt:[${sd} TO *])`
+      + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
+      + `)`,
+    );
   }
   if (filters.endDate) {
     const ed = toSolrDateString(filters.endDate);
@@ -368,15 +318,9 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     );
   }
 
-  // Action required flag — also exclude completed items so only
-  // actionable (non-completed) records are shown.
+  // Action required flag
   if (filters.actionRequired) {
     fq.push('{!tag=actionRequired}actionRequiredByPartiesCOA_b:true');
-
-    const completedValues = ['NCHM-EVENT-STATUS-COMPLETED', ...COMPLETED_QUERY_ALIASES];
-    const uniqueValues = [...new Set(completedValues)];
-
-    fq.push(`-statusCOA_s:(${uniqueValues.join(' OR ')})`);
   }
 
   // Text search — use edismax with locale-specific text + title fields
@@ -394,7 +338,7 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   let qf: string | undefined;
 
   if (searchText?.trim()) {
-    q = quoteHyphenatedTokens(searchText.trim());
+    q = searchText.trim();
     defType = 'edismax';
     qf = `${textField} title_${locale.toUpperCase()}_t^2`;
   }
@@ -467,7 +411,7 @@ export function parseFacets(facetCounts?: SolrFacetCounts): ParsedFacets {
 /** Fields that must always be arrays on a normalized `CalendarDoc`. */
 const CALENDAR_ARRAY_FIELDS: ReadonlySet<string> = new Set([
   'notifications', 'meetings', 'activities',
-  'subjects', 'thematicArea', 'governingBody', 'subsidiaryBody',
+  'subjects', 'governingBody', 'subsidiaryBody',
   'governingBodiesCOA', 'subsidiaryBodiesCOA',
   'gbfTargets', 'gbfSections', 'decisions',
   'agendaItems', 'responsibleUnitsAndOfficers',
@@ -516,16 +460,10 @@ export function normalizeCalendarDoc(raw: Record<string, unknown>): CalendarDoc 
     doc.subsidiaryBody = doc.subsidiaryBodiesCOA;
   }
 
-  // All record types now store their canonical status in `statusCOA_s`
-  // (thesaurus ID, e.g. NCHM-EVENT-STATUS-CONFIRMED). Promote it to the
-  // `status` field so cards, tables, and other display logic find it in a
-  // single place. If the legacy `status_s` field already exists (e.g. on
-  // meetings that still carry a short code like CONFIRM), prefer the COA
-  // value since it reflects the computed/final status.
-  if (doc.statusCOA) {
-    doc.status = doc.statusCOA;
-  } else if (doc.schema === 'calendarActivity' && doc.activityStatus && !doc.status) {
-    // Legacy fallback for calendarActivity docs without statusCOA
+  // calendarActivity docs store status in `activityStatus_s` (thesaurus ID)
+  // rather than `status_s`. Promote it to the canonical `status` field so
+  // cards, tables, and other display logic find it in a single place.
+  if (doc.schema === 'calendarActivity' && doc.activityStatus && !doc.status) {
     doc.status = doc.activityStatus;
   }
 

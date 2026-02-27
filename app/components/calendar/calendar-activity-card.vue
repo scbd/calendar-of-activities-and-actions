@@ -58,7 +58,7 @@ import {
   getDocGlobalTargets,
 } from 'shared/utils/document-processing';
 import { resolveCountryLabel } from 'shared/utils/labels';
-import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
+import { normalizeStatusKey, normalizeStatusLabel, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 
 const props = defineProps<{
@@ -180,12 +180,6 @@ const statusLabel = computed(() => {
   
   // Always normalize the status key to ensure consistent format
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
-
-  // Check completed first — NOT_SET / NODATE with past dates should show
-  // "Completed" rather than being hidden.
-  if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
-    return t('calendar.status.completed') as string;
-  }
 
   if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED' || normalizedStatusKey === 'NODATE') {
     return '';

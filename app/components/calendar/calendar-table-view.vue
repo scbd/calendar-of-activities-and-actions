@@ -334,7 +334,6 @@ import {
   configureStatusLocalization,
   normalizeStatusKey,
   normalizeStatusLabel,
-  shouldDisplayCompleted,
   statusColor,
 } from 'shared/utils/status';
 import {
@@ -815,12 +814,6 @@ const getStatusLabel = (doc: CalendarDoc): string => {
   // Always normalize the status key to ensure consistent format
   const normalizedStatusKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  // Check completed first — NOT_SET / NODATE with past dates should show
-  // "Completed" rather than being hidden.
-  if (shouldDisplayCompleted(doc, normalizedStatusKey, rawStatus)) {
-    return t('calendar.status.completed') as string;
-  }
-
   if (normalizedStatusKey === 'NOT_SET' || normalizedStatusKey === 'PUBLISHED' || normalizedStatusKey === 'NODATE') {
     return '';
   }
@@ -862,7 +855,7 @@ const isStatusCompleted = (doc: CalendarDoc): boolean => {
   const statusKey = getDocStringValue(doc, 'statusKey');
   const normalizedKey = normalizeStatusKey(statusKey ?? rawStatus);
 
-  return normalizedKey === 'COMPLETED' || shouldDisplayCompleted(doc, normalizedKey, rawStatus ?? undefined);
+  return normalizedKey === 'COMPLETED';
 };
 
 /** Show action badge only when the deadline is still active (not past) and status is not completed. */
@@ -1237,24 +1230,44 @@ function setupScrollObserver(el: HTMLElement | null) {
   observer.observe(el);
 }
 
-/** Re-check sentinel visibility after a load-more cycle completes. */
+/**
+ * Re-check sentinel visibility after a load-more cycle completes.
+ * Waits for two animation frames so the browser has actually painted
+ * the new DOM content before measuring. This prevents a cascade of
+ * load-more calls that fire before content pushes the sentinel down.
+ */
 const checkSentinelVisibility = () => {
-  if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
-    return;
-  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
+        return;
+      }
 
-  const rect = scrollSentinel.value.getBoundingClientRect();
-  const inViewport = rect.top < window.innerHeight + 200;
+      const rect = scrollSentinel.value.getBoundingClientRect();
+      const inViewport = rect.top < window.innerHeight + 200;
 
-  if (inViewport) {
-    void loadMore();
-  }
+      if (inViewport) {
+        void loadMore();
+      }
+    });
+  });
 };
 
+// Pause the IntersectionObserver while a load-more is in progress so stale
+// intersection entries don't queue duplicate requests. When loading finishes,
+// re-observe and then check if the sentinel is still in viewport.
 watch(loadingMore, (isLoading, wasLoading) => {
+  if (isLoading && observer && scrollSentinel.value) {
+    observer.unobserve(scrollSentinel.value);
+  }
+
   if (wasLoading && !isLoading) {
-    // After a load-more finishes, check if we need to keep loading
-    nextTick(() => checkSentinelVisibility());
+    nextTick(() => {
+      if (observer && scrollSentinel.value) {
+        observer.observe(scrollSentinel.value);
+      }
+      checkSentinelVisibility();
+    });
   }
 });
 

@@ -107,7 +107,7 @@
         "search": "Introducir palabras clave"
       },
       "toggles": {
-        "actionRequiredOnly": "Mostrar solo los elementos que requieren acción"
+        "actionRequiredOnly": "Mostrar solo los elementos que requieren acción que no están completados"
       },
       "actions": {
         "clearAll": "Borrar todos los filtros",
@@ -139,7 +139,7 @@
       "startDateLabel": "Fecha de inicio",
       "endDateLabel": "Fecha de finalización",
       "actionRequiredLabel": "Acción requerida",
-      "actionRequiredHint": "Mostrar solo los elementos que requieren acción",
+      "actionRequiredHint": "Mostrar solo los elementos que requieren acción que no están completados",
       "clearAll": "Borrar todos los filtros"
     },
     "types": {

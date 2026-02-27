@@ -208,23 +208,44 @@ function setupScrollObserver(el: HTMLElement | null) {
   observer.observe(el);
 }
 
-/** Re-check sentinel visibility after a load-more cycle completes. */
+/**
+ * Re-check sentinel visibility after a load-more cycle completes.
+ * Waits for two animation frames so the browser has actually painted
+ * the new DOM content before measuring. This prevents a cascade of
+ * load-more calls that fire before content pushes the sentinel down.
+ */
 const checkSentinelVisibility = () => {
-  if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
-    return;
-  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!scrollSentinel.value || !hasMore.value || loading.value || loadingMore.value) {
+        return;
+      }
 
-  const rect = scrollSentinel.value.getBoundingClientRect();
-  const inViewport = rect.top < window.innerHeight + 200;
+      const rect = scrollSentinel.value.getBoundingClientRect();
+      const inViewport = rect.top < window.innerHeight + 200;
 
-  if (inViewport) {
-    void loadMore();
-  }
+      if (inViewport) {
+        void loadMore();
+      }
+    });
+  });
 };
 
+// Pause the IntersectionObserver while a load-more is in progress so stale
+// intersection entries don't queue duplicate requests. When loading finishes,
+// re-observe and then check if the sentinel is still in viewport.
 watch(loadingMore, (isLoading, wasLoading) => {
+  if (isLoading && observer && scrollSentinel.value) {
+    observer.unobserve(scrollSentinel.value);
+  }
+
   if (wasLoading && !isLoading) {
-    nextTick(() => checkSentinelVisibility());
+    nextTick(() => {
+      if (observer && scrollSentinel.value) {
+        observer.observe(scrollSentinel.value);
+      }
+      checkSentinelVisibility();
+    });
   }
 });
 

@@ -166,7 +166,7 @@ import {
   responsibleUnitLabel,
   resolveCountryLabel,
 } from 'shared/utils/labels';
-import { normalizeStatusKey, normalizeStatusLabel, shouldDisplayCompleted, statusColor } from 'shared/utils/status';
+import { normalizeStatusKey, normalizeStatusLabel, statusColor } from 'shared/utils/status';
 import { getTypeColor, normalizeTypeKey } from 'shared/utils/type-colors';
 import {
   notificationDisplayEntries,
@@ -373,10 +373,6 @@ const statusLabel = computed(() => {
 
   if (normalizedStatusKey === 'NOT_SET') {
     return '';
-  }
-
-  if (shouldDisplayCompleted(props.doc, normalizedStatusKey, rawStatus)) {
-    return t('calendar.status.completed') as string;
   }
 
   return normalizeStatusLabel(normalizedStatusKey, rawStatus ?? undefined);

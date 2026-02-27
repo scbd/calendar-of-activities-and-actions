@@ -108,7 +108,7 @@
     "search": "Enter keywords"
   },
       "toggles": {
-        "actionRequiredOnly": "Show only items requiring action"
+        "actionRequiredOnly": "Show only items requiring action that are not completed"
       },
       "actions": {
         "clearAll": "Clear all filters",
@@ -140,7 +140,7 @@
       "startDateLabel": "Start date",
       "endDateLabel": "End date",
       "actionRequiredLabel": "Action required",
-      "actionRequiredHint": "Show only items requiring action",
+      "actionRequiredHint": "Show only items requiring action that are not completed",
       "clearAll": "Clear all filters"
     },
     "types": {

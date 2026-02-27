@@ -107,7 +107,7 @@
         "search": "أدخل الكلمات الرئيسية"
       },
       "toggles": {
-        "actionRequiredOnly": "عرض العناصر التي تتطلب إجراءً فقط"
+        "actionRequiredOnly": "عرض العناصر التي تتطلب إجراءً فقط والتي لم تكتمل"
       },
       "actions": {
         "clearAll": "مسح جميع الفلاتر",
@@ -139,7 +139,7 @@
       "startDateLabel": "تاريخ البدء",
       "endDateLabel": "تاريخ الانتهاء",
       "actionRequiredLabel": "الإجراء المطلوب",
-      "actionRequiredHint": "عرض العناصر التي تتطلب إجراءً فقط",
+      "actionRequiredHint": "عرض العناصر التي تتطلب إجراءً فقط والتي لم تكتمل",
       "clearAll": "مسح جميع الفلاتر"
     },
     "types": {
