@@ -122,25 +122,8 @@
           :show-responsible="showResponsible"
         />
 
-        <!-- Generic details (fallback) -->
-        <!-- <CalendarAccordianDetails
-          v-else
-          :status-narrative="statusNarrative"
-          :symbol="documentSymbol"
-          :description="description"
-          :subject-labels="subjectLabels"
-          :subsidiary-bodies="subsidiaryBodies"
-          :governing-bodies="governingBodies"
-          :gbf-sections="gbfSections"
-          :global-targets="globalTargets"
-          :decision-entries="decisionEntriesValue"
-          :responsible-unit="responsibleUnit"
-          :responsible-officer="responsibleOfficer"
-          :show-responsible="showResponsible"
-        /> -->
 
         <!-- Related sections (non-notification docs only; notifications render these inside their details component) -->
-        <template v-if="!isNotification">
           <RelatedActivities
             :activities="relatedActivities"
             :unresolved-refs="unresolvedActivityRefs"
@@ -149,12 +132,10 @@
             :meetings="relatedMeetings"
             :unresolved-refs="unresolvedMeetingRefs"
           />
-        </template>
-
-        <RelatedNotifications
-          :notifications="allNotificationEntries"
-          :all-docs="allDocs"
-        />
+          <RelatedNotifications
+            :notifications="allNotificationEntries"
+            :all-docs="allDocs"
+          />
       </div>
     </div>
 

@@ -135,6 +135,38 @@ describe('buildCalendarQuery – text search', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Hyphenated terms — phrase query to prevent over-broad tokenization
+  // -----------------------------------------------------------------------
+  describe('hyphenated terms (phrase query)', () => {
+    it('wraps a hyphenated ID in quotes for "2026-002"', () => {
+      const body = buildCalendarQuery({ searchText: '2026-002' });
+
+      // Solr splits on hyphens — quoting ensures a phrase (adjacent tokens).
+      expect(body.q).toBe('"2026-002"');
+      assertNoEdismax(body);
+    });
+
+    it('wraps short hyphenated term in quotes for "SBI-6"', () => {
+      const body = buildCalendarQuery({ searchText: 'SBI-6' });
+
+      expect(body.q).toBe('"SBI-6"');
+    });
+
+    it('handles multi-word with a hyphenated token "SBI-6 review"', () => {
+      const body = buildCalendarQuery({ searchText: 'SBI-6 review' });
+
+      // "SBI-6" → quoted phrase, "review" → normal expansion, joined with AND
+      expect(body.q).toBe('"SBI-6" AND (review OR review* OR revi*)');
+    });
+
+    it('handles hyphenated term mixed with plain words "pre-session documents"', () => {
+      const body = buildCalendarQuery({ searchText: 'pre-session documents' });
+
+      expect(body.q).toBe('"pre-session" AND (documents OR documents* OR docu*)');
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // Multi-word search
   // -----------------------------------------------------------------------
   describe('multi-word search', () => {

@@ -346,6 +346,14 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   function expandTermForPartialMatch(term: string): string {
     const lower = term.toLowerCase();
 
+    // Terms containing hyphens (e.g. "2026-002", "SBI-6") — Solr's text
+    // analyser splits on hyphens, so a bare 2026-002 becomes two independent
+    // tokens "2026" and "002" that match far too many documents.  Wrapping in
+    // quotes creates a phrase query requiring the tokens to be adjacent.
+    if (term.includes('-')) {
+      return `"${term}"`;
+    }
+
     if (lower.length > STEM_PREFIX_LENGTH) {
       // Longer than stem prefix — include stem-prefix wildcard as well
       const stemPrefix = lower.slice(0, STEM_PREFIX_LENGTH);
@@ -396,6 +404,12 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
       // User-supplied advanced syntax — pass through as-is.
       // The Lucene parser handles quotes, wildcards, and Boolean operators.
       q = trimmed;
+    } else if (isMultiWord && trimmed.includes('-')) {
+      // Multi-word with hyphens (e.g. "CBD/SBI/REC/2026-002 review") —
+      // split on spaces; each token is expanded independently.  Hyphenated
+      // tokens are quoted by expandTermForPartialMatch.
+      const tokens = trimmed.split(/\s+/);
+      q = tokens.map((t) => expandTermForPartialMatch(t)).join(' AND ');
     } else if (isMultiWord) {
       // Multi-word: expand each token and join with AND so every term
       // must appear in the document.

@@ -1,38 +1,38 @@
 <template>
-  <div class="calendar-details ">
+  <div class="row ">
     <!-- Status narrative -->
-    <div v-if="statusNarrative" class="calendar-detail-section">
+    <div v-if="statusNarrative" class="calendar-detail-section col">
       <div class="calendar-detail-label">{{ t('calendar.labels.statusNarrative') }}</div>
       <div class="calendar-detail-content">{{ statusNarrative }}</div>
     </div>
 
-    <!-- Symbol
-    <div v-if="symbol" class="calendar-detail-section">
-      <div class="calendar-detail-label">{{ t('calendar.labels.symbol') }}</div>
-      <div class="calendar-detail-content">{{ symbol }}</div>
-    </div> -->
-
     <!-- Description -->
-    <div v-if="description" class="calendar-detail-section">
+    <div v-if="description" class="calendar-detail-section col">
       <div class="calendar-detail-label">{{ t('calendar.labels.description') }}</div>
       <div class="calendar-detail-content">{{ description }}</div>
     </div>
 
     <!-- Governing bodies -->
-    <div v-if="governingBodies.length" class="calendar-detail-section">
+    <div v-if="governingBodies.length" class="calendar-detail-section col-md-6 col-sm-12">
       <div class="calendar-detail-label">{{ governingBodies.length > 1 ? t('calendar.labels.governingBodies') : t('calendar.labels.governingBody') }}</div>
-      <div class="calendar-detail-content">{{ governingBodies.join(', ') }}</div>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="governingBodies"
+      />
     </div>
 
     <!-- Subsidiary bodies -->
-    <div v-if="subsidiaryBodies.length" class="calendar-detail-section">
+    <div v-if="subsidiaryBodies.length" class="calendar-detail-section col-md-6 col-sm-12">
       <div class="calendar-detail-label">{{ subsidiaryBodies.length > 1 ? t('calendar.labels.subsidiaryBodies') : t('calendar.labels.subsidiaryBody') }}</div>
-      <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="subsidiaryBodies"
+      />
     </div>
 
     <!-- GBF Sections -->
-    <div v-if="gbfSections.length" class="calendar-detail-section">
-      <div class="calendar-detail-label">{{ t('calendar.labels.gbfSections') }}</div>
+    <div v-if="gbfSections.length" class="calendar-detail-section col-md-6 col-sm-12">
+      <div class="calendar-detail-label">{{ gbfSections.length > 1 ? t('calendar.labels.gbfSections') : t('calendar.labels.gbfSection') }}</div>
       <ExpandablePillList
         class="calendar-pill-row"
         :items="gbfSections"
@@ -40,11 +40,12 @@
     </div>
 
     <!-- Global Targets -->
-    <div v-if="globalTargets.length" class="calendar-detail-section">
-      <div class="calendar-detail-label">{{ t('calendar.filters.labels.globalTargets') }}</div>
+    <div v-if="globalTargets.length" class="calendar-detail-section col-md-6 col-sm-12">
+      <div class="calendar-detail-label">{{ globalTargets.length > 1 ? t('calendar.labels.globalTargets') : t('calendar.labels.globalTarget') }}</div>
       <ExpandablePillList
         class="calendar-pill-row calendar-pill-row--gbf-targets"
         :items="globalTargets"
+        :max-visible="10"
         pill-class="calendar-pill calendar-pill--gbf-target"
       >
         <template #default="{ item }">
@@ -71,22 +72,21 @@
     </div>
 
     <!-- Decisions -->
-    <div v-if="decisionEntries.length" class="calendar-detail-section">
-      <div class="calendar-detail-label">{{ t('calendar.labels.decision') }}</div>
-      <div class="calendar-detail-content">
-        <template
-          v-for="(entry, index) in decisionEntries"
-          :key="`${entry.href ?? entry.label}-${index}`"
-        >
-          <DecisionLink :href="entry.href" :label="entry.label" />
-          <span v-if="index < decisionEntries.length - 1">, </span>
+    <div v-if="decisionEntries.length" class="calendar-detail-section col-md-6 col-sm-12">
+      <div class="calendar-detail-label">{{ decisionEntries.length > 1 ? t('calendar.labels.decisions') : t('calendar.labels.decision') }}</div>
+      <ExpandablePillList
+        class="calendar-pill-row"
+        :items="decisionLabels"
+      >
+        <template #default="{ item, index }">
+          <DecisionLink :href="decisionEntries[index].href" :label="item" />
         </template>
-      </div>
+      </ExpandablePillList>
     </div>
 
     <!-- Subjects -->
-    <div v-if="subjectLabels.length" class="calendar-detail-section">
-      <div class="calendar-detail-label">{{ t('calendar.labels.subjects') }}</div>
+    <div v-if="subjectLabels.length" class="calendar-detail-section col-md-6 col-sm-12">
+      <div class="calendar-detail-label">{{ subjectLabels.length > 1 ? t('calendar.labels.subjects') : t('calendar.labels.subject') }}</div>
       <ExpandablePillList
         class="calendar-pill-row"
         :items="subjectLabels"
@@ -96,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from '#imports';
 import ExpandablePillList from '../../expandable-pill-list.vue';
 import DecisionLink from '../../decision-link.vue';
@@ -117,6 +118,8 @@ const _props = defineProps<{
 }>();
 
 const { t } = useI18n();
+
+const decisionLabels = computed(() => _props.decisionEntries.map((e) => e.label));
 
 /**
  * Convert a GBF target identifier (e.g. "GBF-TARGET-01") to the CBD image URL.
@@ -173,11 +176,7 @@ function gbfTargetUrl(identifier: string): string {
 }
 
 .calendar-detail-section {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0; /* Prevents grid blowout */
+  margin-bottom: .5rem;
 }
 
 .calendar-detail-label {

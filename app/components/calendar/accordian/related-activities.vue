@@ -11,7 +11,7 @@
         <span class="calendar-related__chevron" :class="{ 'calendar-related__chevron--open': isOpen }">
           <FontAwesomeIcon icon="chevron-right" />
         </span>
-        <strong>{{ t('calendar.labels.relatedActivities') }}</strong>
+        <strong>{{ totalCount === 1 ? t('calendar.labels.relatedActivity') : t('calendar.labels.relatedActivities') }}</strong>
         <span class="badge calendar-related__badge">{{ totalCount }}</span>
       </button>
       <Transition name="collapse">

@@ -38,6 +38,30 @@ function escapeRegex(str: string): string {
  * Build highlighted HTML by wrapping every occurrence of the query in a
  * `<mark>` tag with a yellow background.
  */
+/**
+ * Build the regex alternatives for a query.  If the query contains hyphens
+ * (e.g. "2026-002") we match both the full string AND each hyphen-separated
+ * segment individually so highlighting works even when the rendered text
+ * contains only part of the hyphenated term.
+ */
+function buildHighlightPattern(q: string): RegExp {
+  const alternatives = [escapeRegex(q)];
+
+  if (q.includes('-')) {
+    const segments = q.split('-').filter(Boolean);
+
+    for (const seg of segments) {
+      const escaped = escapeRegex(seg);
+
+      if (!alternatives.includes(escaped)) {
+        alternatives.push(escaped);
+      }
+    }
+  }
+
+  return new RegExp(`(${alternatives.join('|')})`, 'gi');
+}
+
 const highlightedHtml = computed(() => {
   const q = normalizedQuery.value;
 
@@ -45,12 +69,14 @@ const highlightedHtml = computed(() => {
     return escapeHtml(props.text);
   }
 
-  const regex = new RegExp(`(${escapeRegex(q)})`, 'gi');
+  const regex = buildHighlightPattern(q);
   const parts = props.text.split(regex);
 
   return parts
     .map((part) => {
-      if (part.toLowerCase() === q.toLowerCase()) {
+      if (regex.test(part)) {
+        // Reset lastIndex since the regex has the `g` flag.
+        regex.lastIndex = 0;
         return `<mark class="search-highlight">${escapeHtml(part)}</mark>`;
       }
       return escapeHtml(part);
