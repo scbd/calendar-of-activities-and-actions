@@ -9,20 +9,19 @@
         :aria-controls="collapseId"
         @click="$emit('toggle')"
       >
-        <!-- Top banner showing type (Meeting, Workshop, Nominations, etc.) -->
         <div class="calendar-row__type-banner p-2" :style="typeStyle">
-          <span class="calendar-row__type-date">{{ dateRange }}</span>
-          <span class="calendar-row__type-text">{{ typeLabel }}</span>
+          <span class="calendar-row__type-date"><HighlightText :text="dateRange" :query="searchText" /></span>
+          <span class="calendar-row__type-text"><HighlightText :text="typeLabel" :query="searchText" /></span>
           <span class="calendar-row__caret-spacer" />
         </div>
 
         <div class="calendar-accordion__summary p-4">
-          <div class="calendar-accordion__title mb-3">{{ title }}</div>
+          <div class="calendar-accordion__title mb-3"><HighlightText :text="title" :query="searchText" /></div>
           
-          <div v-if="notificationSymbol" class="calendar-accordion__symbol mb-3">NTF-{{ notificationSymbol }}</div>
-          <div v-if="isActivityDoc && documentSymbol" class="calendar-accordion__symbol mb-3">{{ documentSymbol }}</div>
-          <div v-if="isMeetingDoc && meetingSymbol" class="calendar-accordion__symbol mb-3">{{ meetingSymbol }}</div>
-          <div v-if="meetingLocation" class="calendar-accordion__location mb-3" :class="{ 'calendar-accordion__location--online': isOnlineMeeting }">{{ meetingLocation }}</div>
+          <div v-if="notificationSymbol" class="calendar-accordion__symbol mb-3">NTF-<HighlightText :text="notificationSymbol" :query="searchText" /></div>
+          <div v-if="isActivityDoc && documentSymbol" class="calendar-accordion__symbol mb-3"><HighlightText :text="documentSymbol" :query="searchText" /></div>
+          <div v-if="isMeetingDoc && meetingSymbol" class="calendar-accordion__symbol mb-3"><HighlightText :text="meetingSymbol" :query="searchText" /></div>
+          <div v-if="meetingLocation" class="calendar-accordion__location mb-3" :class="{ 'calendar-accordion__location--online': isOnlineMeeting }"><HighlightText :text="meetingLocation" :query="searchText" /></div>
           <div
             v-if="statusLabel || showActionBadge || primaryLink"
             class="calendar-accordion__meta-block mt-2"
@@ -46,7 +45,7 @@
               <div v-if="statusLabel || showActionBadge" class="calendar-accordion__status-badges" data-testid="calendar-accordion-status-block" >
                 <span v-if="showActionBadge" class="badge bg-danger calendar-accordion__status-badge" > {{ t('calendar.labels.actionRequiredByParties') }} </span>
 
-                <span v-if="statusLabel" class="badge calendar-accordion__status-badge" :class="`bg-${statusColorValue}`" > {{ statusLabel }} </span>
+                <span v-if="statusLabel" class="badge calendar-accordion__status-badge" :class="`bg-${statusColorValue}`" > <HighlightText :text="statusLabel" :query="searchText" /> </span>
               </div>
             </div>
           </div>
@@ -180,6 +179,7 @@ import CalendarAccordianDetailsNotification from './details-notification.vue';
 import RelatedActivities from './related-activities.vue';
 import RelatedMeetings from './related-meetings.vue';
 import RelatedNotifications from './related-notifications.vue';
+import HighlightText from '../../highlight-text.vue';
 import { fetchRelatedDocsBySchema, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
 import { formatDateRange } from 'shared/utils/date';
 import { DateTime } from 'luxon';
@@ -226,6 +226,8 @@ const props = defineProps<{
   headingId: string;
   collapseId: string;
   fadeOthers?: boolean;
+  /** Active search query for text highlighting. */
+  searchText?: string;
 }>();
 
 const _emit = defineEmits<{
@@ -1159,6 +1161,14 @@ const collapseId = computed(() => props.collapseId);
 .calendar-accordion__status-badge {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.calendar-accordion__status-badge :deep(.search-highlight) {
+  background-color: transparent;
+  color: #ffd700;
+  box-shadow: 0 0 6px 2px rgba(255, 215, 0, 0.6);
+  border-radius: 3px;
+  padding: 0.1em 0.2em;
 }
 
 .calendar-notifications__separator {

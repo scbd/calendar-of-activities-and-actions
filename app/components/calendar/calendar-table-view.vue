@@ -170,21 +170,21 @@
                       </button>
                     </td>
                     <td class="date-cell">
-                      <div class="date-range">{{ formatGridDateRange(doc) }}</div>
+                      <div class="date-range"><HighlightText :text="formatGridDateRange(doc)" :query="searchText" /></div>
                     </td>
                     <td>
                       <span class="type-badge" :style="getTypeStyle(doc)">
-                        {{ getTypeLabel(doc) }}
+                        <HighlightText :text="getTypeLabel(doc)" :query="searchText" />
                       </span>
                     </td>
                     <td>
                       <div class="title-cell">
-                        <span class="title-text">{{ getTitle(doc) }}</span>
-                        <div v-if="getDocumentSymbol(doc)" class="symbol-text">{{ getDocumentSymbol(doc) }}</div>
+                        <span class="title-text"><HighlightText :text="getTitle(doc)" :query="searchText" /></span>
+                        <div v-if="getDocumentSymbol(doc)" class="symbol-text"><HighlightText :text="getDocumentSymbol(doc)" :query="searchText" /></div>
                       </div>
                     </td>
                     <td v-if="showLocationColumn">
-                      <span v-if="getMeetingLocation(doc)" class="location-text">{{ getMeetingLocation(doc) }}</span>
+                      <span v-if="getMeetingLocation(doc)" class="location-text"><HighlightText :text="getMeetingLocation(doc)" :query="searchText" /></span>
                     </td>
                     <td>
                       <div class="status-cell">
@@ -195,7 +195,7 @@
                           {{ t('calendar.status.completed') }}
                         </span>
                         <span v-if="getStatusLabel(doc)" class="badge" :class="`bg-${getStatusColor(doc)}`">
-                          {{ getStatusLabel(doc) }}
+                          <HighlightText :text="getStatusLabel(doc)" :query="searchText" />
                         </span>
                       </div>
                     </td>
@@ -329,6 +329,7 @@ import CalendarAccordianDetailsNotification from './accordian/details-notificati
 import RelatedActivities from './accordian/related-activities.vue';
 import RelatedMeetings from './accordian/related-meetings.vue';
 import RelatedNotifications from './accordian/related-notifications.vue';
+import HighlightText from '../highlight-text.vue';
 import { useCalendarData } from '../../composables/use-calendar-data';
 import {
   configureStatusLocalization,
@@ -468,6 +469,9 @@ const {
 });
 
 setRegionDisplayNames(createRegionDisplayNames(locale.value));
+
+/** Current free-text search query for highlighting visible row text. */
+const searchText = computed(() => currentFilters.value?.searchText?.trim() || '');
 
 const expandedRows = ref<Record<string, boolean>>({});
 const currentSortField = ref<string>('startDate');
@@ -1591,5 +1595,13 @@ onUnmounted(() => {
 .nested-table th:nth-child(3),
 .nested-table td:nth-child(3) {
   white-space: nowrap;
+}
+
+.badge :deep(.search-highlight) {
+  background-color: transparent;
+  color: #ffd700;
+  box-shadow: 0 0 6px 2px rgba(255, 215, 0, 0.6);
+  border-radius: 3px;
+  padding: 0.1em 0.2em;
 }
 </style>

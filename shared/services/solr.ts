@@ -323,24 +323,88 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     fq.push('{!tag=actionRequired}actionRequiredByPartiesCOA_b:true');
   }
 
-  // Text search — use edismax with locale-specific text + title fields
-  const textField = getTextFieldForLocale(locale);
+  // ---------------------------------------------------------------------------
+  // Partial-match helper
+  // ---------------------------------------------------------------------------
+  // The `text_EN_txt` field stores **stemmed** tokens (e.g. "tentative" →
+  // "tent").  Wildcards bypass the analyzer, so they run directly against
+  // those stemmed tokens.
+  //
+  // Strategy for a term like "tenta" (5 chars):
+  //   1. `tenta`  — goes through the analyzer; if the stemmer recognises it
+  //                 it will match (here it doesn't → 0 hits).
+  //   2. `tenta*` — wildcard on the full lowercased input.  Catches any
+  //                 stemmed token starting with "tenta" (rare, but possible).
+  //   3. `tent*`  — wildcard on the first 4 characters.  Catches the actual
+  //                 stem "tent" (and anything else beginning with "tent").
+  //
+  // For exactly 4 characters ("tent"), #1 and #3 overlap but that's fine —
+  // Solr deduplicates.  For < 4 characters, only the plain term is used to
+  // avoid overly broad wildcard matches.
+  const STEM_PREFIX_LENGTH = 4;
 
-  // Default query uses _state_s:public (always true given the matching fq)
-  // instead of schema_s:(...) — putting the schema constraint in q prevents
-  // the {!ex=schema} facet exclusion from working, which hides record types
-  // that are not currently selected.
-  // Use schemaType_s:scbd — all relevant docs (including calendarActivity
-  // which lacks _state_s) share this field.  The _state_s constraint still
-  // lives in fq so meetings/notifications must be public.
+  function expandTermForPartialMatch(term: string): string {
+    const lower = term.toLowerCase();
+
+    if (lower.length > STEM_PREFIX_LENGTH) {
+      // Longer than stem prefix — include stem-prefix wildcard as well
+      const stemPrefix = lower.slice(0, STEM_PREFIX_LENGTH);
+      return `(${term} OR ${lower}* OR ${stemPrefix}*)`;
+    }
+
+    if (lower.length === STEM_PREFIX_LENGTH) {
+      // Exactly stem prefix length — analyzed term + wildcard
+      return `(${term} OR ${lower}*)`;
+    }
+
+    // Short term (< 4 chars) — plain term only
+    return term;
+  }
+
+  // Text search — the SOLR proxy does NOT support edismax (defType, qf, mm
+  // are returned as nonSupportedParams and silently ignored).  Additionally,
+  // wildcard queries (e.g. tentative*) bypass the text analyzer so they fail
+  // to match analysed (lowercased / stemmed) index entries.
+  //
+  // Strategy:
+  //  • Short word (<4 chars) → plain term only; the analyser handles
+  //                            case/stemming.  Wildcards are too broad.
+  //  • Word ≥4 chars         → "(term OR term*)" — the plain term goes
+  //                            through the analyser (stemming) while the
+  //                            lowercased wildcard catches partial prefixes
+  //                            that the stemmer wouldn't match (e.g. "tenta"
+  //                            matches "tentative" via tenta*).
+  //  • Multi-word            → each token is expanded as above and joined
+  //                            with AND so all terms must match.
+  //  • Advanced              → user-supplied syntax (quotes, wildcards,
+  //                            AND/OR/NOT) is passed through as-is.
+
+  // Default query uses schemaType_s:scbd — all relevant docs (including
+  // calendarActivity which lacks _state_s) share this field.  The _state_s
+  // constraint still lives in fq so meetings/notifications must be public.
   let q = 'schemaType_s:scbd';
-  let defType: 'edismax' | undefined;
-  let qf: string | undefined;
 
   if (searchText?.trim()) {
-    q = searchText.trim();
-    defType = 'edismax';
-    qf = `${textField} title_${locale.toUpperCase()}_t^2`;
+    const trimmed = searchText.trim();
+
+    const hasQuotes = trimmed.includes('"');
+    const hasWildcard = trimmed.includes('*');
+    const hasBooleanOps = /\b(AND|OR|NOT)\b/.test(trimmed);
+    const isMultiWord = trimmed.includes(' ');
+
+    if (hasQuotes || hasWildcard || hasBooleanOps) {
+      // User-supplied advanced syntax — pass through as-is.
+      // The Lucene parser handles quotes, wildcards, and Boolean operators.
+      q = trimmed;
+    } else if (isMultiWord) {
+      // Multi-word: expand each token and join with AND so every term
+      // must appear in the document.
+      const tokens = trimmed.split(/\s+/);
+      q = tokens.map((t) => expandTermForPartialMatch(t)).join(' AND ');
+    } else {
+      // Single word — expand for partial matching.
+      q = expandTermForPartialMatch(trimmed);
+    }
   }
 
   const body: SolrSelectBody = {
@@ -357,13 +421,6 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
     'facet.limit': 512,
     fl,
   };
-
-  if (defType) {
-    body.defType = defType;
-  }
-  if (qf) {
-    body.qf = qf;
-  }
 
   return body;
 }

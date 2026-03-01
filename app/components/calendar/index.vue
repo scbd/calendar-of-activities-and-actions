@@ -25,7 +25,7 @@
           :aria-label="t('scbd.views.grid')"
           class="btn btn-outline-secondary"
           :class="{ active: currentView === 'grid' }"
-          @click="currentView = 'grid'"
+          @click="setView('grid')"
         >
           <FontAwesomeIcon icon="grip" />
           <span class="ms-2 d-none d-sm-inline">{{ t('scbd.views.grid') }}</span>
@@ -35,7 +35,7 @@
           :aria-label="t('scbd.views.list')"
           class="btn btn-outline-secondary"
           :class="{ active: currentView === 'list' }"
-          @click="currentView = 'list'"
+          @click="setView('list')"
         >
           <FontAwesomeIcon icon="list" />
           <span class="ms-2 d-none d-sm-inline">{{ t('scbd.views.list') }}</span>
@@ -78,8 +78,12 @@ const router = useRouter();
 // State management
 // ---------------------------------------------------------------------------
 
-const currentView = ref<'grid' | 'list'>('list');
-const showAdvancedFilters = ref(false);
+// Initialise view mode from the URL query param (defaults to 'list')
+const viewParam = route.query.view as string | undefined;
+const currentView = ref<'grid' | 'list'>(viewParam === 'grid' ? 'grid' : 'list');
+
+// Initialise advanced search from the URL query param
+const showAdvancedFilters = ref(route.query['advanced-search'] === 'true');
 
 // Initialise tabViewEnabled from the URL query param before mount so that
 // child components (CalendarTabView, filters) receive the correct prop on
@@ -149,12 +153,67 @@ watch(
   },
 );
 
+watch(
+  () => route.query['advanced-search'],
+  (val) => {
+    const shouldShow = val === 'true';
+
+    if (showAdvancedFilters.value !== shouldShow) {
+      showAdvancedFilters.value = shouldShow;
+    }
+  },
+);
+
+watch(
+  () => route.query.view,
+  (val) => {
+    const target = val === 'grid' ? 'grid' : 'list';
+
+    if (currentView.value !== target) {
+      currentView.value = target;
+    }
+  },
+);
+
 // ---------------------------------------------------------------------------
 // Methods
 // ---------------------------------------------------------------------------
 
-const toggleFilterMode = () => {
-  showAdvancedFilters.value = !showAdvancedFilters.value;
+/**
+ * Switch between grid and list views.
+ *
+ * Updates the URL **first** (awaiting the navigation) so that
+ * `route.query` already contains `view` by the time child components
+ * re-mount and their filter `watchEffect` reads the query.
+ */
+async function setView(view: 'grid' | 'list'): Promise<void> {
+  if (currentView.value === view) return;
+
+  const query: Record<string, string | string[] | undefined> = { ...route.query };
+
+  if (view === 'list') {
+    delete query.view;
+  } else {
+    query.view = view;
+  }
+
+  await router.replace({ query: query as Record<string, string | string[]> });
+  currentView.value = view;
+}
+
+const toggleFilterMode = async () => {
+  const next = !showAdvancedFilters.value;
+
+  const query: Record<string, string | string[] | undefined> = { ...route.query };
+
+  if (next) {
+    query['advanced-search'] = 'true';
+  } else {
+    delete query['advanced-search'];
+  }
+
+  await router.replace({ query: query as Record<string, string | string[]> });
+  showAdvancedFilters.value = next;
 };
 </script>
 

@@ -106,6 +106,7 @@
               :heading-id="headingId(doc)"
               :collapse-id="collapseId(doc)"
               :fade-others="anyItemOpen"
+              :search-text="activeSearchText"
               @toggle="toggleAccordion(doc)"
             />
           </div>
@@ -253,6 +254,7 @@ const {
   retry,
   error,
   isEmpty,
+  currentFilters,
   setFilters,
 } = useCalendarData({
   initialStartDate,
@@ -264,6 +266,9 @@ const {
 });
 
 const allDocsFlat = computed(() => docs.value);
+
+/** Current free-text search query for highlighting visible row text. */
+const activeSearchText = computed(() => currentFilters.value?.searchText?.trim() || '');
 
 // --- Delayed loading-more flag (stays visible for 1 s after data loads) ----
 const visibleLoadingMore = ref(false);

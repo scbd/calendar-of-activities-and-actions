@@ -13,6 +13,7 @@
           :clear-on-select="false"
           :preserve-search="true"
           :taggable="true"
+          :showLabels="false"
           group-values="options"
           group-label="groupLabel"
           label="label"
@@ -85,15 +86,15 @@
         <label for="sort-filter-2" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
         <Multiselect
           id="sort-filter-2"
-          v-model="selectedSorts"
+          v-model="selectedSort"
           :options="sortOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
+          :multiple="false"
+          :allow-empty="false"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.sort')"
+          @select="updateFilters"
         />
       </div>
 
@@ -208,14 +209,14 @@ const {
 
 type FilterSelectionValue = MegaFilterOption | string;
 
-const DEFAULT_SORT_VALUES = Object.freeze(['startDate:asc']);
+const DEFAULT_SORT_VALUE = 'startDate:asc';
 
 // ---------------------------------------------------------------------------
 // Reactive filter values
 // ---------------------------------------------------------------------------
 
 const selectedFilters = ref<FilterSelectionValue[]>([]);
-const selectedSorts = ref<FilterSelectionValue[]>([...DEFAULT_SORT_VALUES]);
+const selectedSort = ref<FilterOption | null>(null);
 const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
@@ -281,34 +282,13 @@ const copDecisionOptions = computed<MegaFilterOption[]>(() =>
 // Sort options
 // ---------------------------------------------------------------------------
 
-const sortOptions = computed<FilterOption[]>(() => {
-  const selectedValues = extractSelectedValues(selectedSorts.value);
-  const hasStartDateAsc = selectedValues.includes('startDate:asc');
-  const hasStartDateDesc = selectedValues.includes('startDate:desc');
-  const hasEndDateAsc = selectedValues.includes('endDate:asc');
-  const hasEndDateDesc = selectedValues.includes('endDate:desc');
-
-  const options: FilterOption[] = [];
-
-  if (!hasStartDateDesc) {
-    options.push({ value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string });
-  }
-  if (!hasStartDateAsc) {
-    options.push({ value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string });
-  }
-  if (!hasEndDateDesc) {
-    options.push({ value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string });
-  }
-  if (!hasEndDateAsc) {
-    options.push({ value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string });
-  }
-
-  options.push({ value: 'title:asc', label: t('calendar.filters.sortOptions.titleAsc') as string });
-  options.push({ value: 'schema:asc', label: t('calendar.filters.sortOptions.schemaAsc') as string });
-  options.push({ value: 'actionRequired:desc', label: t('calendar.filters.sortOptions.actionRequired') as string });
-
-  return options;
-});
+/** Sort options — single select with date-based choices. */
+const sortOptions = computed<FilterOption[]>(() => [
+  { value: 'startDate:asc', label: t('calendar.filters.sortOptions.startDateAsc') as string },
+  { value: 'startDate:desc', label: t('calendar.filters.sortOptions.startDateDesc') as string },
+  { value: 'endDate:asc', label: t('calendar.filters.sortOptions.endDateAsc') as string },
+  { value: 'endDate:desc', label: t('calendar.filters.sortOptions.endDateDesc') as string },
+]);
 
 // ---------------------------------------------------------------------------
 // Consolidated filter options with groups (drives the mega-filter multiselect)
@@ -396,7 +376,7 @@ const filterOptions = computed<FilterGroup[]>(() => {
 // ---------------------------------------------------------------------------
 
 const hasActiveFilters = computed<boolean>(() => {
-  const activeSorts = extractSelectedValues(selectedSorts.value);
+  const activeSort = selectedSort.value?.value ?? DEFAULT_SORT_VALUE;
 
   // In tab view, don't count the tab's own type filter as an active filter
   const nonTabFilters = props.activeTabType
@@ -410,7 +390,7 @@ const hasActiveFilters = computed<boolean>(() => {
     startDate.value !== '' ||
     endDate.value !== '' ||
     actionRequired.value ||
-    !areSortSelectionsDefault(activeSorts)
+    activeSort !== DEFAULT_SORT_VALUE
   );
 });
 
@@ -613,10 +593,8 @@ function findOptionsFromValues(values: string[], availableOptions: MegaFilterOpt
     .filter((option): option is MegaFilterOption => Boolean(option));
 }
 
-function areSortSelectionsDefault(values: string[]): boolean {
-  if (values.length !== DEFAULT_SORT_VALUES.length) return false;
-
-  return values.every((value, index) => value === DEFAULT_SORT_VALUES[index]);
+function isSortDefault(value?: string): boolean {
+  return !value || value === DEFAULT_SORT_VALUE;
 }
 
 /**
@@ -699,10 +677,10 @@ function updateUrlQuery(): void {
   if (filtersByGroup.countries.length > 0) query.countries = filtersByGroup.countries.join(',');
   if (filtersByGroup.searchTerms.length > 0) query.search = filtersByGroup.searchTerms.join(' ');
 
-  const sortSelections = extractSelectedValues(selectedSorts.value);
+  const sortValue = selectedSort.value?.value ?? DEFAULT_SORT_VALUE;
 
-  if (!areSortSelectionsDefault(sortSelections)) {
-    query.sort = sortSelections.join(',');
+  if (!isSortDefault(sortValue)) {
+    query.sort = String(sortValue);
   }
 
   if (startDate.value && startDate.value !== props.initialStartDate) {
@@ -772,10 +750,12 @@ function loadFiltersFromUrl(): void {
 
   // Sort options are local computed — always available immediately
   if (sortOrder.length > 0) {
-    selectedSorts.value = findOptionsFromValues(sortOrder, sortOptions.value);
+    const matched = findOptionsFromValues([sortOrder[0]], sortOptions.value);
+
+    selectedSort.value = matched[0] ?? sortOptions.value[0];
     hasUserInteracted.value = true;
   } else {
-    selectedSorts.value = [...DEFAULT_SORT_VALUES];
+    selectedSort.value = sortOptions.value[0] ?? null;
   }
 
   // Date filters
@@ -838,7 +818,7 @@ function updateFilters(): void {
     endDate: endDate.value,
     actionRequired: actionRequired.value,
     searchText: filtersByGroup.searchTerms.join(' '),
-    sort: extractSelectedValues(selectedSorts.value),
+    sort: [selectedSort.value?.value ?? DEFAULT_SORT_VALUE] as string[],
   };
 
   emit('update:filters', filters);
@@ -858,7 +838,7 @@ function clearFilters(): void {
     selectedFilters.value = [];
   }
 
-  selectedSorts.value = [...DEFAULT_SORT_VALUES];
+  selectedSort.value = sortOptions.value[0] ?? null;
   startDate.value = '';
   endDate.value = '';
   actionRequired.value = false;
@@ -951,19 +931,18 @@ watch(() => route.query, () => {
 
 // Watch for first user interaction with any filter
 watch(
-  [selectedFilters, selectedSorts, actionRequired],
+  [selectedFilters, selectedSort, actionRequired],
   () => {
     if (!hasUserInteracted.value) {
       const hasAnySelection =
         selectedFilters.value.length > 0 ||
-        !areSortSelectionsDefault(extractSelectedValues(selectedSorts.value)) ||
+        !isSortDefault(selectedSort.value?.value) ||
         actionRequired.value;
 
       if (hasAnySelection) {
         hasUserInteracted.value = true;
-        if (startDate.value === props.initialStartDate) {
-          startDate.value = '';
-        }
+        // Start date is preserved until the user manually clears it
+        // via the date input or removes its pill.
       }
     }
   },
@@ -973,7 +952,7 @@ watch(
 // Emit updates whenever relevant filter state changes
 watchEffect(() => {
   void selectedFilters.value;
-  void selectedSorts.value;
+  void selectedSort.value;
   void startDate.value;
   void endDate.value;
   void actionRequired.value;

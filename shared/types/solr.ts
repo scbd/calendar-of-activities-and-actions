@@ -13,8 +13,6 @@ export interface SolrSelectBody {
 	'facet.mincount': number;
 	'facet.limit': number;
 	'facet.pivot'?: string | string[];
-	defType?: 'dismax' | 'edismax';
-	qf?: string;
 	fl?: string;
 }
 

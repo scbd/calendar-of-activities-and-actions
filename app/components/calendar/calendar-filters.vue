@@ -15,7 +15,7 @@
       </div>
 
       <!-- Record Type Filter -->
-      <div v-if="!hideTypeFilter" class="col-12 col-md-6 col-lg-3">
+      <div v-show="false" class="col-12 col-md-6 col-lg-3">
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
@@ -25,6 +25,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.schemas')"
@@ -56,6 +57,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.activityTypes')"
@@ -87,6 +89,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           group-values="options"
           group-label="groupLabel"
           label="label"
@@ -125,6 +128,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.countries')"
@@ -156,6 +160,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.subjects')"
@@ -187,6 +192,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.statuses')"
@@ -218,6 +224,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           group-values="options"
           group-label="groupLabel"
           label="label"
@@ -246,7 +253,7 @@
       </div>
 
       <!-- COP Decision Filter -->
-      <div v-show="true" class="col-12 col-md-6 col-lg-3">
+      <div v-show="false" class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
@@ -256,6 +263,7 @@
           :close-on-select="false"
           :clear-on-select="false"
           :preserve-search="true"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.decisions')"
@@ -327,6 +335,7 @@
           :options="sortOptions"
           :multiple="false"
           :allow-empty="false"
+          :showLabels="false"
           label="label"
           track-by="value"
           :placeholder="t('calendar.filters.placeholders.sort')"
@@ -1129,14 +1138,10 @@ function clearFilters(): void {
 
 /**
  * Called by explicit user interactions (select/remove in multiselect,
- * input change, checkbox toggle). If the start date was auto-applied
- * (default today), clear it on the first manual filter change.
+ * input change, checkbox toggle). The default start date is preserved
+ * until the user manually clears it via the date input or removes its pill.
  */
 function onManualFilterChange(): void {
-  if (startDateIsAutoApplied.value && startDate.value) {
-    startDate.value = '';
-    startDateIsAutoApplied.value = false;
-  }
   hasUserInteracted.value = true;
 }
 
