@@ -4,7 +4,7 @@
     :to="resolvedHref"
     class="decision-link"
   >
-    <slot>{{ displayLabel }}</slot>
+    <slot><HighlightText :text="displayLabel" :query="query" /></slot>
   </NuxtLink>
   <a
     v-else-if="resolvedHref"
@@ -13,10 +13,10 @@
     :target="isExternal ? '_blank' : undefined"
     :rel="isExternal ? 'noopener noreferrer' : undefined"
   >
-    <slot>{{ displayLabel }}</slot>
+    <slot><HighlightText :text="displayLabel" :query="query" /></slot>
   </a>
   <span v-else class="decision-link">
-    <slot>{{ displayLabel }}</slot>
+    <slot><HighlightText :text="displayLabel" :query="query" /></slot>
   </span>
 </template>
 
@@ -24,8 +24,9 @@
 import { computed } from 'vue';
 import { resolveDecisionHrefWithFallback } from 'shared/utils/decision-links';
 import { isExternalUrl, isInternalUrl } from 'shared/utils/url';
+import HighlightText from './highlight-text.vue';
 
-const props = defineProps<{ href?: string; label?: string }>();
+const props = defineProps<{ href?: string; label?: string; query?: string }>();
 
 const resolvedHref = computed(() => resolveDecisionHrefWithFallback(props.href ?? null, props.label ?? null));
 

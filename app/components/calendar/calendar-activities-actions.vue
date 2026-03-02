@@ -4,7 +4,45 @@
       <div v-if="!hideFilterCard" class="card mb-3">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h2 class="h5 mb-0">{{ t('calendar.filters.title') }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <h2 class="h5 mb-0">{{ t('calendar.filters.title') }}</h2>
+              <!-- Filter visibility cog — only shown for basic filters -->
+              <div v-if="!showAdvancedFilters" class="filter-visibility-toggle position-relative">
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm text-decoration-none p-0 text-secondary"
+                  :aria-label="t('calendar.filters.visibility.toggleLabel')"
+                  :aria-expanded="showVisibilityDropdown"
+                  @click="showVisibilityDropdown = !showVisibilityDropdown"
+                >
+                  <FontAwesomeIcon icon="gear" />
+                </button>
+                <div
+                  v-if="showVisibilityDropdown"
+                  class="filter-visibility-dropdown position-absolute bg-white border rounded shadow-sm p-3"
+                  role="menu"
+                  :aria-label="t('calendar.filters.visibility.menuLabel')"
+                >
+                  <div class="fw-semibold mb-2 small">{{ t('calendar.filters.visibility.heading') }}</div>
+                  <div
+                    v-for="filterKey in configurableFilterKeys"
+                    :key="filterKey"
+                    class="form-check mb-1"
+                  >
+                    <input
+                      :id="`filter-vis-${filterKey}`"
+                      v-model="filterVisibility[filterKey]"
+                      class="form-check-input"
+                      type="checkbox"
+                      @change="persistFilterVisibility"
+                    >
+                    <label class="form-check-label small" :for="`filter-vis-${filterKey}`">
+                      {{ t(`calendar.filters.visibility.options.${filterKey}`) }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
               class="btn btn-link btn-sm text-decoration-none p-0"
@@ -20,6 +58,7 @@
             :initial-start-date="initialStartDate"
             :hide-type-filter="hideTypeFilter"
             :active-tab-type="activeTabType"
+            :visible-filters="filterVisibility"
             @update:filters="handleFiltersUpdate"
           />
         </div>
@@ -91,7 +130,7 @@
                 role="status"
                 aria-live="polite"
               >
-                {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+                {{ t('calendar.messages.showingResults', { count: visibleDocCount, total: visibleDocCount }) }}
               </span>
             </h3>
           </div>
@@ -118,7 +157,7 @@
         <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
         <div v-if="hasMore && !loadingMore" class="text-center py-3">
           <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
-            {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
+            {{ t('calendar.messages.loadMore', { remaining: total - visibleDocCount }) }}
           </button>
         </div>
       </div>
@@ -161,9 +200,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, watch, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { DateTime } from 'luxon';
-import { useI18n } from '#imports';
+import { useI18n, useCookie } from '#imports';
 import { useRoute, useRouter } from '#app';
 import CalendarFilters from './calendar-filters.vue';
 import CalendarFilters2 from './calendar-filters-2.vue';
@@ -194,6 +233,85 @@ const router = useRouter();
 
 configureStatusLocalization({ t, te });
 configureLabelLocalization({ t, te });
+
+// ---------------------------------------------------------------------------
+// Filter visibility preferences (cookie-backed)
+// ---------------------------------------------------------------------------
+
+/** Keys that users can toggle on/off in the filter visibility dropdown. */
+const configurableFilterKeys = [
+  'types',
+  'activityTypes',
+  'gbfTargetsAndSections',
+  'countries',
+  'subjects',
+  'statuses',
+  'bodies',
+  'decisions',
+  'dateRange',
+  'actionRequired',
+  'sort',
+] as const;
+
+type FilterVisibilityKey = typeof configurableFilterKeys[number];
+
+type FilterVisibilityMap = Record<FilterVisibilityKey, boolean>;
+
+/** Default visibility — countries, decisions, and record types hidden. */
+const FILTER_VISIBILITY_DEFAULTS: FilterVisibilityMap = {
+  types: false,
+  activityTypes: true,
+  gbfTargetsAndSections: true,
+  countries: false,
+  subjects: true,
+  statuses: true,
+  bodies: true,
+  decisions: false,
+  dateRange: true,
+  actionRequired: true,
+  sort: true,
+};
+
+const filterVisibilityCookie = useCookie<FilterVisibilityMap | null>('calendar_filter_visibility', {
+  maxAge: 60 * 60 * 24 * 365, // 1 year
+  default: () => null,
+});
+
+/** Reactive filter visibility state — seeded from cookie or defaults. */
+const filterVisibility = reactive<FilterVisibilityMap>(
+  filterVisibilityCookie.value
+    ? { ...FILTER_VISIBILITY_DEFAULTS, ...filterVisibilityCookie.value }
+    : { ...FILTER_VISIBILITY_DEFAULTS },
+);
+
+// If no cookie exists yet, persist the defaults immediately
+if (!filterVisibilityCookie.value) {
+  filterVisibilityCookie.value = { ...FILTER_VISIBILITY_DEFAULTS };
+}
+
+const showVisibilityDropdown = ref(false);
+
+/** Persist current visibility state to cookie. */
+function persistFilterVisibility(): void {
+  filterVisibilityCookie.value = { ...filterVisibility };
+}
+
+/** Close dropdown when clicking outside. */
+function onClickOutsideDropdown(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+
+  if (!target.closest('.filter-visibility-toggle')) {
+    showVisibilityDropdown.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutsideDropdown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutsideDropdown);
+});
 
 // Record types — calendarActivity replaces 'activity'
 const SCHEMA_FILTER_KEYS = ['meeting', 'notification', 'calendarActivity'] as const;
@@ -247,6 +365,7 @@ const {
   docs,
   locale: calendarLocale,
   groupedItems,
+  visibleDocCount,
   facets,
   total,
   hasMore,
@@ -743,5 +862,15 @@ h3 {
 .scroll-sentinel {
   height: 1px;
   width: 100%;
+}
+
+.filter-visibility-dropdown {
+  top: 100%;
+  left: 0;
+  z-index: 1060;
+  min-width: 220px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: nowrap;
 }
 </style>

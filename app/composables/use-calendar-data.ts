@@ -336,25 +336,71 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
   }, { immediate: true });
 
   // --- Grouped items (by year-month) — operates on server-filtered docs ----
+  // Items appear under their start-date month AND under their end-date month
+  // when the end date falls in a different month/year.
+  // Groups whose month key falls before the filter start date are excluded
+  // from the view so that only current/future months are shown.
   const groupedItems = computed<GroupedItem[]>(() => {
     const buckets = new Map<string, { label: string; items: CalendarDoc[] }>();
 
-    for (const d of docs.value) {
-      // All record types now use startDate / endDate (aliased from startDateCOA_dt / endDateCOA_dt)
-      const iso = d.startDate || d.endDate;
-      const dt = iso ? DateTime.fromISO(String(iso)) : null;
+    const addToBucket = (dt: DateTime | null, doc: CalendarDoc): void => {
       const key = dt?.isValid ? dt.toFormat('yyyy-LL') : 'unknown';
       const label = dt?.isValid ? dt.toFormat('LLLL yyyy') : 'Unknown date';
 
       if (!buckets.has(key)) {
         buckets.set(key, { label, items: [] });
       }
-      buckets.get(key)!.items.push(d);
+      buckets.get(key)!.items.push(doc);
+    };
+
+    for (const d of docs.value) {
+      // All record types now use startDate / endDate (aliased from startDateCOA_dt / endDateCOA_dt)
+      const startIso = d.startDate || d.endDate;
+      const startDt = startIso ? DateTime.fromISO(String(startIso)) : null;
+
+      // Always add to start-date bucket
+      addToBucket(startDt, d);
+
+      // Also add to end-date bucket when in a different month/year
+      if (d.endDate && d.startDate) {
+        const endDt = DateTime.fromISO(String(d.endDate));
+
+        if (
+          endDt.isValid &&
+          startDt?.isValid &&
+          (endDt.year !== startDt.year || endDt.month !== startDt.month)
+        ) {
+          addToBucket(endDt, d);
+        }
+      }
     }
 
+    // Determine the minimum visible month key from the filter start date
+    const filterStart = currentFilters.value.startDate;
+    const minKey = filterStart
+      ? DateTime.fromISO(filterStart).toFormat('yyyy-LL')
+      : null;
+
     return Array.from(buckets.entries())
+      .filter(([key]) => key === 'unknown' || !minKey || key >= minKey)
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([key, v]) => ({ key, label: v.label, items: v.items }));
+  });
+
+  /**
+   * Count of unique documents visible across all displayed month groups.
+   * Items that span multiple months are counted only once.
+   */
+  const visibleDocCount = computed<number>(() => {
+    const ids = new Set<string>();
+
+    for (const group of groupedItems.value) {
+      for (const doc of group.items) {
+        ids.add(doc.id);
+      }
+    }
+
+    return ids.size;
   });
 
   // --- Filter mutators -----------------------------------------------------
@@ -414,5 +460,6 @@ export function useCalendarData(options: UseCalendarDataOptions = {}) {
 
     // Grouping
     groupedItems,
+    visibleDocCount,
   };
 }

@@ -122,12 +122,28 @@ export interface CalendarActivityDoc extends BaseCalendarDoc {
   statusNarrativeZh?: string;
 
   agendaItems?: string[];
+  agendaItemMeetingCodes?: string[];
+  agendaItemNumbers?: number[];
   subjects?: string[];
   decisions?: string[];
   responsibleUnitsAndOfficers?: string[];
   gbfTargets?: string[];
   gbfSections?: string[];
   outcome?: string;
+}
+
+/**
+ * Resolved agenda item with localized title and short title.
+ */
+export interface AgendaItem {
+  /** Meeting code portion of the agenda item identifier (e.g. "SBI-07"). */
+  meetingCode: string;
+  /** Item number as it appeared in the index (e.g. "5" or "3.2"). */
+  item: string;
+  /** Full localized title of the agenda item. */
+  title: string;
+  /** Short localized title of the agenda item. */
+  shortTitle: string;
 }
 
 // ---------------------------------------------------------------------------

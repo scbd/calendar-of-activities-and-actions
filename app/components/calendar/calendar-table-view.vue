@@ -150,12 +150,12 @@
                           <span class="spinner-border spinner-border-sm ms-5" />
                         </span>
                         <span
-                          v-if="groupIndex === stickyGroupIndex && total > 0"
+                          v-if="groupIndex === stickyGroupIndex && visibleDocCount > 0"
                           class="month-group-header__count"
                           role="status"
                           aria-live="polite"
                         >
-                          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+                          {{ t('calendar.messages.showingResults', { count: visibleDocCount, total: visibleDocCount }) }}
                         </span>
                       </div>
                     </td>
@@ -261,6 +261,7 @@
                           :gbf-sections="getGbfSections(doc)"
                           :global-targets="getGlobalTargets(doc)"
                           :decision-entries="getDecisionEntries(doc)"
+                          :agenda-items="getAgendaItemsForDoc(doc)"
                           :responsible-unit="getResponsibleUnit(doc)"
                           :responsible-officer="getResponsibleOfficer(doc)"
                           :show-responsible="Boolean(getResponsibleUnit(doc) || getResponsibleOfficer(doc))"
@@ -306,7 +307,7 @@
         <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
         <div v-if="hasMore && !loadingMore" class="text-center py-3">
           <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
-            {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
+            {{ t('calendar.messages.loadMore', { remaining: total - visibleDocCount }) }}
           </button>
         </div>
       </div>
@@ -374,7 +375,8 @@ import type { NotificationAttachment } from 'shared/utils/notifications';
 import { extractDecisionEntries, type DecisionEntry } from 'shared/utils/decision-links';
 import { displaySubjectLabels, resolveSubjectLabel, fallbackSubjectLabel, subjectLabelMap } from 'shared/utils/subjects';
 import { normalizeSolrDocument } from 'shared/services/solr';
-import { fetchRelatedDocsBySchema, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
+import { fetchRelatedDocsBySchema, fetchAgendaItems, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
+import type { AgendaItem } from 'shared/types/calendar';
 import { useBodyLabels } from '~/composables/use-body-labels';
 
 // Props
@@ -450,6 +452,7 @@ const {
   initialLoading,
   docs,
   groupedItems,
+  visibleDocCount,
   facets,
   total,
   hasMore,
@@ -594,8 +597,10 @@ const showLocationColumn = computed(() => {
 // ---------------------------------------------------------------------------
 const fetchedRelatedActivities = ref<Record<string, CalendarDoc[]>>({});
 const fetchedRelatedMeetings = ref<Record<string, CalendarDoc[]>>({});
+const fetchedAgendaItemsMap = ref<Record<string, AgendaItem[]>>({});
 const fetchedActivityFlags = ref<Record<string, boolean>>({});
 const fetchedMeetingFlags = ref<Record<string, boolean>>({});
+const fetchedAgendaItemFlags = ref<Record<string, boolean>>({});
 
 /**
  * When a row is expanded, fetch related activities and meetings via
@@ -642,6 +647,31 @@ const fetchRelatedDocsForRow = async (doc: CalendarDoc) => {
     } catch (err) {
       console.error('Failed to fetch related meetings for grid row', err);
       fetchedRelatedMeetings.value = { ...fetchedRelatedMeetings.value, [docId]: [] };
+    }
+  }
+
+  // Fetch resolved agenda items for activity documents
+  const schema = (doc.schema ?? '').toLowerCase();
+
+  if (
+    !fetchedAgendaItemFlags.value[docId] &&
+    schema === 'calendaractivity'
+  ) {
+    const activityDoc = doc as Record<string, unknown>;
+    const meetingCodes = (activityDoc.agendaItemMeetingCodes ?? []) as string[];
+    const itemNumbers = (activityDoc.agendaItemNumbers ?? []) as number[];
+
+    if (meetingCodes.length > 0 && itemNumbers.length > 0) {
+      fetchedAgendaItemFlags.value[docId] = true;
+
+      try {
+        const items = await fetchAgendaItems(meetingCodes, itemNumbers, locale.value as LocaleCode);
+
+        fetchedAgendaItemsMap.value = { ...fetchedAgendaItemsMap.value, [docId]: items };
+      } catch (err) {
+        console.error('Failed to fetch agenda items for grid row', err);
+        fetchedAgendaItemsMap.value = { ...fetchedAgendaItemsMap.value, [docId]: [] };
+      }
     }
   }
 };
@@ -954,6 +984,10 @@ const getRelatedActivities = (doc: CalendarDoc): CalendarDoc[] => {
 
 const getRelatedMeetings = (doc: CalendarDoc): CalendarDoc[] => {
   return fetchedRelatedMeetings.value[doc.id] ?? [];
+};
+
+const getAgendaItemsForDoc = (doc: CalendarDoc): AgendaItem[] => {
+  return fetchedAgendaItemsMap.value[doc.id] ?? [];
 };
 
 /**

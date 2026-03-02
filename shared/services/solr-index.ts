@@ -14,7 +14,8 @@ import type {
 } from '../utils/notifications';
 import { getSolrIndexUrl, getSolrSelectUrl, getArticlesBaseUrl } from '../utils/api-config';
 import { normalizeCalendarDoc, CALENDAR_LIST_FIELDS } from './solr';
-import type { CalendarDoc } from '../types/calendar';
+import type { LocaleCode } from './solr';
+import type { AgendaItem, CalendarDoc } from '../types/calendar';
 import type { SolrResponse } from '../types/solr';
 
 /**
@@ -274,4 +275,112 @@ export async function fetchRelatedDocsBySchema(
   const rawDocs = response?.response?.docs ?? [];
 
   return rawDocs.map(raw => normalizeCalendarDoc(raw as Record<string, unknown>));
+}
+
+// ---------------------------------------------------------------------------
+// Agenda item fetcher
+// ---------------------------------------------------------------------------
+
+/** SOLR document shape returned by the `schema_s:agendaItem` query. */
+interface AgendaItemSolrDoc {
+  identifier_s?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Format a numeric agenda item number for use in identifiers.
+ *
+ * Whole numbers are rendered without a decimal point (`5` → `"5"`),
+ * while fractional values keep their decimal (`3.2` → `"3.2"`).
+ */
+function formatItemNumber(n: number): string {
+  return Number.isInteger(n) ? String(n) : String(n);
+}
+
+/**
+ * Fetch resolved agenda items for a calendar-activity document.
+ *
+ * Combines `agendaItemMeetingCodes` and `agendaItemNumbers` index-by-index
+ * to build identifiers (e.g. `"SBI-07-5"`), then queries the SOLR
+ * `schema_s:agendaItem` index to retrieve localized titles.
+ *
+ * @param meetingCodes - Array of meeting codes from `agendaItemMeetingCodes_ss`.
+ * @param itemNumbers - Array of item numbers from `agendaItemNumbers_ds`.
+ * @param locale - Current UI locale (defaults to `'en'`).
+ * @returns Array of `AgendaItem` objects with localized titles.
+ */
+export async function fetchAgendaItems(
+  meetingCodes: string[],
+  itemNumbers: number[],
+  locale: LocaleCode = 'en',
+): Promise<AgendaItem[]> {
+  if (!meetingCodes.length || !itemNumbers.length) {
+    return [];
+  }
+
+  const length = Math.min(meetingCodes.length, itemNumbers.length);
+
+  // Build identifier pairs: meetingCode-itemNumber
+  const pairs = Array.from({ length }, (_, i) => ({
+    meetingCode: meetingCodes[i],
+    item: formatItemNumber(itemNumbers[i]),
+    identifier: `${meetingCodes[i]}-${formatItemNumber(itemNumbers[i])}`,
+  }));
+
+  const uniqueIdentifiers = [...new Set(pairs.map(p => p.identifier))];
+
+  // Build the field list — request title & shortTitle for the active locale
+  // plus EN as default fall-back.
+  const upperLocale = locale.toUpperCase();
+  const titleFields = [
+    'identifier_s',
+    'title_EN_s',
+    'shortTitle_EN_s',
+  ];
+
+  if (upperLocale !== 'EN') {
+    titleFields.push(`title_${upperLocale}_s`, `shortTitle_${upperLocale}_s`);
+  }
+
+  const escaped = uniqueIdentifiers.map(id => `"${id}"`);
+  const q = `schema_s:agendaItem AND identifier_s:(${escaped.join(' OR ')})`;
+
+  const url = buildSolrSelectUrl(getSolrIndexUrl(), {
+    wt: 'json',
+    rows: uniqueIdentifiers.length,
+    q,
+    fl: titleFields.join(','),
+  });
+
+  const response = await fetchWithRetry(url, { headers: { Accept: 'application/json' } });
+  const json = await response.json() as SolrSelectResponse<AgendaItemSolrDoc>;
+  const docs = json.response?.docs ?? [];
+
+  // Index docs by identifier for fast lookup
+  const docMap = new Map<string, AgendaItemSolrDoc>();
+
+  for (const doc of docs) {
+    const id = doc.identifier_s;
+
+    if (id) {
+      docMap.set(id, doc);
+    }
+  }
+
+  // Resolve each pair to an AgendaItem
+  return pairs.map(({ meetingCode, item, identifier }) => {
+    const doc = docMap.get(identifier);
+
+    const title =
+      (doc?.[`title_${upperLocale}_s`] as string | undefined)?.trim() ||
+      (doc?.title_EN_s as string | undefined)?.trim() ||
+      identifier;
+
+    const shortTitle =
+      (doc?.[`shortTitle_${upperLocale}_s`] as string | undefined)?.trim() ||
+      (doc?.shortTitle_EN_s as string | undefined)?.trim() ||
+      title;
+
+    return { meetingCode, item, title, shortTitle };
+  });
 }

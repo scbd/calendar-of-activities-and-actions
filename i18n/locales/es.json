@@ -22,6 +22,11 @@
       "paragraph": "Para",
       "subject": "Tema",
       "subjects": "Temas",
+      "agendaItem": "Punto del orden del día",
+      "agendaItems": "Puntos del orden del día",
+      "agendaItemNumber": "Punto",
+      "meetingCode": "Reunión",
+      "title": "Título",
       "associatedBody": "Órgano subsidiario",
       "governingBody": "Órgano rector",
       "governingBodies": "Órganos rectores",
@@ -120,6 +125,9 @@
       "actions": {
         "clearAll": "Borrar todos los filtros",
         "appliedFilters": "Filtros aplicados"
+      },
+      "suggestions": {
+        "ariaLabel": "Sugerencias de filtros"
       },
       "sortOptions": {
         "startDateAsc": "Fecha de inicio (la más antigua primero)",

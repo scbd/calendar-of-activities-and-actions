@@ -3,13 +3,13 @@
     <!-- Status narrative -->
     <div v-if="statusNarrative" class="calendar-detail-section col">
       <div class="calendar-detail-label">{{ t('calendar.labels.statusNarrative') }}</div>
-      <div class="calendar-detail-content">{{ statusNarrative }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="statusNarrative ?? ''" :query="searchText" /></div>
     </div>
 
     <!-- Description -->
     <div v-if="description" class="calendar-detail-section col">
       <div class="calendar-detail-label">{{ t('calendar.labels.description') }}</div>
-      <div class="calendar-detail-content">{{ description }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="description ?? ''" :query="searchText" /></div>
     </div>
 
     <!-- Governing bodies -->
@@ -18,6 +18,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="governingBodies"
+        :query="searchText"
       />
     </div>
 
@@ -27,6 +28,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="subsidiaryBodies"
+        :query="searchText"
       />
     </div>
 
@@ -36,6 +38,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="gbfSections"
+        :query="searchText"
       />
     </div>
 
@@ -77,20 +80,44 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="decisionLabels"
+        :query="searchText"
       >
         <template #default="{ item, index }">
-          <DecisionLink :href="decisionEntries[index].href" :label="item" />
+          <DecisionLink :href="decisionEntries[index].href" :label="item" :query="searchText" />
         </template>
       </ExpandablePillList>
     </div>
-
     <!-- Subjects -->
     <div v-if="subjectLabels.length" class="calendar-detail-section col-md-6 col-sm-12">
       <div class="calendar-detail-label">{{ subjectLabels.length > 1 ? t('calendar.labels.subjects') : t('calendar.labels.subject') }}</div>
       <ExpandablePillList
         class="calendar-pill-row"
         :items="subjectLabels"
+        :query="searchText"
       />
+    </div>
+
+    <!-- Agenda Items -->
+    <div v-if="agendaItems.length" class="calendar-detail-section col-md-6 col-sm-12">
+      <div class="calendar-detail-label">{{ agendaItems.length > 1 ? t('calendar.labels.agendaItems') : t('calendar.labels.agendaItem') }}</div>
+      <div class="table-responsive mt-1">
+        <table class="table table-striped table-sm align-middle mb-0 agenda-items-table">
+          <thead>
+            <tr>
+              <th scope="col">{{ t('calendar.labels.meetingCode') }}</th>
+              <th scope="col">{{ t('calendar.labels.agendaItemNumber') }}</th>
+              <th scope="col">{{ t('calendar.labels.title') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(ai, idx) in agendaItems" :key="idx">
+              <td><a :href="`https://www.cbd.int/meetings/${ai.meetingCode}`" target="_blank" rel="noopener">{{ ai.meetingCode }}</a></td>
+              <td>{{ ai.item }}</td>
+              <td>{{ ai.shortTitle || ai.title }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -100,7 +127,9 @@ import { computed } from 'vue';
 import { useI18n } from '#imports';
 import ExpandablePillList from '../../expandable-pill-list.vue';
 import DecisionLink from '../../decision-link.vue';
+import HighlightText from '../../highlight-text.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
+import type { AgendaItem } from 'shared/types/calendar';
 
 const _props = defineProps<{
   statusNarrative?: string | null;
@@ -112,9 +141,11 @@ const _props = defineProps<{
   gbfSections: string[];
   globalTargets: string[];
   decisionEntries: DecisionEntry[];
+  agendaItems: AgendaItem[];
   responsibleUnit?: string;
   responsibleOfficer?: string;
   showResponsible: boolean;
+  searchText?: string;
 }>();
 
 const { t } = useI18n();
@@ -243,5 +274,29 @@ function gbfTargetUrl(identifier: string): string {
   .calendar-detail-section {
     grid-column: 1;
   }
+}
+
+/* Agenda items table */
+.agenda-items-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6c757d;
+  white-space: nowrap;
+  background-color: transparent;
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.agenda-items-table tbody td {
+  font-size: 0.875rem;
+  color: #1f1f1f;
+}
+
+.agenda-items-table tbody td a {
+  font-size: 0.875rem;
+  color: #1f1f1f;
+  text-decoration: underline;
 }
 </style>

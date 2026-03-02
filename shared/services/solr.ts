@@ -14,7 +14,7 @@ import { SOLR_FACET_FIELDS } from '../constants/solr-fields';
 
 export type LocaleCode = 'en' | 'fr' | 'es' | 'ar' | 'ru' | 'zh';
 
-const solrSuffixes = ['_ss', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l'];
+const solrSuffixes = ['_ss', '_ds', '_dt', '_txt', '_s', '_t', '_b', '_i', '_ls', '_l', '_d'];
 
 const isAllUpperCase = (segment: string): boolean => segment.toUpperCase() === segment && segment.toLowerCase() !== segment;
 
@@ -166,6 +166,8 @@ export const CALENDAR_LIST_FIELDS = [
   'notifications_ss', 'meetings_ss', 'activities_ss',
   'url_ss',
   'actionRequiredByPartiesCOA_b',
+  // Agenda item fields needed by the accordion/table detail views
+  'agendaItemMeetingCodes_ss', 'agendaItemNumbers_ds',
   // Notification-specific fields
   'recipient_ss', 'files_ss', 'sender_s', 'reference_s', 'fulltext_s', 'deadline_dt',
 ].join(',');
@@ -180,7 +182,8 @@ export const CALENDAR_DETAIL_FIELDS = [
   'fulltext_EN_t', 'fulltext_FR_t', 'fulltext_ES_t',
   'fulltext_AR_t', 'fulltext_RU_t', 'fulltext_ZH_t',
   'actionRequiredByPartiesCOA_b',
-  'agendaItems_ss', 'responsibleUnitsAndOfficers_ss',
+  'agendaItems_ss',
+  'responsibleUnitsAndOfficers_ss',
   'hostGovernments_ss',
   'reference_s', 'sender_s', 'recipient_ss', 'files_ss',
   'outcome_s',
@@ -295,13 +298,15 @@ export function buildCalendarQuery(params: CalendarQueryParams = {}): SolrSelect
   // Date range filters — prefer startDateCOA_dt / endDateCOA_dt, but fall back
   // to date_dt for notifications that haven't been back-filled yet.
   // When no start date is provided (e.g. filters cleared), default to 2024-01-01.
+  // Items whose start date is before `sd` but whose end date is >= `sd` (i.e.
+  // still ongoing / spanning into the current period) are also included.
   {
     const sd = toSolrDateString(filters.startDate || '2024-01-01');
 
     fq.push(
       `{!tag=startDate}(`
       + `startDateCOA_dt:[${sd} TO *]`
-      + ` OR ((*:* NOT startDateCOA_dt:*) AND endDateCOA_dt:[${sd} TO *])`
+      + ` OR endDateCOA_dt:[${sd} TO *]`
       + ` OR ((*:* NOT startDateCOA_dt:*) AND (*:* NOT endDateCOA_dt:*) AND date_dt:[${sd} TO *])`
       + `)`,
     );
@@ -485,7 +490,8 @@ const CALENDAR_ARRAY_FIELDS: ReadonlySet<string> = new Set([
   'subjects', 'governingBody', 'subsidiaryBody',
   'governingBodiesCOA', 'subsidiaryBodiesCOA',
   'gbfTargets', 'gbfSections', 'decisions',
-  'agendaItems', 'responsibleUnitsAndOfficers',
+  'agendaItems', 'agendaItemMeetingCodes', 'agendaItemNumbers',
+  'responsibleUnitsAndOfficers',
   'hostGovernments', 'themes', 'url', 'recipients', 'files',
 ]);
 

@@ -22,6 +22,11 @@
       "paragraph": "帕拉",
       "subject": "主题",
       "subjects": "主题",
+      "agendaItem": "议程项目",
+      "agendaItems": "议程项目",
+      "agendaItemNumber": "项目",
+      "meetingCode": "会议",
+      "title": "标题",
       "associatedBody": "附属机构",
       "governingBody": "管理机构",
       "governingBodies": "管理机构",
@@ -120,6 +125,9 @@
       "actions": {
         "clearAll": "清除所有筛选条件",
         "appliedFilters": "已应用的筛选条件"
+      },
+      "suggestions": {
+        "ariaLabel": "筛选建议"
       },
       "sortOptions": {
         "startDateAsc": "开始日期（最早的在前）",

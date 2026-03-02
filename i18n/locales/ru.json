@@ -22,6 +22,11 @@
       "paragraph": "Параграф",
       "subject": "Тема",
       "subjects": "Темы",
+      "agendaItem": "Пункт повестки дня",
+      "agendaItems": "Пункты повестки дня",
+      "agendaItemNumber": "Пункт",
+      "meetingCode": "Совещание",
+      "title": "Название",
       "associatedBody": "Вспомогательный орган",
       "governingBody": "Руководящий орган",
       "governingBodies": "Руководящие органы",
@@ -120,6 +125,9 @@
       "actions": {
         "clearAll": "Очистить все фильтры",
         "appliedFilters": "Примененные фильтры"
+      },
+      "suggestions": {
+        "ariaLabel": "Предложения фильтров"
       },
       "sortOptions": {
         "startDateAsc": "Дата начала (сначала самая старая)",

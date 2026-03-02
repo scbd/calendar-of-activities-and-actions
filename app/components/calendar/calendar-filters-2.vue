@@ -169,12 +169,15 @@ interface Props {
   hideTypeFilter?: boolean;
   /** Active tab type in tab view mode — empty string when not in tab view. */
   activeTabType?: string;
+  /** Controls which filter sections are visible (unused in advanced mode). */
+  visibleFilters?: Record<string, boolean>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialStartDate: '',
   hideTypeFilter: false,
   activeTabType: '',
+  visibleFilters: () => ({}),
 });
 
 const emit = defineEmits<{

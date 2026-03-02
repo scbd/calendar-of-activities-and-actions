@@ -5,7 +5,7 @@
       :key="`${item}-${index}`"
       :class="pillClasses"
     >
-      <slot :item="item" :index="index">{{ item }}</slot>
+      <slot :item="item" :index="index"><HighlightText :text="item" :query="query" /></slot>
     </span>
     <button
       v-if="showToggle"
@@ -21,11 +21,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import HighlightText from './highlight-text.vue';
 
 const props = defineProps<{
   items: string[];
   maxVisible?: number;
   pillClass?: string | string[] | Record<string, boolean>;
+  /** Optional search query – forwarded to HighlightText for highlighting. */
+  query?: string;
 }>();
 
 const root = ref<HTMLElement>();

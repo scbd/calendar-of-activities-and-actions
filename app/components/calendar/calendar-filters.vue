@@ -2,20 +2,46 @@
   <div class="calendar-filters">
     <div class="row g-3">
       <!-- Free Text Search -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div class="col-12 ">
         <label for="search-filter" class="form-label">{{ t('calendar.filters.labels.search') }}</label>
-        <input
-          id="search-filter"
-          v-model="searchText"
-          type="search"
-          :placeholder="t('calendar.filters.placeholders.search')"
-          class="form-control form-control-lg"
-          @change="onManualFilterChange"
-        >
+        <div class="search-input-wrapper">
+          <input
+            id="search-filter"
+            v-model="searchText"
+            type="search"
+            :placeholder="t('calendar.filters.placeholders.search')"
+            class="form-control form-control-lg"
+            autocomplete="off"
+            @input="onSearchInput"
+            @change="onManualFilterChange"
+            @focus="showSuggestions = true"
+            @keydown.escape="showSuggestions = false"
+          >
+          <!-- Filter suggestions dropdown -->
+          <div
+            v-if="showSuggestions && searchSuggestions.length > 0"
+            class="search-suggestions"
+            role="listbox"
+            :aria-label="t('calendar.filters.suggestions.ariaLabel')"
+          >
+            <button
+              v-for="suggestion in searchSuggestions"
+              :key="`${suggestion.filterGroup}:${suggestion.option.value}`"
+              type="button"
+              class="search-suggestion-item"
+              role="option"
+              @mousedown.prevent="selectSuggestion(suggestion)"
+            >
+              <span class="search-suggestion-item__label">{{ suggestion.option.label }}</span>
+              <span class="search-suggestion-item__group badge rounded-pill bg-light text-dark">{{ suggestion.groupLabel }}</span>
+              <span v-if="suggestion.option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ suggestion.option.count }}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Record Type Filter -->
-      <div v-show="false" class="col-12 col-md-6 col-lg-3">
+      <div v-if="isFilterVisible('types')" class="col-12 col-md-6 col-lg-4">
         <label for="type-filter" class="form-label">{{ t('calendar.filters.labels.schemas') }}</label>
         <Multiselect
           id="type-filter"
@@ -47,7 +73,7 @@
       </div>
 
       <!-- Activity Types Filter (only when calendarActivity is in selected types) -->
-      <div v-if="showActivityTypesFilter" class="col-12 col-md-6 col-lg-3">
+      <div v-if="isFilterVisible('activityTypes') && showActivityTypesFilter" class="col-12 col-md-6 col-lg-4">
         <label for="activity-types-filter" class="form-label">{{ t('calendar.filters.labels.activityTypes') }}</label>
         <Multiselect
           id="activity-types-filter"
@@ -78,8 +104,41 @@
         </Multiselect>
       </div>
 
+
+      <!-- Status Filter -->
+      <div v-if="isFilterVisible('statuses')" class="col-12 col-md-6 col-lg-4">
+        <label for="status-filter" class="form-label">{{ t('calendar.filters.labels.statuses') }}</label>
+        <Multiselect
+          id="status-filter"
+          v-model="selectedStatuses"
+          :options="statusOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          :showLabels="false"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.statuses')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
+        >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+          </template>
+        </Multiselect>
+      </div>
+
       <!-- GBF Sections & Targets Filter (grouped) -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div v-if="isFilterVisible('gbfTargetsAndSections')" class="col-12">
         <label for="gbf-filter" class="form-label">{{ t('calendar.filters.labels.gbfTargetsAndSections') }}</label>
         <Multiselect
           id="gbf-filter"
@@ -117,40 +176,8 @@
         </Multiselect>
       </div>
 
-      <!-- Countries Filter -->
-      <div v-show="false" class="col-12 col-md-6 col-lg-3">
-        <label for="countries-filter" class="form-label">{{ t('calendar.filters.labels.countries') }}</label>
-        <Multiselect
-          id="countries-filter"
-          v-model="selectedCountries"
-          :options="countryOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          :showLabels="false"
-          label="label"
-          track-by="value"
-          :placeholder="t('calendar.filters.placeholders.countries')"
-          @select="onManualFilterChange"
-          @remove="onManualFilterChange"
-        >
-          <template #tag="{ option, remove }">
-            <span class="multiselect__tag">
-              <span>{{ option.label }}</span>
-              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
-              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
-            </span>
-          </template>
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
-          </template>
-        </Multiselect>
-      </div>
-
-      <!-- Subject Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+            <!-- Subject Filter -->
+      <div v-if="isFilterVisible('subjects')" class="col-12 col-md-6 col-lg-6">
         <label for="subject-filter" class="form-label">{{ t('calendar.filters.labels.subjects') }}</label>
         <Multiselect
           id="subject-filter"
@@ -181,40 +208,8 @@
         </Multiselect>
       </div>
 
-      <!-- Status Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
-        <label for="status-filter" class="form-label">{{ t('calendar.filters.labels.statuses') }}</label>
-        <Multiselect
-          id="status-filter"
-          v-model="selectedStatuses"
-          :options="statusOptions"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          :showLabels="false"
-          label="label"
-          track-by="value"
-          :placeholder="t('calendar.filters.placeholders.statuses')"
-          @select="onManualFilterChange"
-          @remove="onManualFilterChange"
-        >
-          <template #tag="{ option, remove }">
-            <span class="multiselect__tag">
-              <span>{{ option.label }}</span>
-              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
-              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
-            </span>
-          </template>
-          <template #option="{ option }">
-            <span>{{ option.label }}</span>
-            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
-          </template>
-        </Multiselect>
-      </div>
-
-      <!-- Governing & Subsidiary Bodies Filter (grouped) -->
-      <div class="col-12 col-md-6 col-lg-3">
+            <!-- Governing & Subsidiary Bodies Filter (grouped) -->
+      <div v-if="isFilterVisible('bodies')" class="col-12 col-md-6 col-lg-36">
         <label for="bodies-filter" class="form-label">{{ t('calendar.filters.labels.governingAndSubsidiaryBodies') }}</label>
         <Multiselect
           id="bodies-filter"
@@ -252,8 +247,45 @@
         </Multiselect>
       </div>
 
+      <!-- Countries Filter -->
+      <div v-if="isFilterVisible('countries')" class="col-12 col-md-6 col-lg-3">
+        <label for="countries-filter" class="form-label">{{ t('calendar.filters.labels.countries') }}</label>
+        <Multiselect
+          id="countries-filter"
+          v-model="selectedCountries"
+          :options="countryOptions"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          :showLabels="false"
+          label="label"
+          track-by="value"
+          :placeholder="t('calendar.filters.placeholders.countries')"
+          @select="onManualFilterChange"
+          @remove="onManualFilterChange"
+        >
+          <template #tag="{ option, remove }">
+            <span class="multiselect__tag">
+              <span>{{ option.label }}</span>
+              <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+              <i class="multiselect__tag-icon" tabindex="0" @click="remove(option)" @keydown.enter="remove(option)" />
+            </span>
+          </template>
+          <template #option="{ option }">
+            <span>{{ option.label }}</span>
+            <span v-if="option.count != null" class="badge rounded-pill bg-secondary ms-1">{{ option.count }}</span>
+          </template>
+        </Multiselect>
+      </div>
+
+
+
+
+
+
       <!-- COP Decision Filter -->
-      <div v-show="false" class="col-12 col-md-6 col-lg-3">
+      <div v-if="isFilterVisible('decisions')" class="col-12 col-md-6 col-lg-3">
         <label for="cop-decision-filter" class="form-label">{{ t('calendar.filters.labels.decisions') }}</label>
         <Multiselect
           id="cop-decision-filter"
@@ -284,8 +316,8 @@
         </Multiselect>
       </div>
 
-      <!-- Date Range Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+            <!-- Date Range Filter -->
+      <div v-if="isFilterVisible('dateRange')" class="col-12 col-md-6 col-lg-3">
         <label class="form-label">{{ t('calendar.filters.labels.dateRange') }}</label>
         <div class="row g-2">
           <div class="col-12">
@@ -308,9 +340,9 @@
           </div>
         </div>
       </div>
-
-      <!-- Action Required Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      
+            <!-- Action Required Filter -->
+      <div v-if="isFilterVisible('actionRequired')" class="col-12 col-md-6 col-lg-3">
         <label class="form-label">{{ t('calendar.filters.labels.actionRequired') }}</label>
         <div class="form-check">
           <input
@@ -326,8 +358,12 @@
         </div>
       </div>
 
+
+
+
+
       <!-- Sort Filter -->
-      <div class="col-12 col-md-6 col-lg-3">
+      <div v-if="isFilterVisible('sort')" class="col-12 col-md-6 col-lg-3">
         <label for="sort-filter" class="form-label">{{ t('calendar.filters.labels.sort') }}</label>
         <Multiselect
           id="sort-filter"
@@ -383,6 +419,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, watchEffect, nextTick, onMounted, type Ref, type ComputedRef } from 'vue';
+import Fuse from 'fuse.js';
 import Multiselect from 'vue-multiselect';
 import { useThesaurusFilters } from '../../composables/use-thesaurus-filters';
 import type { FilterOption, FilterState, ParsedFacets } from 'shared/types/calendar';
@@ -405,17 +442,29 @@ interface Props {
   hideTypeFilter?: boolean;
   /** Active tab type in tab view mode — empty string when not in tab view. */
   activeTabType?: string;
+  /** Controls which filter sections are visible (managed by the cog dropdown). */
+  visibleFilters?: Record<string, boolean>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialStartDate: '',
   hideTypeFilter: false,
   activeTabType: '',
+  visibleFilters: () => ({}),
 });
 
 const emit = defineEmits<{
   'update:filters': [filters: FilterState];
 }>();
+
+// ---------------------------------------------------------------------------
+// Filter visibility helper
+// ---------------------------------------------------------------------------
+
+/** Returns true if a filter section should be rendered (defaults to true). */
+function isFilterVisible(key: string): boolean {
+  return props.visibleFilters[key] !== false;
+}
 
 // ---------------------------------------------------------------------------
 // Thesaurus filter options (merged with SOLR facet counts)
@@ -482,6 +531,7 @@ const startDate = ref<string>(props.initialStartDate ?? '');
 const endDate = ref<string>('');
 const actionRequired = ref<boolean>(false);
 const searchText = ref<string>('');
+const showSuggestions = ref<boolean>(false);
 
 // Track if any filter has been manually selected
 const hasUserInteracted = ref<boolean>(false);
@@ -1145,6 +1195,191 @@ function onManualFilterChange(): void {
   hasUserInteracted.value = true;
 }
 
+// ---------------------------------------------------------------------------
+// Search suggestions — Fuse.js fuzzy matching against all filter labels
+// ---------------------------------------------------------------------------
+
+type FilterGroupKey =
+  | 'types'
+  | 'activityTypes'
+  | 'subjects'
+  | 'statuses'
+  | 'governingBodies'
+  | 'subsidiaryBodies'
+  | 'copDecisions'
+  | 'gbfSections'
+  | 'globalTargets'
+  | 'countries';
+
+interface SearchableFilterItem {
+  label: string;
+  value: string;
+  filterGroup: FilterGroupKey;
+  groupLabel: string;
+  count?: number;
+}
+
+interface SearchSuggestion {
+  option: FilterOption;
+  filterGroup: FilterGroupKey;
+  groupLabel: string;
+}
+
+/** Map filter-group keys to the corresponding visibility key. */
+const FILTER_GROUP_VISIBILITY: Record<FilterGroupKey, string> = {
+  types: 'types',
+  activityTypes: 'activityTypes',
+  subjects: 'subjects',
+  statuses: 'statuses',
+  governingBodies: 'bodies',
+  subsidiaryBodies: 'bodies',
+  copDecisions: 'decisions',
+  gbfSections: 'gbfTargetsAndSections',
+  globalTargets: 'gbfTargetsAndSections',
+  countries: 'countries',
+};
+
+/** Flatten all available filter options into a single searchable list, excluding hidden groups. */
+const allFilterItems = computed<SearchableFilterItem[]>(() => {
+  const items: SearchableFilterItem[] = [];
+
+  const addGroup = (
+    options: FilterOption[],
+    filterGroup: FilterGroupKey,
+    groupLabel: string,
+  ): void => {
+    if (!isFilterVisible(FILTER_GROUP_VISIBILITY[filterGroup])) return;
+
+    for (const opt of options) {
+      items.push({
+        label: opt.label,
+        value: opt.value,
+        filterGroup,
+        groupLabel,
+        count: opt.count,
+      });
+    }
+  };
+
+  addGroup(recordTypeOptions.value, 'types', t('calendar.filters.labels.schemas') as string);
+  addGroup(activityTypeOptions.value, 'activityTypes', t('calendar.filters.labels.activityTypes') as string);
+  addGroup(subjectOptions.value, 'subjects', t('calendar.filters.labels.subjects') as string);
+  addGroup(statusOptions.value, 'statuses', t('calendar.filters.labels.statuses') as string);
+  addGroup(governingBodyOptions.value, 'governingBodies', t('calendar.filters.labels.governingBodies') as string);
+  addGroup(subsidiaryBodyOptions.value, 'subsidiaryBodies', t('calendar.filters.labels.subsidiaryBodies') as string);
+  addGroup(decisionOptions.value, 'copDecisions', t('calendar.filters.labels.decisions') as string);
+  addGroup(gbfSectionOptions.value, 'gbfSections', t('calendar.filters.labels.gbfSections') as string);
+  addGroup(globalTargetOptions.value, 'globalTargets', t('calendar.filters.labels.globalTargets') as string);
+  addGroup(countryOptions.value, 'countries', t('calendar.filters.labels.countries') as string);
+
+  return items;
+});
+
+/** Fuse.js instance — rebuilt whenever the filter items change. */
+const fuseInstance = computed<Fuse<SearchableFilterItem>>(() => {
+  return new Fuse(allFilterItems.value, {
+    keys: ['label'],
+    threshold: 0.4,
+    distance: 100,
+    includeScore: true,
+    minMatchCharLength: 2,
+  });
+});
+
+/** Check if a filter option is already selected in its group. */
+function isAlreadySelected(item: SearchableFilterItem): boolean {
+  const isSelectedIn = (selection: FilterSelectionValue[]): boolean =>
+    selection.some((s) => (typeof s === 'string' ? s : s.value) === item.value);
+
+  switch (item.filterGroup) {
+    case 'types': return isSelectedIn(selectedTypes.value);
+    case 'activityTypes': return isSelectedIn(selectedActivityTypes.value);
+    case 'subjects': return isSelectedIn(selectedSubjects.value);
+    case 'statuses': return isSelectedIn(selectedStatuses.value);
+    case 'copDecisions': return isSelectedIn(selectedCopDecisions.value);
+    case 'countries': return isSelectedIn(selectedCountries.value);
+    case 'governingBodies':
+      return selectedBodies.value.some((b) => b.value === item.value && b.bodyGroup === 'governingBodies');
+    case 'subsidiaryBodies':
+      return selectedBodies.value.some((b) => b.value === item.value && b.bodyGroup === 'subsidiaryBodies');
+    case 'gbfSections':
+      return selectedGbfItems.value.some((g) => g.value === item.value && g.gbfGroup === 'gbfSections');
+    case 'globalTargets':
+      return selectedGbfItems.value.some((g) => g.value === item.value && g.gbfGroup === 'globalTargets');
+    default: return false;
+  }
+}
+
+/** Top 3 fuzzy-matched filter suggestions for the current search text. */
+const searchSuggestions = computed<SearchSuggestion[]>(() => {
+  const query = searchText.value.trim();
+
+  if (query.length < 2) return [];
+
+  const results = fuseInstance.value.search(query, { limit: 10 });
+
+  return results
+    .filter((result) => !isAlreadySelected(result.item))
+    .slice(0, 3)
+    .map((result) => ({
+      option: {
+        value: result.item.value,
+        label: result.item.label,
+        count: result.item.count,
+      },
+      filterGroup: result.item.filterGroup,
+      groupLabel: result.item.groupLabel,
+    }));
+});
+
+/** Programmatically select a suggestion into the appropriate filter. */
+function selectSuggestion(suggestion: SearchSuggestion): void {
+  const { option, filterGroup } = suggestion;
+
+  switch (filterGroup) {
+    case 'types':
+      selectedTypes.value = [...selectedTypes.value, option];
+      break;
+    case 'activityTypes':
+      selectedActivityTypes.value = [...selectedActivityTypes.value, option];
+      break;
+    case 'subjects':
+      selectedSubjects.value = [...selectedSubjects.value, option];
+      break;
+    case 'statuses':
+      selectedStatuses.value = [...selectedStatuses.value, option];
+      break;
+    case 'copDecisions':
+      selectedCopDecisions.value = [...selectedCopDecisions.value, option];
+      break;
+    case 'countries':
+      selectedCountries.value = [...selectedCountries.value, option];
+      break;
+    case 'governingBodies':
+      selectedBodies.value = [...selectedBodies.value, { ...option, bodyGroup: 'governingBodies' }];
+      break;
+    case 'subsidiaryBodies':
+      selectedBodies.value = [...selectedBodies.value, { ...option, bodyGroup: 'subsidiaryBodies' }];
+      break;
+    case 'gbfSections':
+      selectedGbfItems.value = [...selectedGbfItems.value, { ...option, gbfGroup: 'gbfSections' }];
+      break;
+    case 'globalTargets':
+      selectedGbfItems.value = [...selectedGbfItems.value, { ...option, gbfGroup: 'globalTargets' }];
+      break;
+  }
+
+  // Clear search text after selection and hide suggestions
+  searchText.value = '';
+  showSuggestions.value = false;
+  onManualFilterChange();
+}
+
+/** Handle search input — show suggestions while typing. */
+function onSearchInput(): void {
+  showSuggestions.value = true;
+}
+
 /** Handler for the start-date date-picker input. */
 function onStartDateManualInput(): void {
   startDateIsAutoApplied.value = false;
@@ -1381,5 +1616,60 @@ watchEffect(() => {
   margin-left: 0.4em;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+
+  &:hover,
+  &:focus {
+    background-color: #f0f7f0;
+    outline: none;
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+}
+
+.search-suggestion-item__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-suggestion-item__group {
+  font-size: 0.75rem;
+  flex-shrink: 0;
 }
 </style>

@@ -22,6 +22,11 @@
       "paragraph": "الفقرة",
       "subject": "موضوع",
       "subjects": "المواضيع",
+      "agendaItem": "بند جدول الأعمال",
+      "agendaItems": "بنود جدول الأعمال",
+      "agendaItemNumber": "البند",
+      "meetingCode": "الاجتماع",
+      "title": "العنوان",
       "associatedBody": "هيئة فرعية",
       "governingBody": "هيئة إدارية",
       "governingBodies": "هيئات الإدارة",
@@ -117,6 +122,9 @@
       "actions": {
         "clearAll": "مسح جميع الفلاتر",
         "appliedFilters": "الفلاتر المطبقة"
+      },
+      "suggestions": {
+        "ariaLabel": "اقتراحات التصفية"
       },
       "sortOptions": {
         "startDateAsc": "تاريخ البدء (الأقدم أولاً)",

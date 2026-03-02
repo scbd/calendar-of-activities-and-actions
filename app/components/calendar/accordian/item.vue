@@ -17,11 +17,9 @@
 
         <div class="calendar-accordion__summary p-4">
           <div class="calendar-accordion__title mb-3"><HighlightText :text="title" :query="searchText" /></div>
-          
-          <div v-if="notificationSymbol" class="calendar-accordion__symbol mb-3">NTF-<HighlightText :text="notificationSymbol" :query="searchText" /></div>
-          <div v-if="isActivityDoc && documentSymbol" class="calendar-accordion__symbol mb-3"><HighlightText :text="documentSymbol" :query="searchText" /></div>
-          <div v-if="isMeetingDoc && meetingSymbol" class="calendar-accordion__symbol mb-3"><HighlightText :text="meetingSymbol" :query="searchText" /></div>
-          <div v-if="meetingLocation" class="calendar-accordion__location mb-3" :class="{ 'calendar-accordion__location--online': isOnlineMeeting }"><HighlightText :text="meetingLocation" :query="searchText" /></div>
+          <div >
+            <div v-if="meetingLocation" class="calendar-accordion__location mb-3 " :class="{ 'calendar-accordion__location--online': isOnlineMeeting }"><HighlightText :text="meetingLocation" :query="searchText" /></div>
+          </div>
           <div
             v-if="statusLabel || showActionBadge || primaryLink"
             class="calendar-accordion__meta-block mt-2"
@@ -83,6 +81,7 @@
           :related-activities="relatedActivities"
           :unresolved-meeting-refs="unresolvedMeetingRefs"
           :unresolved-activity-refs="unresolvedActivityRefs"
+          :search-text="searchText"
         />
 
         <!-- Activity-specific details -->
@@ -97,9 +96,11 @@
           :gbf-sections="gbfSections"
           :global-targets="globalTargets"
           :decision-entries="decisionEntriesValue"
+          :agenda-items="fetchedAgendaItems"
           :responsible-unit="responsibleUnit"
           :responsible-officer="responsibleOfficer"
           :show-responsible="showResponsible"
+          :search-text="searchText"
         />
 
         <!-- Meeting-specific details -->
@@ -120,29 +121,59 @@
           :responsible-unit="responsibleUnit"
           :responsible-officer="responsibleOfficer"
           :show-responsible="showResponsible"
+          :search-text="searchText"
         />
 
 
-        <!-- Related sections (non-notification docs only; notifications render these inside their details component) -->
-          <RelatedActivities
-            :activities="relatedActivities"
-            :unresolved-refs="unresolvedActivityRefs"
-          />
-          <RelatedMeetings
-            :meetings="relatedMeetings"
-            :unresolved-refs="unresolvedMeetingRefs"
-          />
-          <RelatedNotifications
-            :notifications="allNotificationEntries"
-            :all-docs="allDocs"
-          />
+      <!-- Related sections (non-notification docs only; notifications render these inside their details component) -->
+        <RelatedActivities
+          :activities="relatedActivities"
+          :unresolved-refs="unresolvedActivityRefs"
+        />
+        <RelatedMeetings
+          :meetings="relatedMeetings"
+          :unresolved-refs="unresolvedMeetingRefs"
+        />
+        <RelatedNotifications
+          :notifications="allNotificationEntries"
+          :all-docs="allDocs"
+        />
       </div>
     </div>
 
     <!-- CPB/Biosafety footer -->
-    <div v-if="isCpbDoc || isNpDoc" class="accordion-item__cpb-footer">
-      <span v-if="isCpbDoc" class="accordion-item__cpb-label">{{ t('calendar.labels.cpbRelated') }}</span>
-      <span v-if="isNpDoc" class="accordion-item__np-label">{{ t('calendar.labels.npRelated') }}</span>
+    <div class="accordion-item__cpb-footer">
+      <span v-if="isCpbDoc" class="accordion-item__cpb-label "><HighlightText :text="t('calendar.labels.cpbRelated')" :query="searchText" /></span>
+      <span v-if="isNpDoc" class="accordion-item__np-label"><HighlightText :text="t('calendar.labels.npRelated')" :query="searchText" /></span>
+      <div class="ms-auto">
+        <div
+          v-if="notificationSymbol"
+          class="accordion-item__footer-symbol me-3 font-monospace"
+          role="button"
+          tabindex="0"
+          :title="copiedText || t('calendar.labels.clickToCopy')"
+          @click.stop="copySymbolToClipboard(`NTF-${notificationSymbol}`)"
+          @keydown.enter.stop="copySymbolToClipboard(`NTF-${notificationSymbol}`)"
+        >NTF-<HighlightText :text="notificationSymbol" :query="searchText" /></div>
+        <div
+          v-if="isActivityDoc && documentSymbol"
+          class="accordion-item__footer-symbol me-3 font-monospace"
+          role="button"
+          tabindex="0"
+          :title="copiedText || t('calendar.labels.clickToCopy')"
+          @click.stop="copySymbolToClipboard(documentSymbol)"
+          @keydown.enter.stop="copySymbolToClipboard(documentSymbol)"
+        ><HighlightText :text="documentSymbol" :query="searchText" /></div>
+        <div
+          v-if="isMeetingDoc && meetingSymbol"
+          class="accordion-item__footer-symbol me-3 font-monospace"
+          role="button"
+          tabindex="0"
+          :title="copiedText || t('calendar.labels.clickToCopy')"
+          @click.stop="copySymbolToClipboard(meetingSymbol)"
+          @keydown.enter.stop="copySymbolToClipboard(meetingSymbol)"
+        ><HighlightText :text="meetingSymbol" :query="searchText" /></div>
+      </div>
     </div>
 
   </div>
@@ -161,7 +192,8 @@ import RelatedActivities from './related-activities.vue';
 import RelatedMeetings from './related-meetings.vue';
 import RelatedNotifications from './related-notifications.vue';
 import HighlightText from '../../highlight-text.vue';
-import { fetchRelatedDocsBySchema, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
+import { fetchRelatedDocsBySchema, fetchAgendaItems, LEGACY_MEETING_ID_MAP } from 'shared/services/solr-index';
+import type { AgendaItem } from 'shared/types/calendar';
 import { formatDateRange } from 'shared/utils/date';
 import { DateTime } from 'luxon';
 import {
@@ -216,6 +248,42 @@ const _emit = defineEmits<{
 }>();
 
 const accordionRef = ref<HTMLElement>();
+const copiedText = ref('');
+let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+
+const copySymbolToClipboard = async (text: string) => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for non-secure contexts (HTTP, iframes)
+      const textarea = document.createElement('textarea');
+
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+
+    copiedText.value = t('calendar.labels.copied') as string;
+  } catch {
+    copiedText.value = t('calendar.labels.copyFailed') as string;
+  }
+
+  if (copiedTimer) {
+    clearTimeout(copiedTimer);
+  }
+
+  copiedTimer = setTimeout(() => {
+    copiedText.value = '';
+  }, 2000);
+};
 
 const handleClickOutside = (event: Event) => {
   if (accordionRef.value && !accordionRef.value.contains(event.target as Node) && props.isOpen) {
@@ -627,8 +695,10 @@ const notificationEntries = computed(() => notificationDisplayEntries(props.doc)
 // ---------------------------------------------------------------------------
 const fetchedRelatedActivities = ref<CalendarDoc[]>([]);
 const fetchedRelatedMeetings = ref<CalendarDoc[]>([]);
+const fetchedAgendaItems = ref<AgendaItem[]>([]);
 const fetchedActivityRefs = ref(false);
 const fetchedMeetingRefs = ref(false);
+const fetchedAgendaItemRefs = ref(false);
 
 /**
  * When the accordion opens, fetch related activities and meetings via
@@ -684,6 +754,30 @@ watch(
         );
       } catch (err) {
         console.error('Failed to fetch related meetings', err);
+      }
+    }
+
+    // Fetch resolved agenda items for activities
+    if (
+      !fetchedAgendaItemRefs.value &&
+      isActivityDoc.value
+    ) {
+      const activityDoc = props.doc as Record<string, unknown>;
+      const meetingCodes = (activityDoc.agendaItemMeetingCodes ?? []) as string[];
+      const itemNumbers = (activityDoc.agendaItemNumbers ?? []) as number[];
+
+      if (meetingCodes.length > 0 && itemNumbers.length > 0) {
+        fetchedAgendaItemRefs.value = true;
+
+        try {
+          fetchedAgendaItems.value = await fetchAgendaItems(
+            meetingCodes,
+            itemNumbers,
+            locale.value as LocaleCode,
+          );
+        } catch (err) {
+          console.error('Failed to fetch agenda items', err);
+        }
       }
     }
   },
@@ -960,6 +1054,7 @@ const collapseId = computed(() => props.collapseId);
 
 .accordion-item__cpb-footer {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
   padding: 0;
   border-radius: 0 0 var(--bs-accordion-inner-border-radius) var(--bs-accordion-inner-border-radius);
@@ -1161,6 +1256,17 @@ const collapseId = computed(() => props.collapseId);
 .calendar-notifications__header {
   font-size: 1.125rem;
 }
+
+.accordion-item__footer-symbol {
+  color: rgba(51, 51, 51, 0.7);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+
 
 @media (max-width: 768px) {
   .calendar-accordion__title { font-size: 1.125rem; }

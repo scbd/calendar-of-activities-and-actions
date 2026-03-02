@@ -3,7 +3,7 @@
     <!-- Status narrative -->
     <div v-if="statusNarrative" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ t('calendar.labels.statusNarrative') }}</div>
-      <div class="calendar-detail-content">{{ statusNarrative }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="statusNarrative ?? ''" :query="searchText" /></div>
     </div>
 
     <!-- Symbol -->
@@ -15,13 +15,13 @@
     <!-- Description -->
     <div v-if="description" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ t('calendar.labels.description') }}</div>
-      <div class="calendar-detail-content">{{ description }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="description ?? ''" :query="searchText" /></div>
     </div>
 
     <!-- Location -->
     <div v-if="location" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ t('calendar.labels.location') }}</div>
-      <div class="calendar-detail-content">{{ location }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="location ?? ''" :query="searchText" /></div>
     </div>
 
     <!-- Themes / Thematic Areas -->
@@ -30,6 +30,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="themes"
+        :query="searchText"
         pill-class="calendar-pill calendar-pill--muted"
       />
     </div>
@@ -37,13 +38,13 @@
     <!-- Governing bodies -->
     <div v-if="governingBodies.length" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ governingBodies.length > 1 ? t('calendar.labels.governingBodies') : t('calendar.labels.governingBody') }}</div>
-      <div class="calendar-detail-content">{{ governingBodies.join(', ') }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="governingBodies.join(', ')" :query="searchText" /></div>
     </div>
 
     <!-- Subsidiary bodies -->
     <div v-if="subsidiaryBodies.length" class="calendar-detail-section">
       <div class="calendar-detail-label">{{ subsidiaryBodies.length > 1 ? t('calendar.labels.subsidiaryBodies') : t('calendar.labels.subsidiaryBody') }}</div>
-      <div class="calendar-detail-content">{{ subsidiaryBodies.join(', ') }}</div>
+      <div class="calendar-detail-content"><HighlightText :text="subsidiaryBodies.join(', ')" :query="searchText" /></div>
     </div>
 
     <!-- GBF Sections -->
@@ -52,6 +53,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="gbfSections"
+        :query="searchText"
       />
     </div>
 
@@ -94,7 +96,7 @@
           v-for="(entry, index) in decisionEntries"
           :key="`${entry.href ?? entry.label}-${index}`"
         >
-          <DecisionLink :href="entry.href" :label="entry.label" />
+          <DecisionLink :href="entry.href" :label="entry.label" :query="searchText" />
           <span v-if="index < decisionEntries.length - 1">, </span>
         </template>
       </div>
@@ -106,6 +108,7 @@
       <ExpandablePillList
         class="calendar-pill-row"
         :items="subjectLabels"
+        :query="searchText"
       />
     </div>
 
@@ -132,6 +135,7 @@ import { computed } from 'vue';
 import { useI18n } from '#imports';
 import ExpandablePillList from '../../expandable-pill-list.vue';
 import DecisionLink from '../../decision-link.vue';
+import HighlightText from '../../highlight-text.vue';
 import type { DecisionEntry } from 'shared/utils/decision-links';
 
 interface UrlLink {
@@ -155,6 +159,7 @@ const props = defineProps<{
   responsibleUnit?: string;
   responsibleOfficer?: string;
   showResponsible: boolean;
+  searchText?: string;
 }>();
 
 const { t } = useI18n();

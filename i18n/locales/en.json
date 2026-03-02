@@ -22,6 +22,11 @@
       "paragraph": "Para",
       "subject": "Theme",
       "subjects": "Themes",
+      "agendaItem": "Agenda Item",
+      "agendaItems": "Agenda Items",
+      "agendaItemNumber": "Item",
+      "meetingCode": "Meeting",
+      "title": "Title",
       "associatedBody": "Subsidiary body",
       "governingBody": "Governing Body",
       "governingBodies": "Governing Bodies",
@@ -60,7 +65,10 @@
       "untitled": "Untitled",
       "unknownDate": "Unknown date",
       "cpbRelated": "Cartagena Protocol / Biosafety",
-      "npRelated": "Nagoya Protocol / ABS"
+      "npRelated": "Nagoya Protocol / ABS",
+      "clickToCopy": "Click to copy",
+      "copied": "Copied!",
+      "copyFailed": "Copy failed"
     },
     "links": {
       "documents": "Documents »"
@@ -77,6 +85,24 @@
       "title": "Filters",
       "showBasic": "Show advanced search",
       "showAdvanced": "Show basic search",
+      "visibility": {
+        "toggleLabel": "Configure visible filters",
+        "menuLabel": "Filter visibility options",
+        "heading": "Show / hide filters",
+        "options": {
+          "types": "Record types",
+          "activityTypes": "Activity types",
+          "gbfTargetsAndSections": "GBF sections & targets",
+          "countries": "Parties",
+          "subjects": "Thematic areas",
+          "statuses": "Statuses",
+          "bodies": "Governing & subsidiary bodies",
+          "decisions": "Decisions",
+          "dateRange": "Date range",
+          "actionRequired": "Action required",
+          "sort": "Sort"
+        }
+      },
       "labels": {
         "typeActivity": "Record type(s)",
         "activityTypes": "Activity type(s)",
@@ -121,6 +147,9 @@
       "actions": {
         "clearAll": "Clear all filters",
         "appliedFilters": "Applied Filters"
+      },
+      "suggestions": {
+        "ariaLabel": "Filter suggestions"
       },
       "sortOptions": {
         "startDateAsc": "Start date (oldest first)",

@@ -34,8 +34,8 @@
       <!-- Results -->
       <div v-else>
         <!-- Results count -->
-        <p v-if="total > 0" class="text-muted small mb-3" role="status" aria-live="polite">
-          {{ t('calendar.messages.showingResults', { count: docs.length, total }) }}
+        <p v-if="visibleDocCount > 0" class="text-muted small mb-3" role="status" aria-live="polite">
+          {{ t('calendar.messages.showingResults', { count: visibleDocCount, total: visibleDocCount }) }}
         </p>
 
         <!-- Re-query loading overlay (filter change, not initial) -->
@@ -77,7 +77,7 @@
         <!-- Manual load-more button (fallback when infinite scroll doesn't trigger) -->
         <div v-if="hasMore && !loadingMore" class="text-center py-3">
           <button class="btn btn-outline-primary btn-sm" @click="loadMore()">
-            {{ t('calendar.messages.loadMore', { remaining: total - docs.length }) }}
+            {{ t('calendar.messages.loadMore', { remaining: total - visibleDocCount }) }}
           </button>
         </div>
       </div>
@@ -127,6 +127,7 @@ const {
   docs,
   locale: calendarLocale,
   groupedItems,
+  visibleDocCount,
   facets,
   total,
   hasMore,
